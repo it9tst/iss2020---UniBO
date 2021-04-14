@@ -1,0 +1,8 @@
+System client
+
+// Definizione protocolli di comunicazione
+
+// CLIENT
+// Messaggi scambiati tra client e smartbell
+Request enter_request_client	: enter_request_client (ID)
+Reply   enter_reply_client	: enter_reply_client (C)

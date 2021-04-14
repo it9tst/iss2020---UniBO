@@ -1,0 +1,51 @@
+System tearoom
+
+// Definizione protocolli di comunicazione
+
+// CLIENTE
+// Messaggi scambiati tra client e smartbell
+Request enter_request_client	: enter_request_client (ID)
+Reply   enter_reply_client	: enter_reply_client (C)
+
+
+
+// SMARTBELL
+
+
+// BARMAN
+
+
+// WAITER
+
+
+
+
+
+
+
+
+
+
+Dispatch end		: end (V)	// terminazione
+
+// Messaggi scambiati tra cliente e waiter
+Dispatch order		: order (ORD)		// cliente pronto a ordinare
+Dispatch payment	: payment (P)		// cliente pronto a pagare
+
+// Messaggi scambiati tra smartbell e waiter
+Request enter	: enter (ID)		// smarbell chiede se il cliente può entrare, dopo aver rilevato la temperatura corporea
+Reply   accept	: accept (C)		// waiter risponde allo smartbell
+
+// Messaggi scambiati tra barman e waiter
+Dispatch orderReady	: orderReady (B)					// barman avvisa il waiter che l'ordine è pronto per essere servito
+
+Request comunicateOrder : comunicateOrder (CID)		// waiter fa la richiesta dell'ordine del cliente "ID"
+Reply comunicateBReady	: comunicateBReady (CID)		// barman risponde dicendo che l'ordine del cliente "ID" è pronto
+
+
+Context ctxrobotboundary ip [host="localhost" port=8018]
+Context ctxbasicrobot ip [host="localhost" port=8020]
+Context ctxclient ip [host="localhost" port=8060]
+
+ExternalQActor barman context ctxrobotboundary
+ExternalQActor basicrobot context ctxbasicrobot
