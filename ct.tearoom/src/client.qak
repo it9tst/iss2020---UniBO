@@ -3,6 +3,76 @@ System client
 // Definizione protocolli di comunicazione
 
 // CLIENT
-// Messaggi scambiati tra client e smartbell
-Request enter_request_client	: enter_request_client (ID)
-Reply   enter_reply_client	: enter_reply_client (C)
+// Message between client - tearoom
+Request tearoom_is_open_request	: tearoom_is_open_request (PAYLOAD)
+Reply   tearoom_is_open_reply	: tearoom_is_open_reply (PAYLOAD)
+Dispatch tearoom_is_open_dispatch : tearoom_is_open_dispatch(PAYLOAD)
+
+// Message between client - smartbell
+Request enter_request_client	: enter_request_client (PAYLOAD)
+Reply   enter_reply_from_smartbell	: enter_reply_from_smartbell (ID)
+
+// Message between client - waiter
+Dispatch client_ready_to_order : client_ready_to_order (ID)
+Dispatch client_order : client_order (ID, ORD)
+Dispatch client_payment : client_payment (ID)
+
+
+Context ctxtearoom ip [host="localhost" port=9901]
+Context ctxclient ip [host="localhost" port=9902]
+
+ExternalQActor smartbell context ctxtearoom
+ExternalQActor waiter context ctxtearoom
+
+
+QActor client context ctxclient {
+	[#
+		var ID = ""
+		var ORD = mutableListOf(caffe, cornetto)
+		var m_tearoom_is_open = True
+	#]
+	
+	State s0 initial {
+		// Initial state
+		println("Client start")
+	}
+	Transition t0 whenRequest tearoom_is_open_request -> checkTearoomOpen
+	
+	State checkTearoomOpen {
+		// Initial state
+		println("Client check if tearoom is open")
+		
+		if [# m_tearoom_is_open #] {
+			// Client rings the doorbell 
+			println("Tearoom is open")
+			println("Client rings the doorbell")
+			request smartbell -m enter_request_client : enter_request_client (CanIEnter)
+		} else {
+			println("Tearoom is close")
+			forward client -m tearoom_is_open_dispatch : tearoom_is_open_dispatch (Close)
+		}
+	}
+	Transition t1 	whenReply tearoom_is_open_reply -> endWork
+					whenMsg tearoom_is_open_dispatch -> clientRejected
+	
+	State clientRejected {
+		// Client rings the doorbell 
+		println("Client go away")
+	}
+	Goto endWork
+
+	State endWork {
+		// Client end work
+		println("Client end work")
+		terminate 0
+	}
+}
+
+
+
+
+
+
+
+
+
