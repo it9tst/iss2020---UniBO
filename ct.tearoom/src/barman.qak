@@ -3,6 +3,7 @@ System barman
 // MESSAGES
 
 Dispatch orderReady	: orderReady (B)
+Dispatch takeOrder  : takeOrder (ORD)
 
 
 
@@ -12,11 +13,41 @@ Context ctxtearoom ip [host="localhost" port=9901]
 ExternalQActor waiter context ctxtearoom
 
 QActor barman context ctxtearoom {
+	[#
+		var is_free = true
+		var list = arrayListOf<String>()
+	#]			
 	
 	State s0 initial {
 		// Initial state
 		println("Barman start")
 	}
+	Goto getState
+	
+	State getState {
+		if [#isfree#]{
+			println("Barman is free!")
+			[#isfree = true#]
+		} else {
+			println("Barman is busy!")
+			[#isfree = false#]
+		}
+	}
+	Transition t0 whenMsg takeOrder -> getOrder
+	
+	State getOrder{
+		if [#isfree#]{
+			//get order from waiter
+			println("Barman is preparing order... ") 
+		}
+	}
+	Goto orderFinish
+	
+	State orderFinish{
+		println("The order is ready!")
+		//send dispatch to waiter
+	}
+	Transition t1 whenMsg orderReady -> endWork
 	
 	State endWork {
 		// Client end work
