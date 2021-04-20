@@ -1,5 +1,12 @@
 System waiter
 
-// Definizione protocolli di comunicazione
+// MESSAGES
 
-// WAITER
+
+// CONTEXT
+Context ctxtearoom ip [host="localhost" port=9901]
+Context ctxclient ip [host="localhost" port=9902]
+
+QActor waiter context ctxwaiter {
+	
+}

@@ -1,5 +1,26 @@
 System barman
 
-// Definizione protocolli di comunicazione
+// MESSAGES
 
-// BARMAN
+Dispatch orderReady	: orderReady (B)
+
+
+
+// CONTEXT
+Context ctxtearoom ip [host="localhost" port=9901]
+
+ExternalQActor waiter context ctxtearoom
+
+QActor barman context ctxtearoom {
+	
+	State s0 initial {
+		// Initial state
+		println("Barman start")
+	}
+	
+	State endWork {
+		// Client end work
+		println("Barman end work")
+		terminate 0
+	}
+}

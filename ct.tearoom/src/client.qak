@@ -1,8 +1,6 @@
 System client
 
-// Definizione protocolli di comunicazione
-
-// CLIENT
+// MESSAGES
 // Message between client - tearoom
 Request tearoom_is_open_request	: tearoom_is_open_request (PAYLOAD)
 Reply   tearoom_is_open_reply	: tearoom_is_open_reply (PAYLOAD)
@@ -18,6 +16,8 @@ Dispatch client_order : client_order (ID, ORD)
 Dispatch client_payment : client_payment (ID)
 
 
+
+// CONTEXT
 Context ctxtearoom ip [host="localhost" port=9901]
 Context ctxclient ip [host="localhost" port=9902]
 
@@ -36,14 +36,14 @@ QActor client context ctxclient {
 		// Initial state
 		println("Client start")
 	}
-	Transition t0 whenRequest tearoom_is_open_request -> checkTearoomOpen
+	Transition t0 	whenRequest tearoom_is_open_request -> checkTearoomOpen
 	
 	State checkTearoomOpen {
 		// Initial state
 		println("Client check if tearoom is open")
 		
 		if [# m_tearoom_is_open #] {
-			// Client rings the doorbell 
+			// Client rings the doorbell
 			println("Tearoom is open")
 			println("Client rings the doorbell")
 			request smartbell -m enter_request_client : enter_request_client (CanIEnter)
@@ -56,7 +56,7 @@ QActor client context ctxclient {
 					whenMsg tearoom_is_open_dispatch -> clientRejected
 	
 	State clientRejected {
-		// Client rings the doorbell 
+		// Client go away
 		println("Client go away")
 	}
 	Goto endWork
