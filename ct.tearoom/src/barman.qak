@@ -1,44 +1,42 @@
 System barman
 
 // MESSAGES
-
-Dispatch orderReady	: orderReady (B)
-Dispatch takeOrder  : takeOrder (ORD)
-
+// Message between barman - waiter
+Dispatch takeOrder  : takeOrder (ID, ORD)
+Dispatch orderReady	: orderReady (PAYLOAD)
+Dispatch end : end (PAYLOAD)
 
 
 // CONTEXT
 Context ctxtearoom ip [host="localhost" port=9901]
+Context ctxbarman ip [host="localhost" port=9904]
 
 ExternalQActor waiter context ctxtearoom
 
-QActor barman context ctxtearoom {
+QActor barman context ctxbarman {
 	[#
-		var is_free = true
-		var list = arrayListOf<String>()
+		var List = arrayListOf<Int, arrayListOf<String>()>()
 	#]			
 	
 	State s0 initial {
 		// Initial state
 		println("Barman start")
 	}
-	Goto getState
+	Goto waitOrder
 	
-	State getState {
-		if [#isfree#]{
-			println("Barman is free!")
-			[#isfree = true#]
-		} else {
-			println("Barman is busy!")
-			[#isfree = false#]
-		}
+	State waitOrder {
+		// Barman wait order
+		println("Barman wait order")
 	}
-	Transition t0 whenMsg takeOrder -> getOrder
+	Transition t0 	whenMsg takeOrder -> getOrder
+					whenMsg end -> endWork
 	
 	State getOrder{
-		if [#isfree#]{
-			//get order from waiter
-			println("Barman is preparing order... ") 
+		// Get order from waiter
+		println("Barman is preparing order... ")
+		
+		onMsg(takeOrder : takeOrder(ID, ORD)){
+			[# List.add($payloadArg(0), $payloadArg(1)) #]
 		}
 	}
 	Goto orderFinish
@@ -46,8 +44,10 @@ QActor barman context ctxtearoom {
 	State orderFinish{
 		println("The order is ready!")
 		//send dispatch to waiter
+		forward waiter -m orderReady : orderReady (READY)
+		[# List.remove() #]
 	}
-	Transition t1 whenMsg orderReady -> endWork
+	Transition t1 whenMsg orderReady -> waitOrder
 	
 	State endWork {
 		// Client end work

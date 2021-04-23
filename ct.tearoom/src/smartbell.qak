@@ -2,52 +2,66 @@ System smartbell
 
 // MESSAGES
 // Message between smartbell - client
-Request enter_request_client	: enter_request_client (PAYLOAD)
+Request enter_request_client	: enter_request_client (TEMP)
 Reply   enter_reply_from_smartbell	: enter_reply_from_smartbell (ID)
+Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
 
 // Message between smartbell - waiter
 Request enter	: enter (ID)		// smarbell chiede se il cliente può entrare, dopo aver rilevato la temperatura corporea
 Reply   accept	: accept (C)		// waiter risponde allo smartbell
-
+Dispatch end : end (PAYLOAD)
 
 
 // CONTEXT
 Context ctxtearoom ip [host="localhost" port=9901]
 Context ctxclient ip [host="localhost" port=9902]
+Context ctxsmartbell ip [host="localhost" port=9903]
 
 ExternalQActor client context ctxclient
 ExternalQActor waiter context ctxtearoom
 
-QActor smartbell context ctxtearoom {
+QActor smartbell context ctxsmartbell {
 	[#
-		
+		val Temp_max = 37.5
+		var Client_temp = 0.0
+		var Id_client = 0
 	#]
 	
 	State s0 initial {
 		// Initial state
 		println("Smartbell start")
 	}
-	Goto isRing
+	Goto waitRing
 	
-	State isRing {
+	State waitRing {
 		// Smartbell wait ring
 		println("Smartbell wait ring")
 	}
 	Transition t0 	whenRequest enter_request_client -> checkTempClient
-	
+					whenMsg end -> endWork
+								
 	State checkTempClient {
 		// Smartbell check temp client
 		println("Smartbell check temp client")
 		
-		if [# ClientTemp < Temp_max #] {
-			
-		} else {
-			
+		onMsg(enter_request_client : enter_request_client(TEMP)){
+			[# Client_temp = $payloadArg(0) #]
 		}
 		
+		if [# Client_temp < Temp_max && Client_temp != 0.0 #] {
+			println("Puoi entrare")
+
+			replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client)
+			[# Id_client++ #]
+			
+		} else {
+			println("Non puoi entrare")
+			
+			replyTo enter_request_client with enter_reply_from_smartbell_n : enter_reply_from_smartbell_n (NONE)
+		}
 	}
-	Transition t1 	whenReply 	smartbellEntryReply -> checkWaiterReply
-	
+	Goto waitRing
+
 	State endWork {
 		// Smartbell end work
 		println("Smartbell end work")

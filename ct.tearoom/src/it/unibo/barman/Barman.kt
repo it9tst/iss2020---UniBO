@@ -16,11 +16,39 @@ class Barman ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	@kotlinx.coroutines.ObsoleteCoroutinesApi
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
+		
+				var List = arrayListOf<Int, arrayListOf<String>()>()
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						println("Barman start")
 					}
+					 transition( edgeName="goto",targetState="waitOrder", cond=doswitch() )
+				}	 
+				state("waitOrder") { //this:State
+					action { //it:State
+						println("Barman wait order")
+					}
+					 transition(edgeName="t00",targetState="getOrder",cond=whenDispatch("takeOrder"))
+					transition(edgeName="t01",targetState="endWork",cond=whenDispatch("end"))
+				}	 
+				state("getOrder") { //this:State
+					action { //it:State
+						println("Barman is preparing order... ")
+						if( checkMsgContent( Term.createTerm("takeOrder(ID,ORD)"), Term.createTerm("takeOrder(ID,ORD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 List.add($payloadArg(0), $payloadArg(1))  
+						}
+					}
+					 transition( edgeName="goto",targetState="orderFinish", cond=doswitch() )
+				}	 
+				state("orderFinish") { //this:State
+					action { //it:State
+						println("The order is ready!")
+						forward("orderReady", "orderReady(READY)" ,"waiter" ) 
+						 List.remove()  
+					}
+					 transition(edgeName="t12",targetState="waitOrder",cond=whenDispatch("orderReady"))
 				}	 
 				state("endWork") { //this:State
 					action { //it:State

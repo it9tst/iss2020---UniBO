@@ -3,10 +3,18 @@ System waiter
 // MESSAGES
 
 
+
 // CONTEXT
 Context ctxtearoom ip [host="localhost" port=9901]
 Context ctxclient ip [host="localhost" port=9902]
+Context ctxsmartbell ip [host="localhost" port=9903]
+Context ctxbarman ip [host="localhost" port=9904]
+Context ctxwaiter ip [host="localhost" port=9905]
 
 QActor waiter context ctxwaiter {
 	
+	State s0 initial {
+		// Initial state
+		println("Waiter start")
+	}
 }

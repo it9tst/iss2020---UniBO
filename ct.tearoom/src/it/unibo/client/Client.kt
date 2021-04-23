@@ -17,31 +17,41 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-				var ID = ""
+				var ID = 0
 				var ORD = mutableListOf(caffe, cornetto)
-				var m_tearoom_is_open = True
+				var M_tearoom_is_open = True
+				var Client_temp = 0.0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						println("Client start")
 					}
-					 transition(edgeName="t00",targetState="checkTearoomOpen",cond=whenRequest("tearoom_is_open_request"))
+					 transition( edgeName="goto",targetState="checkTearoomOpen", cond=doswitch() )
 				}	 
 				state("checkTearoomOpen") { //this:State
 					action { //it:State
 						println("Client check if tearoom is open")
-						if(  m_tearoom_is_open  
+						if(  M_tearoom_is_open  
 						 ){println("Tearoom is open")
 						println("Client rings the doorbell")
-						request("enter_request_client", "enter_request_client(CanIEnter)" ,"smartbell" )  
+						forward("tearoom_is_open_dispatch", "tearoom_is_open_dispatch(Open)" ,"client" ) 
 						}
 						else
 						 {println("Tearoom is close")
-						 forward("tearoom_is_open_dispatch", "tearoom_is_open_dispatch(Close)" ,"client" ) 
+						 forward("tearoom_is_close_dispatch", "tearoom_is_close_dispatch(Close)" ,"client" ) 
 						 }
 					}
-					 transition(edgeName="t11",targetState="endWork",cond=whenReply("tearoom_is_open_reply"))
-					transition(edgeName="t12",targetState="clientRejected",cond=whenDispatch("tearoom_is_open_dispatch"))
+					 transition(edgeName="t00",targetState="clientValidate",cond=whenDispatch("tearoom_is_open_dispatch"))
+					transition(edgeName="t01",targetState="clientRejected",cond=whenDispatch("tearoom_is_close_dispatch"))
+				}	 
+				state("clientValidate") { //this:State
+					action { //it:State
+						println("Client check enter")
+						 Client_temp = 36.0  
+						request("enter_request_client", "enter_request_client($Client_temp)" ,"smartbell" )  
+					}
+					 transition(edgeName="t12",targetState="endWork",cond=whenReply("enter_reply_from_smartbell"))
+					transition(edgeName="t13",targetState="endWork",cond=whenReply("enter_reply_from_smartbell_n"))
 				}	 
 				state("clientRejected") { //this:State
 					action { //it:State
