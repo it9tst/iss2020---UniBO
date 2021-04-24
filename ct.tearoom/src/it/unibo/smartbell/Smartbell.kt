@@ -43,15 +43,21 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						}
 						if(  Client_temp < Temp_max && Client_temp != 0.0  
 						 ){println("Puoi entrare")
-						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
-						 Id_client++  
+						request("smartbell_enter_request", "smartbell_enter_request($Id_client)" ,"waiter" )  
 						}
 						else
 						 {println("Non puoi entrare")
 						 answer("enter_request_client", "enter_reply_from_smartbell_n", "enter_reply_from_smartbell_n(NONE)"   )  
 						 }
 					}
-					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
+					 transition(edgeName="t12",targetState="clientEnter",cond=whenReply("client_accept"))
+					transition(edgeName="t13",targetState="endWork",cond=whenReply("client_accept_n"))
+				}	 
+				state("clientEnter") { //this:State
+					action { //it:State
+						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
+						 Id_client++  
+					}
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
