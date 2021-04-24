@@ -1,8 +1,22 @@
 System waiter
 
 // MESSAGES
+// Message between waiter - barman
+Dispatch takeOrder  			: takeOrder (ID, ORD)
+Dispatch orderReady				: orderReady (PAYLOAD)
 
+// Message between waiter - client
+Dispatch client_ready_to_order 	: client_ready_to_order (ID)
+Dispatch client_order 			: client_order (ID, ORD)
+Dispatch client_payment 		: client_payment (ID)
 
+// Message between waiter - smartbell
+Request smartbell_enter_request	: smartbell_enter_request (ID)		
+Reply   client_accept			: client_accept (TABLE)
+Reply   client_accept_n			: client_accept_n (MAXWAITINGTIME)
+
+// Exit
+Dispatch end					: end (V)
 
 // CONTEXT
 Context ctxtearoom ip [host="localhost" port=9901]
@@ -11,10 +25,55 @@ Context ctxsmartbell ip [host="localhost" port=9903]
 Context ctxbarman ip [host="localhost" port=9904]
 Context ctxwaiter ip [host="localhost" port=9905]
 
+ExternalQActor client context ctxtearoom
+ExternalQActor smartbell context ctxtearoom
+ExternalQActor barman context ctxtearoom
+
 QActor waiter context ctxwaiter {
+	
+	[#
+		var Is_free = true
+		var Table1_free = true
+		var Table1_clean = true
+		var Table2_free = true
+		var Table2_clean = true
+		var Max_waiting_time = 10
+	#]
 	
 	State s0 initial {
 		// Initial state
 		println("Waiter start")
+	}
+	Goto rest
+	
+	State rest {
+		if[# Is_free #]{
+			println("PAUSE")
+		}
+		else{
+			println("MOVE")
+		}
+	}
+	Transition t0 whenRequest smartbell_enter_request -> accept 
+	
+	State accept {
+		[# Is_free = false #]
+		if [# Table1_free && Table1_clean || Table2_free && Table2_clean #]{
+			replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
+		} else {
+			replyTo smartbell_enter_request with client_accept_n : client_accept_n ($Max_waiting_time)
+		}
+	}
+	Goto endWork
+	
+	State endService{
+		[# Is_free = true#]
+	}
+	Goto endWork
+	
+	State endWork {
+		// Waiter end work
+		println("Waiter end work")
+		terminate 0
 	}
 }

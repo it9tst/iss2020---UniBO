@@ -9,8 +9,8 @@ Dispatch tearoom_is_close_dispatch	: tearoom_is_close_dispatch(PAYLOAD)
 
 
 // Message between client - smartbell
-Request enter_request_client		: enter_request_client (TEMP)
-Reply   enter_reply_from_smartbell	: enter_reply_from_smartbell (ID)
+Request enter_request_client			: enter_request_client (TEMP)
+Reply   enter_reply_from_smartbell		: enter_reply_from_smartbell (ID)
 Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
 
 // Message between client - waiter
