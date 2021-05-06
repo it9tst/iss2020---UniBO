@@ -1,4 +1,5 @@
 /.metadata/
+<<<<<<< Updated upstream
 ct.tearoom/.classpath
 ct.tearoom/.classpath
 ct.tearoom/.project
@@ -22,3 +23,13 @@ ct.tearoom/.classpath
 ct.tearoom/.project
 ct.tearoom/.settings/org.eclipse.jdt.core.prefs
 *.prefs
+=======
+ct.tearoom/.settings/org.eclipse.jdt.ui.prefs
+ct.tearoom/.settings/org.eclipse.jdt.core.prefs
+ct.tearoom/.project
+ct.tearoom/.classpath
+>>>>>>> Stashed changes
+ct.tearoom/.settings/org.jetbrains.kotlin.core.prefs
+ct.tearoom/.settings/org.eclipse.jdt.core.prefs
+ct.tearoom/.project
+ct.tearoom/.classpath
