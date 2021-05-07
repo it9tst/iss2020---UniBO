@@ -4,23 +4,22 @@ System smartbell
 // Message between smartbell - client
 Request enter_request_client	: enter_request_client (TEMP)
 Reply   enter_reply_from_smartbell	: enter_reply_from_smartbell (ID)
-Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
 
 // Message between smartbell - waiter
 Request smartbell_enter_request	: smartbell_enter_request (ID)		
 Reply   client_accept		: client_accept (TABLE)
-Reply   client_accept_n		: client_accept_n (MAXWAITINGTIME)
 
-Dispatch end : end (PAYLOAD)
+
 
 
 // CONTEXT
-Context ctxtearoom ip [host="localhost" port=9901]
-Context ctxclient ip [host="localhost" port=9902]
-Context ctxsmartbell ip [host="localhost" port=9903]
+Context ctxwaiter ip [host="localhost" port=8010]
+Context ctxsmartbell ip [host="127.0.0.1" port=8020]
+Context ctxclient ip [host="127.0.0.1" port=8030]
 
-ExternalQActor client context ctxtearoom
-ExternalQActor waiter context ctxtearoom
+ExternalQActor waiter context ctxwaiter
+ExternalQActor client context ctxclient
+
 
 QActor smartbell context ctxsmartbell {
 	[#
@@ -40,32 +39,28 @@ QActor smartbell context ctxsmartbell {
 		println("Smartbell wait ring")
 	}
 	Transition t0 	whenRequest enter_request_client -> checkTempClient
-					whenMsg end -> endWork
 								
 	State checkTempClient {
 		// Smartbell check temp client
 		println("Smartbell check temp client")
 		
 		onMsg(enter_request_client : enter_request_client(TEMP)){
-			[# Client_temp = $payloadArg(0) #]
+			println("Richiesta di entrata da CLIENT: $Id_client con TEMP: ${payloadArg(0)}")
+			[# Client_temp = payloadArg(0).toDouble() #]
 		}
 		
-		if [# Client_temp < Temp_max && Client_temp != 0.0 #] {
+		if [# Client_temp < Temp_max #] {
 			println("Puoi entrare")
 			request waiter -m smartbell_enter_request : smartbell_enter_request ($Id_client)
-		} else {
-			println("Non puoi entrare")
-			
-			replyTo enter_request_client with enter_reply_from_smartbell_n : enter_reply_from_smartbell_n (NONE)
 		}
 	}
 	Transition t1 whenReply client_accept -> clientEnter
-				  whenReply client_accept_n -> endWork
 	
 	State clientEnter{
 		replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client)
 		[# Id_client++ #]
 	}
+	Goto endWork
 
 	State endWork {
 		// Smartbell end work

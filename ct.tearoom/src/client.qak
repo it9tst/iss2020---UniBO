@@ -1,81 +1,68 @@
 System client
 
-// MESSAGES
-// Message between client - tearoom
-//Request tearoom_is_open_request	: tearoom_is_open_request (PAYLOAD)
-//Reply   tearoom_is_open_reply		: tearoom_is_open_reply (PAYLOAD)
-Dispatch tearoom_is_open_dispatch	: tearoom_is_open_dispatch(PAYLOAD)
-Dispatch tearoom_is_close_dispatch	: tearoom_is_close_dispatch(PAYLOAD)
-
-
-// Message between client - smartbell
+// MESSAGES// Message between client - smartbell
 Request enter_request_client			: enter_request_client (TEMP)
 Reply   enter_reply_from_smartbell		: enter_reply_from_smartbell (ID)
-Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
 
 // Message between client - waiter
 Dispatch client_ready_to_order : client_ready_to_order (ID)
-Dispatch client_order : client_order (ID, ORD)
 Dispatch client_payment : client_payment (ID)
 
 
 
 // CONTEXT
-Context ctxtearoom ip [host="localhost" port=9901]
-Context ctxclient ip [host="localhost" port=9902]
+Context ctxwaiter ip [host="127.0.0.1" port=8010]
+Context ctxsmartbell ip [host="127.0.0.1" port=8020]
+Context ctxclient ip [host="localhost" port=8030]
 
-ExternalQActor smartbell context ctxtearoom
-ExternalQActor waiter context ctxtearoom
+ExternalQActor waiter context ctxwaiter
+ExternalQActor smartbell context ctxsmartbell
+
 
 
 QActor client context ctxclient {
 	[#
 		var ID = 0
-		var ORD = mutableListOf(caffe, cornetto)
-		var M_tearoom_is_open = True
-		var Client_temp = 0.0
+		var Client_temp = 36.0
 	#]
 	
 	State s0 initial {
 		// Initial state
 		println("Client start")
 	}
-	Goto checkTearoomOpen
+	Goto ringBell
 	
-	State checkTearoomOpen {
-		// Initial state
-		println("Client check if tearoom is open")
+	State ringBell {
+		// Client rings the doorbell
+		println("Tearoom is open")
+		println("Client rings the doorbell")
 		
-		if [# M_tearoom_is_open #] {
-			// Client rings the doorbell
-			println("Tearoom is open")
-			println("Client rings the doorbell")
-			
-			forward client -m tearoom_is_open_dispatch : tearoom_is_open_dispatch (Open)
-			
-		} else {
-			println("Tearoom is close")
-			forward client -m tearoom_is_close_dispatch : tearoom_is_close_dispatch (Close)
-		}
-	}
-	Transition t0 	whenMsg tearoom_is_open_dispatch -> clientValidate
-					whenMsg tearoom_is_close_dispatch -> clientRejected
-	
-	State clientValidate {
-		// Client check enter
-		println("Client check enter")
-		
-		[# Client_temp = 36.0 #]	
 		request smartbell -m enter_request_client : enter_request_client ($Client_temp)
 	}
-	Transition t1	whenReply enter_reply_from_smartbell -> endWork
-					whenReply enter_reply_from_smartbell_n -> endWork // Per statistica inviare un dispatch al manager per ogni cliente rifiutato per la temperatura corporea alta
-					
+	Transition t0 	whenReply enter_reply_from_smartbell -> enter
 	
-	State clientRejected {
-		// Client go away
-		println("Client go away")
-		// stats for tearoom close
+	State enter {
+		onMsg(enter_reply_from_smartbell : enter_reply_from_smartbell(ID)){
+			println("Client ID: ${payloadArg(0)}")
+			[# ID = payloadArg(0).toInt() #]
+		}
+	}
+	Goto order
+	
+	State order {
+		println("Client ID: ${payloadArg(0)} vuole ordinare")
+		forward waiter -m client_ready_to_order : client_ready_to_order(ID)
+	}
+	Goto pay
+	
+	State pay {
+		println("Client ID: ${payloadArg(0)} vuole pagare")
+		forward waiter -m client_payment : client_payment(ID)
+	}
+	Goto exit
+	
+	State exit {
+		println("Client ID: ${payloadArg(0)} esce")
 	}
 	Goto endWork
 

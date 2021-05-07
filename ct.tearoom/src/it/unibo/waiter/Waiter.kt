@@ -17,45 +17,48 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-				var Is_free = true
 				var Table1_free = true
 				var Table1_clean = true
 				var Table2_free = true
 				var Table2_clean = true
-				var Max_waiting_time = 10
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						println("Waiter start")
 					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("rest") { //this:State
-					action { //it:State
-						if(  Is_free  
-						 ){println("PAUSE")
-						}
-						else
-						 {println("MOVE")
-						 }
-					}
 					 transition(edgeName="t00",targetState="accept",cond=whenRequest("smartbell_enter_request"))
 				}	 
 				state("accept") { //this:State
 					action { //it:State
-						 Is_free = false  
-						if(  Table1_free && Table1_clean || Table2_free && Table2_clean  
-						 ){answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
+						if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("Waiter fa sedere il cliente con ID: ${payloadArg(0)}")
 						}
-						else
-						 {answer("smartbell_enter_request", "client_accept_n", "client_accept_n($Max_waiting_time)"   )  
-						 }
+						answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
 					}
-					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
+					 transition(edgeName="t11",targetState="takeOrder",cond=whenDispatch("client_ready_to_order"))
+				}	 
+				state("takeOrder") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID)"), Term.createTerm("client_ready_to_order(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("Waiter prende l'ordinazione dal cliente con ID: ${payloadArg(0)}")
+						}
+					}
+					 transition(edgeName="t22",targetState="collectPayment",cond=whenDispatch("client_payment"))
+				}	 
+				state("collectPayment") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("client_payment(ID)"), Term.createTerm("client_payment(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("Waiter prende i soldi dal cliente con ID: ${payloadArg(0)}")
+						}
+					}
+					 transition( edgeName="goto",targetState="endService", cond=doswitch() )
 				}	 
 				state("endService") { //this:State
 					action { //it:State
-						 Is_free = true 
+						println("Waiter termina il servizio")
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 

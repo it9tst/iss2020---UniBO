@@ -32,32 +32,28 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						println("Smartbell wait ring")
 					}
 					 transition(edgeName="t00",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
-					transition(edgeName="t01",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
 						println("Smartbell check temp client")
 						if( checkMsgContent( Term.createTerm("enter_request_client(TEMP)"), Term.createTerm("enter_request_client(TEMP)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								 Client_temp = $payloadArg(0)  
+								println("Richiesta di entrata da CLIENT: $Id_client con TEMP: ${payloadArg(0)}")
+								 Client_temp = payloadArg(0).toDouble()  
 						}
-						if(  Client_temp < Temp_max && Client_temp != 0.0  
+						if(  Client_temp < Temp_max  
 						 ){println("Puoi entrare")
 						request("smartbell_enter_request", "smartbell_enter_request($Id_client)" ,"waiter" )  
 						}
-						else
-						 {println("Non puoi entrare")
-						 answer("enter_request_client", "enter_reply_from_smartbell_n", "enter_reply_from_smartbell_n(NONE)"   )  
-						 }
 					}
-					 transition(edgeName="t12",targetState="clientEnter",cond=whenReply("client_accept"))
-					transition(edgeName="t13",targetState="endWork",cond=whenReply("client_accept_n"))
+					 transition(edgeName="t11",targetState="clientEnter",cond=whenReply("client_accept"))
 				}	 
 				state("clientEnter") { //this:State
 					action { //it:State
 						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
 						 Id_client++  
 					}
+					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State

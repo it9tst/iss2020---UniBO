@@ -1,76 +1,68 @@
 System waiter
 
 // MESSAGES
-// Message between waiter - barman
-Dispatch takeOrder  			: takeOrder (ID, ORD)
-Dispatch orderReady				: orderReady (PAYLOAD)
-
 // Message between waiter - client
 Dispatch client_ready_to_order 	: client_ready_to_order (ID)
-Dispatch client_order 			: client_order (ID, ORD)
 Dispatch client_payment 		: client_payment (ID)
 
 // Message between waiter - smartbell
 Request smartbell_enter_request	: smartbell_enter_request (ID)		
 Reply   client_accept			: client_accept (TABLE)
-Reply   client_accept_n			: client_accept_n (MAXWAITINGTIME)
 
-// Exit
-Dispatch end					: end (V)
+
+
 
 // CONTEXT
-Context ctxtearoom ip [host="localhost" port=9901]
-Context ctxclient ip [host="localhost" port=9902]
-Context ctxsmartbell ip [host="localhost" port=9903]
-Context ctxbarman ip [host="localhost" port=9904]
-Context ctxwaiter ip [host="localhost" port=9905]
+Context ctxwaiter ip [host="localhost" port=8010]
+Context ctxsmartbell ip [host="127.0.0.1" port=8020]
+Context ctxclient ip [host="127.0.0.1" port=8030]
 
-ExternalQActor client context ctxtearoom
-ExternalQActor smartbell context ctxtearoom
-ExternalQActor barman context ctxtearoom
+ExternalQActor smartbell context ctxsmartbell
+ExternalQActor client context ctxclient
+
 
 QActor waiter context ctxwaiter {
 	
 	[#
-		var Is_free = true
 		var Table1_free = true
 		var Table1_clean = true
 		var Table2_free = true
 		var Table2_clean = true
-		var Max_waiting_time = 10
 	#]
 	
 	State s0 initial {
 		// Initial state
 		println("Waiter start")
 	}
-	Goto rest
-	
-	State rest {
-		if[# Is_free #]{
-			println("PAUSE")
-		}
-		else{
-			println("MOVE")
-		}
-	}
-	Transition t0 whenRequest smartbell_enter_request -> accept 
-	
+	Transition t0 whenRequest smartbell_enter_request -> accept
+
 	State accept {
-		[# Is_free = false #]
-		if [# Table1_free && Table1_clean || Table2_free && Table2_clean #]{
-			replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
-		} else {
-			replyTo smartbell_enter_request with client_accept_n : client_accept_n ($Max_waiting_time)
+		onMsg(smartbell_enter_request : smartbell_enter_request(ID)){
+			println("Waiter fa sedere il cliente con ID: ${payloadArg(0)}")
+		}
+		replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
+	}
+	Transition t1 whenMsg client_ready_to_order -> takeOrder
+
+	State takeOrder{
+		onMsg(client_ready_to_order : client_ready_to_order(ID)){
+			println("Waiter prende l'ordinazione dal cliente con ID: ${payloadArg(0)}")
 		}
 	}
-	Goto endWork
+	Transition t2 whenMsg client_payment -> collectPayment
 	
-	State endService{
-		[# Is_free = true#]
+	State collectPayment {
+		onMsg(client_payment : client_payment(ID)){
+			println("Waiter prende i soldi dal cliente con ID: ${payloadArg(0)}")
+		}
+	}
+	Goto endService
+	
+	State endService {
+		println("Waiter termina il servizio")
 	}
 	Goto endWork
-	
+
 	State endWork {
 		// Waiter end work
 		println("Waiter end work")

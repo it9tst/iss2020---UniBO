@@ -18,44 +18,49 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				var ID = 0
-				var ORD = mutableListOf(caffe, cornetto)
-				var M_tearoom_is_open = True
-				var Client_temp = 0.0
+				var Client_temp = 36.0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						println("Client start")
 					}
-					 transition( edgeName="goto",targetState="checkTearoomOpen", cond=doswitch() )
+					 transition( edgeName="goto",targetState="ringBell", cond=doswitch() )
 				}	 
-				state("checkTearoomOpen") { //this:State
+				state("ringBell") { //this:State
 					action { //it:State
-						println("Client check if tearoom is open")
-						if(  M_tearoom_is_open  
-						 ){println("Tearoom is open")
+						println("Tearoom is open")
 						println("Client rings the doorbell")
-						forward("tearoom_is_open_dispatch", "tearoom_is_open_dispatch(Open)" ,"client" ) 
-						}
-						else
-						 {println("Tearoom is close")
-						 forward("tearoom_is_close_dispatch", "tearoom_is_close_dispatch(Close)" ,"client" ) 
-						 }
-					}
-					 transition(edgeName="t00",targetState="clientValidate",cond=whenDispatch("tearoom_is_open_dispatch"))
-					transition(edgeName="t01",targetState="clientRejected",cond=whenDispatch("tearoom_is_close_dispatch"))
-				}	 
-				state("clientValidate") { //this:State
-					action { //it:State
-						println("Client check enter")
-						 Client_temp = 36.0  
 						request("enter_request_client", "enter_request_client($Client_temp)" ,"smartbell" )  
 					}
-					 transition(edgeName="t12",targetState="endWork",cond=whenReply("enter_reply_from_smartbell"))
-					transition(edgeName="t13",targetState="endWork",cond=whenReply("enter_reply_from_smartbell_n"))
+					 transition(edgeName="t00",targetState="enter",cond=whenReply("enter_reply_from_smartbell"))
 				}	 
-				state("clientRejected") { //this:State
+				state("enter") { //this:State
 					action { //it:State
-						println("Client go away")
+						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell(ID)"), Term.createTerm("enter_reply_from_smartbell(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("Client ID: ${payloadArg(0)}")
+								 ID = payloadArg(0).toInt()  
+						}
+					}
+					 transition( edgeName="goto",targetState="order", cond=doswitch() )
+				}	 
+				state("order") { //this:State
+					action { //it:State
+						println("Client ID: ${payloadArg(0)} vuole ordinare")
+						forward("client_ready_to_order", "client_ready_to_order(ID)" ,"waiter" ) 
+					}
+					 transition( edgeName="goto",targetState="pay", cond=doswitch() )
+				}	 
+				state("pay") { //this:State
+					action { //it:State
+						println("Client ID: ${payloadArg(0)} vuole pagare")
+						forward("client_payment", "client_payment(ID)" ,"waiter" ) 
+					}
+					 transition( edgeName="goto",targetState="exit", cond=doswitch() )
+				}	 
+				state("exit") { //this:State
+					action { //it:State
+						println("Client ID: ${payloadArg(0)} esce")
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
