@@ -23,41 +23,51 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("Smartbell start")
+						println("SMARTBELL | Start")
+						updateResourceRep( "s0 smartbell"  
+						)
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
 				state("waitRing") { //this:State
 					action { //it:State
-						println("Smartbell wait ring")
+						println("SMARTBELL | Wait ring")
+						updateResourceRep( "waitRing"  
+						)
 					}
-					 transition(edgeName="t00",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
+					 transition(edgeName="t03",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
-						println("Smartbell check temp client")
+						println("SMARTBELL | Check temp client")
+						updateResourceRep( "checkTempClient"  
+						)
 						if( checkMsgContent( Term.createTerm("enter_request_client(TEMP)"), Term.createTerm("enter_request_client(TEMP)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("Richiesta di entrata da CLIENT: $Id_client con TEMP: ${payloadArg(0)}")
+								println("SMARTBELL | Entry request from CLIENT with ID: $Id_client and TEMP: ${payloadArg(0)}")
 								 Client_temp = payloadArg(0).toDouble()  
 						}
 						if(  Client_temp < Temp_max  
-						 ){println("Puoi entrare")
+						 ){println("SMARTBELL | The client can enter")
 						request("smartbell_enter_request", "smartbell_enter_request($Id_client)" ,"waiter" )  
 						}
+						 readLine()  
 					}
-					 transition(edgeName="t11",targetState="clientEnter",cond=whenReply("client_accept"))
+					 transition(edgeName="t14",targetState="clientEnter",cond=whenReply("client_accept"))
 				}	 
 				state("clientEnter") { //this:State
 					action { //it:State
+						updateResourceRep( "clientEnter"  
+						)
 						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
 						 Id_client++  
 					}
-					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
-						println("Smartbell end work")
+						println("SMARTBELL | End work")
+						updateResourceRep( "endWork"  
+						)
 						terminate(0)
 					}
 				}	 

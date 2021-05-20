@@ -17,7 +17,6 @@ import it.unibo.kactor.ApplMessageType
 class Test01 {
 	var waiter          : ActorBasic? = null    // 1
 	var smartbell       : ActorBasic? = null 	// 2
-	var client          : ActorBasic? = null    // 3
 	val initDelayTime     = 1000L
 	
 	@kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -25,41 +24,30 @@ class Test01 {
 	@Before
 	fun systemSetUp() {
    		kotlin.concurrent.thread(start = true) {
-			it.unibo.ctxwaiter.main()
-			it.unibo.ctxsmartbell.main()
-			it.unibo.ctxclient.main()
+			it.unibo.ctxtearoom.main()
 		}
 	}
-
+	
 	@After
 	fun terminate() {
-		println("%%%  TestState terminate ")
+		println("TEST | %%%  TestState terminate")
 	}
 	
 	fun checkState(state: String, actor: Int){
 		when(actor)	{
 			1 -> {
-				if( waiter != null ){
-					println(" --- stato letto --- ${waiter!!.geResourceRep()}")
+				if(waiter != null){
+					println("TEST |  --- stato letto Waiter  --- ${waiter!!.geResourceRep()}")
 					assertTrue( waiter!!.geResourceRep() == "$state")
 				}
 			}
 			
 			2 -> {
-				if( smartbell != null ){
-					println(" --- stato letto --- ${smartbell!!.geResourceRep()}")
+				if(smartbell != null){
+					println("TEST |  --- stato letto Smartbell --- ${smartbell!!.geResourceRep()}")
 					assertTrue( smartbell!!.geResourceRep() == "$state")
 				}
 			}
-			
-			3 -> {
-				if( client != null ){
-					println(" --- stato letto --- ${client!!.geResourceRep()}")
-					assertTrue( client!!.geResourceRep() == "$state")
-				}
-			}
-						
-			
 		}
 		
 	}
@@ -67,38 +55,42 @@ class Test01 {
 	@Test
 	fun testStateWaiter(){
 	 	runBlocking{
- 			while( waiter == null || smartbell == null || client == null ){
-				println("waits for waiter ... ")
-				delay(initDelayTime)  //time for robot to start
+ 			while(waiter == null || smartbell == null){
+				println("waits for waiter...")
+				delay(initDelayTime)  // time for robot to start
 				waiter = it.unibo.kactor.sysUtil.getActor("waiter")
 				smartbell = it.unibo.kactor.sysUtil.getActor("smartbell")
-				client = it.unibo.kactor.sysUtil.getActor("client")
  			}
 			
-			MsgUtil.sendMsg(MsgUtil.buildRequest("client","enter_request_client","enter_request_client","smartbell"),smartbell!!)
- 			delay(10000)
-			checkState("ringBell", 3)
+			
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client","smartbell"),smartbell!!)
+			delay(15000)
 			checkState("checkTempClient", 2)
-			println("clicca invio per continuare")
-			
+			println("TEST | checkTempClient checked")
+			println("TEST | click enter to continue")
 			 
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("smartbell","smartbell_enter_request","smartbell_enter_request","waiter"),waiter!!)
-			delay(25000)
-			checkState("clientEnter", 2)
-			checkState("accept", 1)
-			println("clicca invio per continuare")
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","smartbell_enter_request","smartbell_enter_request","waiter"),waiter!!)
+			delay(15000)
+			checkState("convoyTable", 1)
+			println("TEST | convoyTable checked")
+			println("TEST | click enter to continue")
+			
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waiter","client_ready_to_order","client_ready_to_order","waiter"),waiter!!)
+			delay(10000)
+			checkState("takeOrder", 1)
+			println("TEST | takeOrder checked")
+			println("TEST | click enter to continue")
+			 
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waiter","client_payment","client_payment","waiter"),waiter!!)
+			delay(10000)
+			checkState("collectPayment", 1)
+			println("TEST | collectPayment checked")
+			println("TEST | click enter to continue")
 			
 			
-			
-			
-			
-			
-			
-			
-			
-			
+			if( waiter != null ) waiter!!.waitTermination()
   		}
-	 	println("testWaiter BYE  ")  
+	 	println("TEST | testWaiter BYE  ")  
 	}
 	
 }

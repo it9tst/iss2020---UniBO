@@ -24,47 +24,70 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("Waiter start")
+						println("WAITER | Start")
+						updateResourceRep( "s0 waiter"  
+						)
 					}
 					 transition(edgeName="t00",targetState="accept",cond=whenRequest("smartbell_enter_request"))
 				}	 
 				state("accept") { //this:State
 					action { //it:State
+						updateResourceRep( "accept"  
+						)
 						if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("Waiter fa sedere il cliente con ID: ${payloadArg(0)}")
+								println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 						}
 						answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
+					}
+					 transition( edgeName="goto",targetState="convoyTable", cond=doswitch() )
+				}	 
+				state("convoyTable") { //this:State
+					action { //it:State
+						updateResourceRep( "convoyTable"  
+						)
+						println("WAITER | Convoy the client to table")
+						 readLine()  
 					}
 					 transition(edgeName="t11",targetState="takeOrder",cond=whenDispatch("client_ready_to_order"))
 				}	 
 				state("takeOrder") { //this:State
 					action { //it:State
+						updateResourceRep( "takeOrder"  
+						)
 						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID)"), Term.createTerm("client_ready_to_order(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("Waiter prende l'ordinazione dal cliente con ID: ${payloadArg(0)}")
+								println("WAITER | take the order from client with ID: ${payloadArg(0)}")
 						}
+						 readLine()  
 					}
 					 transition(edgeName="t22",targetState="collectPayment",cond=whenDispatch("client_payment"))
 				}	 
 				state("collectPayment") { //this:State
 					action { //it:State
+						updateResourceRep( "collectPayment"  
+						)
 						if( checkMsgContent( Term.createTerm("client_payment(ID)"), Term.createTerm("client_payment(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("Waiter prende i soldi dal cliente con ID: ${payloadArg(0)}")
+								println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
 						}
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="endService", cond=doswitch() )
 				}	 
 				state("endService") { //this:State
 					action { //it:State
-						println("Waiter termina il servizio")
+						println("WAITER | End service")
+						updateResourceRep( "endService"  
+						)
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
-						println("Waiter end work")
+						println("WAITER | End work")
+						updateResourceRep( "endWork"  
+						)
 						terminate(0)
 					}
 				}	 

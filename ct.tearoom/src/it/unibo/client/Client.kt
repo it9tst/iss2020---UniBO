@@ -22,14 +22,17 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("Client start")
+						println("CLIENT | Start")
+						updateResourceRep( "START"  
+						)
 					}
 					 transition( edgeName="goto",targetState="ringBell", cond=doswitch() )
 				}	 
 				state("ringBell") { //this:State
 					action { //it:State
-						println("Tearoom is open")
-						println("Client rings the doorbell")
+						println("CLIENT | Rings the doorbell")
+						updateResourceRep( "ringBell"  
+						)
 						request("enter_request_client", "enter_request_client($Client_temp)" ,"smartbell" )  
 					}
 					 transition(edgeName="t00",targetState="enter",cond=whenReply("enter_reply_from_smartbell"))
@@ -38,7 +41,9 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell(ID)"), Term.createTerm("enter_reply_from_smartbell(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("Client ID: ${payloadArg(0)}")
+								println("CLIENT | ID: ${payloadArg(0)} | Enter")
+								updateResourceRep( "enter"  
+								)
 								 ID = payloadArg(0).toInt()  
 						}
 					}
@@ -46,27 +51,35 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("order") { //this:State
 					action { //it:State
-						println("Client ID: ${payloadArg(0)} vuole ordinare")
-						forward("client_ready_to_order", "client_ready_to_order(ID)" ,"waiter" ) 
+						println("CLIENT | ID: ${payloadArg(0)} | Would like to order")
+						updateResourceRep( "order"  
+						)
+						forward("client_ready_to_order", "client_ready_to_order($ID)" ,"waiter" ) 
 					}
 					 transition( edgeName="goto",targetState="pay", cond=doswitch() )
 				}	 
 				state("pay") { //this:State
 					action { //it:State
-						println("Client ID: ${payloadArg(0)} vuole pagare")
-						forward("client_payment", "client_payment(ID)" ,"waiter" ) 
+						println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
+						updateResourceRep( "pay"  
+						)
+						forward("client_payment", "client_payment($ID)" ,"waiter" ) 
 					}
 					 transition( edgeName="goto",targetState="exit", cond=doswitch() )
 				}	 
 				state("exit") { //this:State
 					action { //it:State
-						println("Client ID: ${payloadArg(0)} esce")
+						println("CLIENT || ID: ${payloadArg(0)} | Exit")
+						updateResourceRep( "exit"  
+						)
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
-						println("Client end work")
+						println("CLIENT | ID: ${payloadArg(0)} | End work")
+						updateResourceRep( "endWork"  
+						)
 						terminate(0)
 					}
 				}	 

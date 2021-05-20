@@ -1,0 +1,145 @@
+System -msglog tearoom
+
+// MESSAGES SMARTBELL
+// Message between smartbell - client
+Request enter_request_client	: enter_request_client (TEMP)
+Reply   enter_reply_from_smartbell	: enter_reply_from_smartbell (ID)
+
+// Message between smartbell - waiter
+Request smartbell_enter_request	: smartbell_enter_request (ID)		
+Reply   client_accept		: client_accept (TABLE)
+
+// MESSAGES WAITER
+// Message between waiter - client
+Dispatch client_ready_to_order 	: client_ready_to_order (ID)
+Dispatch client_payment 		: client_payment (ID)
+
+
+Context ctxtearoom ip [host="localhost" port=50810]
+
+
+QActor waiter context ctxtearoom {
+	
+	[#
+		var Table1_free = true
+		var Table1_clean = true
+		var Table2_free = true
+		var Table2_clean = true
+	#]
+	
+	State s0 initial {
+		// Initial state
+		println("WAITER | Start")
+		updateResource [# "s0 waiter" #]
+	}
+	Transition t0 whenRequest smartbell_enter_request -> accept
+
+	State accept {
+		// Waiter accept the client
+		updateResource [# "accept" #]
+		onMsg(smartbell_enter_request : smartbell_enter_request(ID)){
+			println("WAITER | Accept the client with ID: ${payloadArg(0)}")
+		}
+		replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
+	}
+	Goto convoyTable
+	
+	State convoyTable {
+		// Waiter convoy the client to table
+		updateResource [# "convoyTable" #]
+		println("WAITER | Convoy the client to table")
+		[# readLine() #]
+	}
+	Transition t1 whenMsg client_ready_to_order -> takeOrder
+
+	State takeOrder{
+		// Waiter take the order
+		updateResource [# "takeOrder" #]
+		onMsg(client_ready_to_order : client_ready_to_order(ID)){
+			println("WAITER | take the order from client with ID: ${payloadArg(0)}")
+		}
+		[# readLine() #]
+	}
+	Transition t2 whenMsg client_payment -> collectPayment
+	
+	State collectPayment {
+		// Waiter collect the payment
+		updateResource [# "collectPayment" #]
+		onMsg(client_payment : client_payment(ID)){
+			println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
+		}
+		[# readLine() #]
+		
+	}
+	Goto endService
+	
+	State endService {
+		// Waiter end service
+		println("WAITER | End service")
+		updateResource [# "endService" #]
+	}
+	Goto endWork
+
+	State endWork {
+		// Waiter end work
+		println("WAITER | End work")
+		updateResource [# "endWork" #]
+		terminate 0
+	}
+}
+
+QActor smartbell context ctxtearoom {
+	[#
+		val Temp_max = 37.5
+		var Client_temp = 0.0
+		var Id_client = 0
+	#]
+	
+	State s0 initial {
+		// Smartbell initial state
+		println("SMARTBELL | Start")
+		updateResource [# "s0 smartbell" #]
+	}
+	Goto waitRing
+	
+	State waitRing {
+		// Smartbell wait ring
+		println("SMARTBELL | Wait ring")
+		updateResource [# "waitRing" #]
+	}
+	Transition t0 	whenRequest enter_request_client -> checkTempClient
+								
+	State checkTempClient {
+		// Smartbell check temp client
+		println("SMARTBELL | Check temp client")
+		updateResource [# "checkTempClient" #]
+		
+		
+		onMsg(enter_request_client : enter_request_client(TEMP)){
+			println("SMARTBELL | Entry request from CLIENT with ID: $Id_client and TEMP: ${payloadArg(0)}")
+			[# Client_temp = payloadArg(0).toDouble() #]
+		}
+		
+		if [# Client_temp < Temp_max #] {
+			println("SMARTBELL | The client can enter")
+			request waiter -m smartbell_enter_request : smartbell_enter_request ($Id_client)
+		}
+		[# readLine() #]
+	}
+	Transition t1 whenReply client_accept -> clientEnter
+	
+	State clientEnter{
+		// Smartbell reply to waiter
+		updateResource [# "clientEnter" #]
+		replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client)
+		[# Id_client++ #]
+	}
+	//Goto endWork
+
+	State endWork {
+		// Smartbell end work
+		println("SMARTBELL | End work")
+		updateResource [# "endWork" #]
+		terminate 0
+	}
+}
