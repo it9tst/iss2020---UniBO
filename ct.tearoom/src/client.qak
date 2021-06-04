@@ -4,9 +4,12 @@ System -msglog client
 // Message between client - smartbell
 Request enter_request_client			: enter_request_client (TEMP)
 Reply   enter_reply_from_smartbell		: enter_reply_from_smartbell (ID)
+Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
+Reply 	enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time (ID, MAXSTAYTIME)
+
 
 // Message between client - waiter
-Dispatch client_ready_to_order : client_ready_to_order (ID)
+Dispatch client_ready_to_order : client_ready_to_order (ID, ORD)
 Dispatch client_payment : client_payment (ID)
 
 
@@ -22,8 +25,10 @@ ExternalQActor smartbell context ctxtearoom
 
 QActor client context ctxclient {
 	[#
-		var ID = 0
+		var Client_ID = 0
 		var Client_temp = 36.0
+		var Client_MaxWaitTime = 5000
+		var Client_Ord: String = "the"
 	#]
 	
 	State s0 initial {
@@ -41,22 +46,50 @@ QActor client context ctxclient {
 		request smartbell -m enter_request_client : enter_request_client ($Client_temp)
 	}
 	Transition t0 	whenReply enter_reply_from_smartbell -> enter
+					whenReply enter_reply_from_smartbell_n -> goAway
+					whenReply enter_reply_from_smartbell_with_time -> enterWithTime
+	
+	State enterWithTime {
+		// Client wait
+		updateResource [# "enterWithTime" #]
+		onMsg(enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time(ID, MAXSTAYTIME)){
+			if [# Client_MaxWaitTime < payloadArg(0).toInt() #] {
+				println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)}")
+			} else {
+				println("CLIENT | ID: ${payloadArg(0)} | Not Wait")
+			}
+		}
+	}
+	Goto endWork
+	
+	State goAway {
+		// Client go away because temp is KO
+		updateResource [# "goAway" #]
+		onMsg(enter_reply_from_smartbell_n : enter_reply_from_smartbell_n(ID)){
+			println("CLIENT | ID: ${payloadArg(0)} | Go away because temp is KO: $Client_temp")
+		}
+	}
+	Goto endWork
 	
 	State enter {
 		// Client enter
+		updateResource [# "enter" #]
 		onMsg(enter_reply_from_smartbell : enter_reply_from_smartbell(ID)){
 			println("CLIENT | ID: ${payloadArg(0)} | Enter")
-			updateResource [# "enter" #]
-			[# ID = payloadArg(0).toInt() #]
+			[# Client_ID = payloadArg(0).toInt() #]
 		}
+		println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
+//		[# readLine() #]
 	}
 	Goto order
 	
 	State order {
 		// Client would like to order
-		println("CLIENT | ID: ${payloadArg(0)} | Would like to order")
+		println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
 		updateResource [# "order" #]
-		forward waiter -m client_ready_to_order : client_ready_to_order($ID)
+		forward waiter -m client_ready_to_order : client_ready_to_order($Client_ID, $Client_Ord)
+		println("CLIENT | Premi invio per continuare e farlo pagare")
+//		[# readLine() #]
 	}
 	Goto pay
 	
@@ -64,7 +97,7 @@ QActor client context ctxclient {
 		// Client would like to pay
 		println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
 		updateResource [# "pay" #]
-		forward waiter -m client_payment : client_payment($ID)
+		forward waiter -m client_payment : client_payment($Client_ID)
 	}
 	Goto exit
 	
@@ -82,12 +115,3 @@ QActor client context ctxclient {
 		terminate 0
 	}
 }
-
-
-
-
-
-
-
-
-

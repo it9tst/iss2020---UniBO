@@ -2,17 +2,30 @@ System -msglog tearoom
 
 // MESSAGES SMARTBELL
 // Message between smartbell - client
-Request enter_request_client	: enter_request_client (TEMP)
-Reply   enter_reply_from_smartbell	: enter_reply_from_smartbell (ID)
+Request  enter_request_client					: enter_request_client (TEMP)
+Reply    enter_reply_from_smartbell				: enter_reply_from_smartbell (ID)
+Reply    enter_reply_from_smartbell_n			: enter_reply_from_smartbell_n (PAYLOAD)
+Reply 	 enter_reply_from_smartbell_with_time 	: enter_reply_from_smartbell_with_time (ID, MAXSTAYTIME)
+Dispatch go_to_wait_ring 						: go_to_wait_ring (PAYLOAD)
 
 // Message between smartbell - waiter
 Request smartbell_enter_request	: smartbell_enter_request (ID)		
-Reply   client_accept		: client_accept (TABLE)
+Reply   client_accept			: client_accept (TABLE)
+Reply	client_accept_with_time : client_accept_with_time (MAXSTAYTIME)
+
+// MESSAGES BARMAN
+// Message between barman - waiter
+Dispatch send_order 			: send_order (ID, ORD)
+Dispatch barman_complete_order 	: barman_complete_order (ID, ORD)
 
 // MESSAGES WAITER
 // Message between waiter - client
-Dispatch client_ready_to_order 	: client_ready_to_order (ID)
+Dispatch inform_maxwaittime		: inform_maxwaittime (PAYLOAD)
+Dispatch convoy_to_table		: convoy_to_table (PAYLOAD)
+Dispatch client_ready_to_order 	: client_ready_to_order (ID, ORD)
 Dispatch client_payment 		: client_payment (ID)
+
+Dispatch end : end (PAYLOAD)
 
 
 Context ctxtearoom ip [host="localhost" port=50810]
@@ -21,10 +34,11 @@ Context ctxtearoom ip [host="localhost" port=50810]
 QActor waiter context ctxtearoom {
 	
 	[#
-		var Table1_free = true
-		var Table1_clean = true
-		var Table2_free = true
-		var Table2_clean = true
+		var MaxStayTime = 3000
+		var Table1_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+		var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+		var ID_client = 0
+		var ORD_client: String = ""
 	#]
 	
 	State s0 initial {
@@ -32,53 +46,153 @@ QActor waiter context ctxtearoom {
 		println("WAITER | Start")
 		updateResource [# "s0 waiter" #]
 	}
-	Transition t0 whenRequest smartbell_enter_request -> accept
+	Goto rest
+	
+	State rest {
+		// Waiter is at home
+		println("WAITER | Rest")
+		updateResource [# "rest" #]
+	}
+	Transition t0 	whenRequest smartbell_enter_request -> accept
+					whenMsg client_ready_to_order -> takeOrder
+					whenMsg barman_complete_order -> serve
+					whenMsg client_payment -> collectPayment
+					whenMsg end -> endWork
 
 	State accept {
 		// Waiter accept the client
 		updateResource [# "accept" #]
-		onMsg(smartbell_enter_request : smartbell_enter_request(ID)){
-			println("WAITER | Accept the client with ID: ${payloadArg(0)}")
+		
+		if [# Table1_states.get(3) == true #]{
+			onMsg(smartbell_enter_request : smartbell_enter_request (ID)){
+				println("WAITER | Accept the client with ID: ${payloadArg(0)}")
+			}
+			replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
+			forward waiter -m convoy_to_table : convoy_to_table (PAYLOAD)
+		} else {
+			if [# Table2_states.get(3) == true #]{
+				onMsg(smartbell_enter_request : smartbell_enter_request (ID)){
+					println("WAITER | Accept the client with ID: ${payloadArg(0)}")
+				}
+			  	replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
+			  	forward waiter -m convoy_to_table : convoy_to_table (PAYLOAD)
+			} else {
+				forward waiter -m inform_maxwaittime : inform_maxwaittime (PAYLOAD)
+			}
 		}
-		replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
+		[# readLine() #]
 	}
-	Goto convoyTable
+	Transition t1	whenMsg inform_maxwaittime -> inform
+					whenMsg convoy_to_table -> convoyTable
+	
+	State inform {
+		// Waiter inform the client about the maximum waiting time if there is no tableclean
+		updateResource [# "inform" #]
+		println("WAITER | Inform the client about the maximum waiting time: $MaxStayTime")
+		onMsg(inform_maxwaittime : inform_maxwaittime (PAYLOAD)){
+			replyTo smartbell_enter_request with client_accept_with_time : client_accept_with_time ($MaxStayTime)
+		}
+		[# readLine() #]
+	}
+	Goto rest
 	
 	State convoyTable {
 		// Waiter convoy the client to table
 		updateResource [# "convoyTable" #]
 		println("WAITER | Convoy the client to table")
-		[# readLine() #]
+		[#  
+			Table1_states.set(0, false)
+			Table1_states.set(1, false)
+			Table1_states.set(2, false)
+			Table1_states.set(3, false)
+		#]
+//		[# readLine() #]
 	}
-	Transition t1 whenMsg client_ready_to_order -> takeOrder
+	Goto rest
 
 	State takeOrder{
 		// Waiter take the order
 		updateResource [# "takeOrder" #]
-		onMsg(client_ready_to_order : client_ready_to_order(ID)){
-			println("WAITER | take the order from client with ID: ${payloadArg(0)}")
+		onMsg(client_ready_to_order : client_ready_to_order (ID, ORD)){
+			println("WAITER | take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			[#  
+				ID_client = payloadArg(0).toInt()
+				ORD_client = payloadArg(1).toString()
+			#]
 		}
-		[# readLine() #]
+//		[# readLine() #]
 	}
-	Transition t2 whenMsg client_payment -> collectPayment
+	Goto sendOrderToBarman
+	
+	State sendOrderToBarman{
+		// Waiter send the order to Barman
+		updateResource [# "sendOrderToBarman" #]
+		println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+		forward barman -m send_order : send_order ($ID_client, $ORD_client)
+//		[# readLine() #]
+	}
+	Goto rest
+	
+	State serve{
+		// Barman complete the order and send it to Waiter that serve to the Client
+		updateResource [# "serve" #]
+		onMsg(barman_complete_order : barman_complete_order (ID, ORD)){
+			println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+		}
+//		[# readLine() #]
+	}
+	Goto rest
 	
 	State collectPayment {
 		// Waiter collect the payment
 		updateResource [# "collectPayment" #]
-		onMsg(client_payment : client_payment(ID)){
+		onMsg(client_payment : client_payment (ID)){
 			println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
 		}
-		[# readLine() #]
+//		[# readLine() #]
 		
 	}
-	Goto endService
+	Goto convoyExit
 	
-	State endService {
-		// Waiter end service
-		println("WAITER | End service")
-		updateResource [# "endService" #]
+	State convoyExit {
+		// Waiter convoy the Client to the exitdoor
+		println("WAITER | Convoy the Client to the exitdoor")
+		updateResource [# "convoyExit" #]
+		[#
+			Table1_states.set(0, true) 
+		#]
 	}
-	Goto endWork
+	Goto tableCleared
+	
+	State tableCleared {
+		// Waiter tableCleared
+		println("WAITER | tableCleared")
+		updateResource [# "tableCleared" #]
+		[#
+			Table1_states.set(1, true)
+		#]
+	}
+	Goto tableCleaned
+	
+	State tableCleaned {
+		// Waiter tableCleaned
+		println("WAITER | tableCleaned")
+		updateResource [# "tableCleaned" #]
+		[# 
+			Table1_states.set(2, true) 
+		#]
+	}
+	Goto tableSanitized
+	
+	State tableSanitized {
+		// Waiter tableSanitized
+		println("WAITER | tableSanitized")
+		updateResource [# "tableSanitized" #]
+		[#
+			Table1_states.set(3, true)
+		#]
+	}
+	Goto rest
 
 	State endWork {
 		// Waiter end work
@@ -91,7 +205,7 @@ QActor waiter context ctxtearoom {
 QActor smartbell context ctxtearoom {
 	[#
 		val Temp_max = 37.5
-		var Client_temp = 0.0
+		var Client_temp = 36.0
 		var Id_client = 0
 	#]
 	
@@ -108,37 +222,93 @@ QActor smartbell context ctxtearoom {
 		updateResource [# "waitRing" #]
 	}
 	Transition t0 	whenRequest enter_request_client -> checkTempClient
-								
+					whenMsg end -> endWork
+						
 	State checkTempClient {
 		// Smartbell check temp client
 		println("SMARTBELL | Check temp client")
 		updateResource [# "checkTempClient" #]
-		
-		
-		onMsg(enter_request_client : enter_request_client(TEMP)){
+
+		onMsg(enter_request_client : enter_request_client (TEMP)){
 			println("SMARTBELL | Entry request from CLIENT with ID: $Id_client and TEMP: ${payloadArg(0)}")
 			[# Client_temp = payloadArg(0).toDouble() #]
 		}
 		
 		if [# Client_temp < Temp_max #] {
-			println("SMARTBELL | The client can enter")
+			println("SMARTBELL | The client can enter - Temp Ok")
 			request waiter -m smartbell_enter_request : smartbell_enter_request ($Id_client)
+		} else {
+			println("SMARTBELL | The client can't enter - Temp Ko")
+			replyTo enter_request_client with enter_reply_from_smartbell_n : enter_reply_from_smartbell_n ($Id_client)
+			forward smartbell -m go_to_wait_ring : go_to_wait_ring (PAYLOAD)
 		}
 		[# readLine() #]
 	}
-	Transition t1 whenReply client_accept -> clientEnter
-	
+	Transition t1	whenReply client_accept -> clientEnter
+					whenReply client_accept_with_time -> clientEnterWithTime
+					whenMsg go_to_wait_ring -> waitRing
+
+	State clientEnterWithTime{
+		// Smartbell reply to client the max wait time
+		println("SMARTBELL | The client must wait time")
+		updateResource [# "clientEnterWithTime" #]
+		onMsg(client_accept_with_time : client_accept_with_time (MAXSTAYTIME)){
+			replyTo enter_request_client with enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time ($Id_client, $payloadArg(0))
+		}
+		[# Id_client++ #]
+		[# readLine() #]
+	}
+	Goto waitRing
+
 	State clientEnter{
-		// Smartbell reply to waiter
+		// Smartbell reply to client
+		println("SMARTBELL | The client can enter")
 		updateResource [# "clientEnter" #]
 		replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client)
 		[# Id_client++ #]
 	}
-	//Goto endWork
+	Goto waitRing
 
 	State endWork {
 		// Smartbell end work
 		println("SMARTBELL | End work")
+		updateResource [# "endWork" #]
+		terminate 0
+	}
+}
+
+QActor barman context ctxtearoom {
+	
+	State s0 initial {
+		// Barman initial state
+		println("BARMAN | Start")
+		updateResource [# "s0 barman" #]
+	}
+	Goto waitOrder
+	
+	State waitOrder {
+		// Barman wait order
+		println("BARMAN | Wait order")
+		updateResource [# "waitOrder" #]
+	}
+	Transition t0	whenMsg send_order -> prepareOrder
+					whenMsg end -> endWork
+	
+	State prepareOrder {
+		// Barman prepare order
+		updateResource [# "prepareOrder" #]
+		onMsg(send_order : send_order (ID, ORD)){
+			println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			delay 10000
+			println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			forward waiter -m barman_complete_order : barman_complete_order($payloadArg(0), $payloadArg(1))
+		}
+	}
+	Goto waitOrder
+	
+	State endWork {
+		// Barman end work
+		println("BARMAN | End work")
 		updateResource [# "endWork" #]
 		terminate 0
 	}

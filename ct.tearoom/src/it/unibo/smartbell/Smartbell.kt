@@ -18,7 +18,7 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				val Temp_max = 37.5
-				var Client_temp = 0.0
+				var Client_temp = 36.0
 				var Id_client = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -35,7 +35,8 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						updateResourceRep( "waitRing"  
 						)
 					}
-					 transition(edgeName="t03",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
+					 transition(edgeName="t07",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
+					transition(edgeName="t08",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
@@ -48,20 +49,43 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 								 Client_temp = payloadArg(0).toDouble()  
 						}
 						if(  Client_temp < Temp_max  
-						 ){println("SMARTBELL | The client can enter")
+						 ){println("SMARTBELL | The client can enter - Temp Ok")
 						request("smartbell_enter_request", "smartbell_enter_request($Id_client)" ,"waiter" )  
 						}
+						else
+						 {println("SMARTBELL | The client can't enter - Temp Ko")
+						 answer("enter_request_client", "enter_reply_from_smartbell_n", "enter_reply_from_smartbell_n($Id_client)"   )  
+						 forward("go_to_wait_ring", "go_to_wait_ring(PAYLOAD)" ,"smartbell" ) 
+						 }
 						 readLine()  
 					}
-					 transition(edgeName="t14",targetState="clientEnter",cond=whenReply("client_accept"))
+					 transition(edgeName="t19",targetState="clientEnter",cond=whenReply("client_accept"))
+					transition(edgeName="t110",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
+					transition(edgeName="t111",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
+				}	 
+				state("clientEnterWithTime") { //this:State
+					action { //it:State
+						println("SMARTBELL | The client must wait time")
+						updateResourceRep( "clientEnterWithTime"  
+						)
+						if( checkMsgContent( Term.createTerm("client_accept_with_time(MAXSTAYTIME)"), Term.createTerm("client_accept_with_time(MAXSTAYTIME)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								answer("enter_request_client", "enter_reply_from_smartbell_with_time", "enter_reply_from_smartbell_with_time($Id_client,${payloadArg(0)})"   )  
+						}
+						 Id_client++  
+						 readLine()  
+					}
+					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
 				state("clientEnter") { //this:State
 					action { //it:State
+						println("SMARTBELL | The client can enter")
 						updateResourceRep( "clientEnter"  
 						)
 						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
 						 Id_client++  
 					}
+					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State

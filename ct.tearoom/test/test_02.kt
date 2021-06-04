@@ -14,7 +14,7 @@ import it.unibo.kactor.MqttUtils
 import it.unibo.kactor.ApplMessage
 import it.unibo.kactor.ApplMessageType
 
-class Test01 {
+class Test02 {
 	var waiter          : ActorBasic? = null    // 1
 	var smartbell       : ActorBasic? = null 	// 2
 	var barman       : ActorBasic? = null 		// 3
@@ -77,6 +77,28 @@ class Test01 {
 			checkState("checkTempClient", 2)
 			println("TEST | checkTempClient checked")
 			println("TEST | click enter to continue")
+			
+			MsgUtil.sendMsg(MsgUtil.buildRequest("waiter","smartbell_enter_request","smartbell_enter_request","waiter"),waiter!!)
+			delay(5000)
+			checkState("accept", 1)
+			println("TEST | accept checked")
+			println("TEST | click enter to continue")
+			
+			MsgUtil.sendMsg(MsgUtil.buildRequest("waiter","inform_maxwaittime","inform_maxwaittime","waiter"),waiter!!)
+			delay(5000)
+			checkState("inform", 1)
+			println("TEST | inform checked")
+			println("TEST | click enter to continue")
+					
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","client_accept_with_time","client_accept_with_time","smartbell"),waiter!!)
+			delay(5000)
+			checkState("clientEnterWithTime", 2)
+			println("TEST | clientEnterWithTime checked")
+			println("TEST | click enter to continue")
+			
+			
+			
+			
 			
 			delay(5000)
 			MsgUtil.sendMsg("end","end","end",waiter!!)

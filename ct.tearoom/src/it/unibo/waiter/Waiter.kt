@@ -17,10 +17,11 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-				var Table1_free = true
-				var Table1_clean = true
-				var Table2_free = true
-				var Table2_clean = true
+				var MaxStayTime = 3000
+				var Table1_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+				var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+				var ID_client = 0
+				var ORD_client: String = ""
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -28,40 +29,109 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						updateResourceRep( "s0 waiter"  
 						)
 					}
+					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
+				}	 
+				state("rest") { //this:State
+					action { //it:State
+						println("WAITER | Rest")
+						updateResourceRep( "rest"  
+						)
+					}
 					 transition(edgeName="t00",targetState="accept",cond=whenRequest("smartbell_enter_request"))
+					transition(edgeName="t01",targetState="takeOrder",cond=whenDispatch("client_ready_to_order"))
+					transition(edgeName="t02",targetState="serve",cond=whenDispatch("barman_complete_order"))
+					transition(edgeName="t03",targetState="collectPayment",cond=whenDispatch("client_payment"))
+					transition(edgeName="t04",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("accept") { //this:State
 					action { //it:State
 						updateResourceRep( "accept"  
 						)
-						if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
+						if(  Table1_states.get(3) == true  
+						 ){if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 						}
 						answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
+						forward("convoy_to_table", "convoy_to_table(PAYLOAD)" ,"waiter" ) 
+						}
+						else
+						 {if(  Table2_states.get(3) == true  
+						  ){if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
+						                         currentMsg.msgContent()) ) { //set msgArgList
+						 		println("WAITER | Accept the client with ID: ${payloadArg(0)}")
+						 }
+						 answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
+						 forward("convoy_to_table", "convoy_to_table(PAYLOAD)" ,"waiter" ) 
+						 }
+						 else
+						  {forward("inform_maxwaittime", "inform_maxwaittime(PAYLOAD)" ,"waiter" ) 
+						  }
+						 }
+						 readLine()  
 					}
-					 transition( edgeName="goto",targetState="convoyTable", cond=doswitch() )
+					 transition(edgeName="t15",targetState="inform",cond=whenDispatch("inform_maxwaittime"))
+					transition(edgeName="t16",targetState="convoyTable",cond=whenDispatch("convoy_to_table"))
+				}	 
+				state("inform") { //this:State
+					action { //it:State
+						updateResourceRep( "inform"  
+						)
+						println("WAITER | Inform the client about the maximum waiting time: $MaxStayTime")
+						if( checkMsgContent( Term.createTerm("inform_maxwaittime(PAYLOAD)"), Term.createTerm("inform_maxwaittime(PAYLOAD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								answer("smartbell_enter_request", "client_accept_with_time", "client_accept_with_time($MaxStayTime)"   )  
+						}
+						 readLine()  
+					}
+					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
 				state("convoyTable") { //this:State
 					action { //it:State
 						updateResourceRep( "convoyTable"  
 						)
 						println("WAITER | Convoy the client to table")
-						 readLine()  
+						  
+									Table1_states.set(0, false)
+									Table1_states.set(1, false)
+									Table1_states.set(2, false)
+									Table1_states.set(3, false)
 					}
-					 transition(edgeName="t11",targetState="takeOrder",cond=whenDispatch("client_ready_to_order"))
+					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
 				state("takeOrder") { //this:State
 					action { //it:State
 						updateResourceRep( "takeOrder"  
 						)
-						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID)"), Term.createTerm("client_ready_to_order(ID)"), 
+						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID,ORD)"), Term.createTerm("client_ready_to_order(ID,ORD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | take the order from client with ID: ${payloadArg(0)}")
+								println("WAITER | take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+								  
+												ID_client = payloadArg(0).toInt()
+												ORD_client = payloadArg(1).toString()
 						}
-						 readLine()  
 					}
-					 transition(edgeName="t22",targetState="collectPayment",cond=whenDispatch("client_payment"))
+					 transition( edgeName="goto",targetState="sendOrderToBarman", cond=doswitch() )
+				}	 
+				state("sendOrderToBarman") { //this:State
+					action { //it:State
+						updateResourceRep( "sendOrderToBarman"  
+						)
+						println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+						forward("send_order", "send_order($ID_client,$ORD_client)" ,"barman" ) 
+					}
+					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
+				}	 
+				state("serve") { //this:State
+					action { //it:State
+						updateResourceRep( "serve"  
+						)
+						if( checkMsgContent( Term.createTerm("barman_complete_order(ID,ORD)"), Term.createTerm("barman_complete_order(ID,ORD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+						}
+					}
+					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
 				state("collectPayment") { //this:State
 					action { //it:State
@@ -71,17 +141,48 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
 						}
-						 readLine()  
 					}
-					 transition( edgeName="goto",targetState="endService", cond=doswitch() )
+					 transition( edgeName="goto",targetState="convoyExit", cond=doswitch() )
 				}	 
-				state("endService") { //this:State
+				state("convoyExit") { //this:State
 					action { //it:State
-						println("WAITER | End service")
-						updateResourceRep( "endService"  
+						println("WAITER | Convoy the Client to the exitdoor")
+						updateResourceRep( "convoyExit"  
 						)
+						
+									Table1_states.set(0, true) 
 					}
-					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
+					 transition( edgeName="goto",targetState="tableCleared", cond=doswitch() )
+				}	 
+				state("tableCleared") { //this:State
+					action { //it:State
+						println("WAITER | tableCleared")
+						updateResourceRep( "tableCleared"  
+						)
+						
+									Table1_states.set(1, true)
+					}
+					 transition( edgeName="goto",targetState="tableCleaned", cond=doswitch() )
+				}	 
+				state("tableCleaned") { //this:State
+					action { //it:State
+						println("WAITER | tableCleaned")
+						updateResourceRep( "tableCleaned"  
+						)
+						 
+									Table1_states.set(2, true) 
+					}
+					 transition( edgeName="goto",targetState="tableSanitized", cond=doswitch() )
+				}	 
+				state("tableSanitized") { //this:State
+					action { //it:State
+						println("WAITER | tableSanitized")
+						updateResourceRep( "tableSanitized"  
+						)
+						
+									Table1_states.set(3, true)
+					}
+					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
