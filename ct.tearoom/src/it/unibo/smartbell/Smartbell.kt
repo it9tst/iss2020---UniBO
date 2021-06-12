@@ -35,8 +35,8 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						updateResourceRep( "waitRing"  
 						)
 					}
-					 transition(edgeName="t07",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
-					transition(edgeName="t08",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t08",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
+					transition(edgeName="t09",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
@@ -57,11 +57,10 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						 answer("enter_request_client", "enter_reply_from_smartbell_n", "enter_reply_from_smartbell_n($Id_client)"   )  
 						 forward("go_to_wait_ring", "go_to_wait_ring(PAYLOAD)" ,"smartbell" ) 
 						 }
-						 readLine()  
 					}
-					 transition(edgeName="t19",targetState="clientEnter",cond=whenReply("client_accept"))
-					transition(edgeName="t110",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
-					transition(edgeName="t111",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
+					 transition(edgeName="t110",targetState="clientEnter",cond=whenReply("client_accept"))
+					transition(edgeName="t111",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
+					transition(edgeName="t112",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
 				}	 
 				state("clientEnterWithTime") { //this:State
 					action { //it:State
@@ -73,7 +72,6 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 								answer("enter_request_client", "enter_reply_from_smartbell_with_time", "enter_reply_from_smartbell_with_time($Id_client,${payloadArg(0)})"   )  
 						}
 						 Id_client++  
-						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
@@ -82,8 +80,10 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						println("SMARTBELL | The client can enter")
 						updateResourceRep( "clientEnter"  
 						)
-						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
-						 Id_client++  
+						if( checkMsgContent( Term.createTerm("client_accept(TABLE)"), Term.createTerm("client_accept(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client,${payloadArg(0)})"   )  
+						}
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 

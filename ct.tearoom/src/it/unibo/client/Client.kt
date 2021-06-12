@@ -19,7 +19,8 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 		
 				var Client_ID = 0
 				var Client_temp = 36.0
-				var Client_MaxWaitTime = 5000
+				var Client_MaxWaitTime = 1000
+				var Client_table = 1
 				var Client_Ord: String = "the"
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -47,7 +48,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						)
 						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXSTAYTIME)"), Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXSTAYTIME)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(  Client_MaxWaitTime < payloadArg(0).toInt()  
+								if(  Client_MaxWaitTime < payloadArg(1).toInt()  
 								 ){println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)}")
 								}
 								else
@@ -72,10 +73,12 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 					action { //it:State
 						updateResourceRep( "enter"  
 						)
-						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell(ID)"), Term.createTerm("enter_reply_from_smartbell(ID)"), 
+						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell(ID,TABLE)"), Term.createTerm("enter_reply_from_smartbell(ID,TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("CLIENT | ID: ${payloadArg(0)} | Enter")
-								 Client_ID = payloadArg(0).toInt()  
+								 
+												Client_ID = payloadArg(0).toInt()
+												Client_table = payloadArg(1).toInt()
 						}
 						println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
 					}

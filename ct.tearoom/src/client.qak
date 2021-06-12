@@ -3,7 +3,7 @@ System -msglog client
 // MESSAGES CLIENT
 // Message between client - smartbell
 Request enter_request_client			: enter_request_client (TEMP)
-Reply   enter_reply_from_smartbell		: enter_reply_from_smartbell (ID)
+Reply   enter_reply_from_smartbell		: enter_reply_from_smartbell (ID, TABLE)
 Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
 Reply 	enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time (ID, MAXSTAYTIME)
 
@@ -27,7 +27,8 @@ QActor client context ctxclient {
 	[#
 		var Client_ID = 0
 		var Client_temp = 36.0
-		var Client_MaxWaitTime = 5000
+		var Client_MaxWaitTime = 1000
+		var Client_table = 1
 		var Client_Ord: String = "the"
 	#]
 	
@@ -53,7 +54,7 @@ QActor client context ctxclient {
 		// Client wait
 		updateResource [# "enterWithTime" #]
 		onMsg(enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time(ID, MAXSTAYTIME)){
-			if [# Client_MaxWaitTime < payloadArg(0).toInt() #] {
+			if [# Client_MaxWaitTime < payloadArg(1).toInt() #] {
 				println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)}")
 			} else {
 				println("CLIENT | ID: ${payloadArg(0)} | Not Wait")
@@ -74,9 +75,12 @@ QActor client context ctxclient {
 	State enter {
 		// Client enter
 		updateResource [# "enter" #]
-		onMsg(enter_reply_from_smartbell : enter_reply_from_smartbell(ID)){
+		onMsg(enter_reply_from_smartbell : enter_reply_from_smartbell(ID, TABLE)){
 			println("CLIENT | ID: ${payloadArg(0)} | Enter")
-			[# Client_ID = payloadArg(0).toInt() #]
+			[# 
+				Client_ID = payloadArg(0).toInt()
+				Client_table = payloadArg(1).toInt()
+			#]
 		}
 		println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
 //		[# readLine() #]

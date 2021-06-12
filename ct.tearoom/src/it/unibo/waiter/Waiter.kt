@@ -17,11 +17,14 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-				var MaxStayTime = 3000
-				var Table1_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+				var MaxStayTime = 2000
+				var Table1_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
 				var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
 				var ID_client = 0
+				var Table1_id = 1
+				var Table2_id = 2
 				var ORD_client: String = ""
+				var Table_selected = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -41,7 +44,8 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 					transition(edgeName="t01",targetState="takeOrder",cond=whenDispatch("client_ready_to_order"))
 					transition(edgeName="t02",targetState="serve",cond=whenDispatch("barman_complete_order"))
 					transition(edgeName="t03",targetState="collectPayment",cond=whenDispatch("client_payment"))
-					transition(edgeName="t04",targetState="endWork",cond=whenDispatch("end"))
+					transition(edgeName="t04",targetState="tableCleared",cond=whenDispatch("start_sanification"))
+					transition(edgeName="t05",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("accept") { //this:State
 					action { //it:State
@@ -52,8 +56,8 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 						}
-						answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
-						forward("convoy_to_table", "convoy_to_table(PAYLOAD)" ,"waiter" ) 
+						answer("smartbell_enter_request", "client_accept", "client_accept(1)"   )  
+						forward("convoy_to_table", "convoy_to_table(1)" ,"waiter" ) 
 						}
 						else
 						 {if(  Table2_states.get(3) == true  
@@ -61,17 +65,28 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						                         currentMsg.msgContent()) ) { //set msgArgList
 						 		println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 						 }
-						 answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
-						 forward("convoy_to_table", "convoy_to_table(PAYLOAD)" ,"waiter" ) 
+						 answer("smartbell_enter_request", "client_accept", "client_accept(2)"   )  
+						 forward("convoy_to_table", "convoy_to_table(2)" ,"waiter" ) 
 						 }
 						 else
 						  {forward("inform_maxwaittime", "inform_maxwaittime(PAYLOAD)" ,"waiter" ) 
+						  if(  Table1_states.get(0) == true  
+						   ){
+						  						Table_selected = Table1_id
+						  forward("start_sanification", "start_sanification(PAYLOAD)" ,"waiter" ) 
+						  }
+						  else
+						   {if(  Table2_states.get(0) == true  
+						    ){
+						   							Table_selected = Table2_id
+						   forward("start_sanification", "start_sanification(PAYLOAD)" ,"waiter" ) 
+						   }
+						   }
 						  }
 						 }
-						 readLine()  
 					}
-					 transition(edgeName="t15",targetState="inform",cond=whenDispatch("inform_maxwaittime"))
-					transition(edgeName="t16",targetState="convoyTable",cond=whenDispatch("convoy_to_table"))
+					 transition(edgeName="t16",targetState="inform",cond=whenDispatch("inform_maxwaittime"))
+					transition(edgeName="t17",targetState="convoyTable",cond=whenDispatch("convoy_to_table"))
 				}	 
 				state("inform") { //this:State
 					action { //it:State
@@ -82,7 +97,6 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("smartbell_enter_request", "client_accept_with_time", "client_accept_with_time($MaxStayTime)"   )  
 						}
-						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
@@ -91,11 +105,26 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						updateResourceRep( "convoyTable"  
 						)
 						println("WAITER | Convoy the client to table")
-						  
-									Table1_states.set(0, false)
-									Table1_states.set(1, false)
-									Table1_states.set(2, false)
-									Table1_states.set(3, false)
+						if( checkMsgContent( Term.createTerm("convoy_to_table(TABLE)"), Term.createTerm("convoy_to_table(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												Table_selected = payloadArg(0).toInt()
+												when(Table_selected) {
+													1 -> {
+														Table1_states.set(0, false)
+														Table1_states.set(1, false)
+														Table1_states.set(2, false)
+														Table1_states.set(3, false)
+													}
+													
+													2 -> {
+														Table2_states.set(0, false)
+														Table2_states.set(1, false)
+														Table2_states.set(2, false)
+														Table2_states.set(3, false)
+													}
+												}
+						}
 					}
 					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
@@ -150,7 +179,16 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						updateResourceRep( "convoyExit"  
 						)
 						
-									Table1_states.set(0, true) 
+									when(Table_selected) {
+										1 -> {
+											Table1_states.set(0, true)
+										}
+										
+										2 -> {
+											Table2_states.set(0, true)
+										}
+									}
+									
 					}
 					 transition( edgeName="goto",targetState="tableCleared", cond=doswitch() )
 				}	 
@@ -160,7 +198,15 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						updateResourceRep( "tableCleared"  
 						)
 						
-									Table1_states.set(1, true)
+									when(Table_selected) {
+										1 -> {
+											Table1_states.set(1, true)
+										}
+											
+										2 -> {
+											Table2_states.set(1, true)
+										}				
+									}
 					}
 					 transition( edgeName="goto",targetState="tableCleaned", cond=doswitch() )
 				}	 
@@ -169,8 +215,16 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						println("WAITER | tableCleaned")
 						updateResourceRep( "tableCleaned"  
 						)
-						 
-									Table1_states.set(2, true) 
+						
+									when(Table_selected) {
+										1 -> {
+											Table1_states.set(2, true)
+										}
+											
+										2 -> {
+											Table2_states.set(2, true)
+										}				
+									}	
 					}
 					 transition( edgeName="goto",targetState="tableSanitized", cond=doswitch() )
 				}	 
@@ -180,7 +234,16 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						updateResourceRep( "tableSanitized"  
 						)
 						
-									Table1_states.set(3, true)
+									when(Table_selected) {
+										1 -> {
+											Table1_states.set(3, true)
+										}
+											
+										2 -> {
+											Table2_states.set(3, true)
+										}				
+									}
+									Table_selected = 0
 					}
 					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 

@@ -3,7 +3,7 @@ System -msglog tearoom
 // MESSAGES SMARTBELL
 // Message between smartbell - client
 Request  enter_request_client					: enter_request_client (TEMP)
-Reply    enter_reply_from_smartbell				: enter_reply_from_smartbell (ID)
+Reply    enter_reply_from_smartbell				: enter_reply_from_smartbell (ID, TABLE)
 Reply    enter_reply_from_smartbell_n			: enter_reply_from_smartbell_n (PAYLOAD)
 Reply 	 enter_reply_from_smartbell_with_time 	: enter_reply_from_smartbell_with_time (ID, MAXSTAYTIME)
 Dispatch go_to_wait_ring 						: go_to_wait_ring (PAYLOAD)
@@ -21,9 +21,10 @@ Dispatch barman_complete_order 	: barman_complete_order (ID, ORD)
 // MESSAGES WAITER
 // Message between waiter - client
 Dispatch inform_maxwaittime		: inform_maxwaittime (PAYLOAD)
-Dispatch convoy_to_table		: convoy_to_table (PAYLOAD)
+Dispatch convoy_to_table		: convoy_to_table (TABLE)
 Dispatch client_ready_to_order 	: client_ready_to_order (ID, ORD)
 Dispatch client_payment 		: client_payment (ID)
+Dispatch start_sanification		: start_sanification (PAYLOAD)
 
 Dispatch end : end (PAYLOAD)
 
@@ -32,13 +33,16 @@ Context ctxtearoom ip [host="localhost" port=50810]
 
 
 QActor waiter context ctxtearoom {
-	
+
 	[#
-		var MaxStayTime = 3000
-		var Table1_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+		var MaxStayTime = 2000
+		var Table1_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
 		var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
 		var ID_client = 0
+		var Table1_id = 1
+		var Table2_id = 2
 		var ORD_client: String = ""
+		var Table_selected = 0
 	#]
 	
 	State s0 initial {
@@ -57,6 +61,7 @@ QActor waiter context ctxtearoom {
 					whenMsg client_ready_to_order -> takeOrder
 					whenMsg barman_complete_order -> serve
 					whenMsg client_payment -> collectPayment
+					whenMsg start_sanification -> tableCleared
 					whenMsg end -> endWork
 
 	State accept {
@@ -67,20 +72,38 @@ QActor waiter context ctxtearoom {
 			onMsg(smartbell_enter_request : smartbell_enter_request (ID)){
 				println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 			}
-			replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
-			forward waiter -m convoy_to_table : convoy_to_table (PAYLOAD)
+			replyTo smartbell_enter_request with client_accept : client_accept (1)
+			forward waiter -m convoy_to_table : convoy_to_table (1)
+			
 		} else {
 			if [# Table2_states.get(3) == true #]{
 				onMsg(smartbell_enter_request : smartbell_enter_request (ID)){
 					println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 				}
-			  	replyTo smartbell_enter_request with client_accept : client_accept (TABLE)
-			  	forward waiter -m convoy_to_table : convoy_to_table (PAYLOAD)
+			  	replyTo smartbell_enter_request with client_accept : client_accept (2)
+			  	forward waiter -m convoy_to_table : convoy_to_table (2)
+			  	
 			} else {
 				forward waiter -m inform_maxwaittime : inform_maxwaittime (PAYLOAD)
+				
+				if [# Table1_states.get(0) == true #]{
+					[#
+						Table_selected = Table1_id
+					#]
+					forward waiter -m start_sanification : start_sanification (PAYLOAD)
+					
+				} else {
+					if [# Table2_states.get(0) == true #]{
+						[#
+							Table_selected = Table2_id
+						#]
+						forward waiter -m start_sanification : start_sanification (PAYLOAD)
+					
+					}
+				}
 			}
 		}
-		[# readLine() #]
+//		[# readLine() #]
 	}
 	Transition t1	whenMsg inform_maxwaittime -> inform
 					whenMsg convoy_to_table -> convoyTable
@@ -92,7 +115,7 @@ QActor waiter context ctxtearoom {
 		onMsg(inform_maxwaittime : inform_maxwaittime (PAYLOAD)){
 			replyTo smartbell_enter_request with client_accept_with_time : client_accept_with_time ($MaxStayTime)
 		}
-		[# readLine() #]
+//		[# readLine() #]
 	}
 	Goto rest
 	
@@ -100,12 +123,26 @@ QActor waiter context ctxtearoom {
 		// Waiter convoy the client to table
 		updateResource [# "convoyTable" #]
 		println("WAITER | Convoy the client to table")
-		[#  
-			Table1_states.set(0, false)
-			Table1_states.set(1, false)
-			Table1_states.set(2, false)
-			Table1_states.set(3, false)
-		#]
+		onMsg(convoy_to_table : convoy_to_table (TABLE)){
+			[#
+				Table_selected = payloadArg(0).toInt()
+				when(Table_selected) {
+					1 -> {
+						Table1_states.set(0, false)
+						Table1_states.set(1, false)
+						Table1_states.set(2, false)
+						Table1_states.set(3, false)
+					}
+					
+					2 -> {
+						Table2_states.set(0, false)
+						Table2_states.set(1, false)
+						Table2_states.set(2, false)
+						Table2_states.set(3, false)
+					}
+				}
+			#]
+		}
 //		[# readLine() #]
 	}
 	Goto rest
@@ -159,7 +196,16 @@ QActor waiter context ctxtearoom {
 		println("WAITER | Convoy the Client to the exitdoor")
 		updateResource [# "convoyExit" #]
 		[#
-			Table1_states.set(0, true) 
+			when(Table_selected) {
+				1 -> {
+					Table1_states.set(0, true)
+				}
+				
+				2 -> {
+					Table2_states.set(0, true)
+				}
+			}
+			
 		#]
 	}
 	Goto tableCleared
@@ -169,8 +215,17 @@ QActor waiter context ctxtearoom {
 		println("WAITER | tableCleared")
 		updateResource [# "tableCleared" #]
 		[#
-			Table1_states.set(1, true)
+			when(Table_selected) {
+				1 -> {
+					Table1_states.set(1, true)
+				}
+					
+				2 -> {
+					Table2_states.set(1, true)
+				}				
+			}
 		#]
+//		[# readLine() #]
 	}
 	Goto tableCleaned
 	
@@ -178,9 +233,18 @@ QActor waiter context ctxtearoom {
 		// Waiter tableCleaned
 		println("WAITER | tableCleaned")
 		updateResource [# "tableCleaned" #]
-		[# 
-			Table1_states.set(2, true) 
+		[#
+			when(Table_selected) {
+				1 -> {
+					Table1_states.set(2, true)
+				}
+					
+				2 -> {
+					Table2_states.set(2, true)
+				}				
+			}	
 		#]
+//		[# readLine() #]
 	}
 	Goto tableSanitized
 	
@@ -189,8 +253,18 @@ QActor waiter context ctxtearoom {
 		println("WAITER | tableSanitized")
 		updateResource [# "tableSanitized" #]
 		[#
-			Table1_states.set(3, true)
+			when(Table_selected) {
+				1 -> {
+					Table1_states.set(3, true)
+				}
+					
+				2 -> {
+					Table2_states.set(3, true)
+				}				
+			}
+			Table_selected = 0
 		#]
+//		[# readLine() #]
 	}
 	Goto rest
 
@@ -242,7 +316,7 @@ QActor smartbell context ctxtearoom {
 			replyTo enter_request_client with enter_reply_from_smartbell_n : enter_reply_from_smartbell_n ($Id_client)
 			forward smartbell -m go_to_wait_ring : go_to_wait_ring (PAYLOAD)
 		}
-		[# readLine() #]
+//		[# readLine() #]
 	}
 	Transition t1	whenReply client_accept -> clientEnter
 					whenReply client_accept_with_time -> clientEnterWithTime
@@ -256,7 +330,7 @@ QActor smartbell context ctxtearoom {
 			replyTo enter_request_client with enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time ($Id_client, $payloadArg(0))
 		}
 		[# Id_client++ #]
-		[# readLine() #]
+//		[# readLine() #]
 	}
 	Goto waitRing
 
@@ -264,8 +338,10 @@ QActor smartbell context ctxtearoom {
 		// Smartbell reply to client
 		println("SMARTBELL | The client can enter")
 		updateResource [# "clientEnter" #]
-		replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client)
-		[# Id_client++ #]
+		onMsg(client_accept : client_accept (TABLE)){
+			replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client, $payloadArg(0))
+		}
+//		[# Id_client++ #]
 	}
 	Goto waitRing
 
