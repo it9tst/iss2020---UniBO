@@ -17,241 +17,51 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-				var MaxStayTime = 2000
-				var Table1_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
-				var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
-				var ID_client = 0
-				var Table1_id = 1
-				var Table2_id = 2
-				var ORD_client: String = ""
-				var Table_selected = 0
+				var Is_free = true
+				var Table1_free = true
+				var Table1_clean = true
+				var Table2_free = true
+				var Table2_clean = true
+				var Max_waiting_time = 10
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						println("WAITER | Start")
-						updateResourceRep( "s0 waiter"  
-						)
+						println("Waiter start")
 					}
 					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
 				state("rest") { //this:State
 					action { //it:State
-						println("WAITER | Rest")
-						updateResourceRep( "rest"  
-						)
+						if(  Is_free  
+						 ){println("PAUSE")
+						}
+						else
+						 {println("MOVE")
+						 }
 					}
 					 transition(edgeName="t00",targetState="accept",cond=whenRequest("smartbell_enter_request"))
-					transition(edgeName="t01",targetState="takeOrder",cond=whenDispatch("client_ready_to_order"))
-					transition(edgeName="t02",targetState="serve",cond=whenDispatch("barman_complete_order"))
-					transition(edgeName="t03",targetState="collectPayment",cond=whenDispatch("client_payment"))
-					transition(edgeName="t04",targetState="tableCleared",cond=whenDispatch("start_sanification"))
-					transition(edgeName="t05",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("accept") { //this:State
 					action { //it:State
-						updateResourceRep( "accept"  
-						)
-						if(  Table1_states.get(3) == true  
-						 ){if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | Accept the client with ID: ${payloadArg(0)}")
-						}
-						answer("smartbell_enter_request", "client_accept", "client_accept(1)"   )  
-						forward("convoy_to_table", "convoy_to_table(1)" ,"waiter" ) 
+						 Is_free = false  
+						if(  Table1_free && Table1_clean || Table2_free && Table2_clean  
+						 ){answer("smartbell_enter_request", "client_accept", "client_accept(TABLE)"   )  
 						}
 						else
-						 {if(  Table2_states.get(3) == true  
-						  ){if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
-						                         currentMsg.msgContent()) ) { //set msgArgList
-						 		println("WAITER | Accept the client with ID: ${payloadArg(0)}")
-						 }
-						 answer("smartbell_enter_request", "client_accept", "client_accept(2)"   )  
-						 forward("convoy_to_table", "convoy_to_table(2)" ,"waiter" ) 
-						 }
-						 else
-						  {forward("inform_maxwaittime", "inform_maxwaittime(PAYLOAD)" ,"waiter" ) 
-						  if(  Table1_states.get(0) == true  
-						   ){
-						  						Table_selected = Table1_id
-						  forward("start_sanification", "start_sanification(PAYLOAD)" ,"waiter" ) 
-						  }
-						  else
-						   {if(  Table2_states.get(0) == true  
-						    ){
-						   							Table_selected = Table2_id
-						   forward("start_sanification", "start_sanification(PAYLOAD)" ,"waiter" ) 
-						   }
-						   }
-						  }
+						 {answer("smartbell_enter_request", "client_accept_n", "client_accept_n($Max_waiting_time)"   )  
 						 }
 					}
-					 transition(edgeName="t16",targetState="inform",cond=whenDispatch("inform_maxwaittime"))
-					transition(edgeName="t17",targetState="convoyTable",cond=whenDispatch("convoy_to_table"))
+					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
-				state("inform") { //this:State
+				state("endService") { //this:State
 					action { //it:State
-						updateResourceRep( "inform"  
-						)
-						println("WAITER | Inform the client about the maximum waiting time: $MaxStayTime")
-						if( checkMsgContent( Term.createTerm("inform_maxwaittime(PAYLOAD)"), Term.createTerm("inform_maxwaittime(PAYLOAD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								answer("smartbell_enter_request", "client_accept_with_time", "client_accept_with_time($MaxStayTime)"   )  
-						}
+						 Is_free = true 
 					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("convoyTable") { //this:State
-					action { //it:State
-						updateResourceRep( "convoyTable"  
-						)
-						println("WAITER | Convoy the client to table")
-						if( checkMsgContent( Term.createTerm("convoy_to_table(TABLE)"), Term.createTerm("convoy_to_table(TABLE)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												Table_selected = payloadArg(0).toInt()
-												when(Table_selected) {
-													1 -> {
-														Table1_states.set(0, false)
-														Table1_states.set(1, false)
-														Table1_states.set(2, false)
-														Table1_states.set(3, false)
-													}
-													
-													2 -> {
-														Table2_states.set(0, false)
-														Table2_states.set(1, false)
-														Table2_states.set(2, false)
-														Table2_states.set(3, false)
-													}
-												}
-						}
-					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("takeOrder") { //this:State
-					action { //it:State
-						updateResourceRep( "takeOrder"  
-						)
-						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID,ORD)"), Term.createTerm("client_ready_to_order(ID,ORD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-								  
-												ID_client = payloadArg(0).toInt()
-												ORD_client = payloadArg(1).toString()
-						}
-					}
-					 transition( edgeName="goto",targetState="sendOrderToBarman", cond=doswitch() )
-				}	 
-				state("sendOrderToBarman") { //this:State
-					action { //it:State
-						updateResourceRep( "sendOrderToBarman"  
-						)
-						println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
-						forward("send_order", "send_order($ID_client,$ORD_client)" ,"barman" ) 
-					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("serve") { //this:State
-					action { //it:State
-						updateResourceRep( "serve"  
-						)
-						if( checkMsgContent( Term.createTerm("barman_complete_order(ID,ORD)"), Term.createTerm("barman_complete_order(ID,ORD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-						}
-					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("collectPayment") { //this:State
-					action { //it:State
-						updateResourceRep( "collectPayment"  
-						)
-						if( checkMsgContent( Term.createTerm("client_payment(ID)"), Term.createTerm("client_payment(ID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
-						}
-					}
-					 transition( edgeName="goto",targetState="convoyExit", cond=doswitch() )
-				}	 
-				state("convoyExit") { //this:State
-					action { //it:State
-						println("WAITER | Convoy the Client to the exitdoor")
-						updateResourceRep( "convoyExit"  
-						)
-						
-									when(Table_selected) {
-										1 -> {
-											Table1_states.set(0, true)
-										}
-										
-										2 -> {
-											Table2_states.set(0, true)
-										}
-									}
-									
-					}
-					 transition( edgeName="goto",targetState="tableCleared", cond=doswitch() )
-				}	 
-				state("tableCleared") { //this:State
-					action { //it:State
-						println("WAITER | tableCleared")
-						updateResourceRep( "tableCleared"  
-						)
-						
-									when(Table_selected) {
-										1 -> {
-											Table1_states.set(1, true)
-										}
-											
-										2 -> {
-											Table2_states.set(1, true)
-										}				
-									}
-					}
-					 transition( edgeName="goto",targetState="tableCleaned", cond=doswitch() )
-				}	 
-				state("tableCleaned") { //this:State
-					action { //it:State
-						println("WAITER | tableCleaned")
-						updateResourceRep( "tableCleaned"  
-						)
-						
-									when(Table_selected) {
-										1 -> {
-											Table1_states.set(2, true)
-										}
-											
-										2 -> {
-											Table2_states.set(2, true)
-										}				
-									}	
-					}
-					 transition( edgeName="goto",targetState="tableSanitized", cond=doswitch() )
-				}	 
-				state("tableSanitized") { //this:State
-					action { //it:State
-						println("WAITER | tableSanitized")
-						updateResourceRep( "tableSanitized"  
-						)
-						
-									when(Table_selected) {
-										1 -> {
-											Table1_states.set(3, true)
-										}
-											
-										2 -> {
-											Table2_states.set(3, true)
-										}				
-									}
-									Table_selected = 0
-					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
+					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
-						println("WAITER | End work")
-						updateResourceRep( "endWork"  
-						)
+						println("Waiter end work")
 						terminate(0)
 					}
 				}	 

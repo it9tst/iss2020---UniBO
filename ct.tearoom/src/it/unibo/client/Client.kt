@@ -81,6 +81,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 												Client_table = payloadArg(1).toInt()
 						}
 						println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="order", cond=doswitch() )
 				}	 
@@ -89,8 +90,9 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
 						updateResourceRep( "order"  
 						)
-						forward("client_ready_to_order", "client_ready_to_order($Client_ID,$Client_Ord)" ,"waiter" ) 
+						forward("client_ready_to_order", "client_ready_to_order($Client_ID,$Client_Ord)" ,"waitermind" ) 
 						println("CLIENT | Premi invio per continuare e farlo pagare")
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="pay", cond=doswitch() )
 				}	 
@@ -99,7 +101,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
 						updateResourceRep( "pay"  
 						)
-						forward("client_payment", "client_payment($Client_ID)" ,"waiter" ) 
+						forward("client_payment", "client_payment($Client_ID)" ,"waitermind" ) 
 					}
 					 transition( edgeName="goto",targetState="exit", cond=doswitch() )
 				}	 

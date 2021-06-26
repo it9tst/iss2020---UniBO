@@ -31,8 +31,8 @@ class Barman ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						updateResourceRep( "waitOrder"  
 						)
 					}
-					 transition(edgeName="t013",targetState="prepareOrder",cond=whenDispatch("send_order"))
-					transition(edgeName="t014",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t021",targetState="prepareOrder",cond=whenDispatch("send_order"))
+					transition(edgeName="t022",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("prepareOrder") { //this:State
 					action { //it:State
@@ -43,7 +43,7 @@ class Barman ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 								println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 								delay(10000) 
 								println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-								forward("barman_complete_order", "barman_complete_order(${payloadArg(0)},${payloadArg(1)})" ,"waiter" ) 
+								forward("barman_complete_order", "barman_complete_order(${payloadArg(0)},${payloadArg(1)})" ,"waitermind" ) 
 						}
 					}
 					 transition( edgeName="goto",targetState="waitOrder", cond=doswitch() )
