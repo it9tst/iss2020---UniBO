@@ -44,9 +44,10 @@ Dispatch end : end (PAYLOAD)
 
 
 Context ctxtearoom ip [host="localhost" port=50810]
-Context ctxbasicrobot ip [host="192.168.10.100" port=50800]
+Context ctxbasicrobot ip [host="192.168.1.20" port=50800]
 
 ExternalQActor basicrobot context ctxbasicrobot
+
 
 
 QActor waitermind context ctxtearoom {
@@ -54,8 +55,8 @@ QActor waitermind context ctxtearoom {
 	[#
 		// Init variable
 		var MaxStayTime = 2000
-		var Table1_states = arrayOf(true, true, true, true) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
-		var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+		var Table1_states = arrayOf(1, 1, 1, 1, -1) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized, 5. ID_client
+		var Table2_states = arrayOf(1, 1, 1, 1, -1) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized, 5. ID_client
 		var ID_client = 0
 		var Table1_id = 1
 		var Table2_id = 2
@@ -67,16 +68,16 @@ QActor waitermind context ctxtearoom {
 		val Y_home = "0"
 		
 		// Barman Position
-		val X_barman = "5"
+		val X_barman = "6"
 		val Y_barman = "0"
 	
 		// Entrance Position
 		val X_entrance = "0"
-		val Y_entrance = "3"
+		val Y_entrance = "4"
 		
 		// Exit Position
-		val X_exit = "5"
-		val Y_exit = "3"
+		val X_exit = "6"
+		val Y_exit = "4"
 		
 		// Table1 Position
 		val X_table1 = "2"
@@ -102,7 +103,7 @@ QActor waitermind context ctxtearoom {
 	}
 	Transition t1 	whenRequest smartbell_enter_request -> accept
 					whenMsg client_ready_to_order -> takeOrder
-					whenMsg barman_complete_order -> serve
+					whenMsg barman_complete_order -> reachBarman
 					whenMsg client_payment -> collectPayment
 					whenMsg start_sanification -> tableCleared
 					whenMsg end -> endWork
@@ -111,6 +112,7 @@ QActor waitermind context ctxtearoom {
 		// Waiter reach home
 		println("WAITERMIND | Reach Home")
 		updateResource [# "reachHome" #]
+		delay 3000
 		request waiterengine -m moveTo : moveTo ($X_home, $Y_home)
 		
 	}
@@ -120,32 +122,38 @@ QActor waitermind context ctxtearoom {
 		// Waiter accept the client
 		updateResource [# "accept" #]
 		
-		if [# Table1_states.get(3) == true #]{
+		if [# Table1_states.get(3) == 1 #]{
 			onMsg(smartbell_enter_request : smartbell_enter_request (ID)){
 				println("WAITERMIND | Accept the client with ID: ${payloadArg(0)}")
 			}
 			replyTo smartbell_enter_request with client_accept : client_accept (1)
+			[#
+				Table1_states.set(4, payloadArg(0).toInt())
+			#]
 			forward waitermind -m convoy_to_table : convoy_to_table (1)
 			
 		} else {
-			if [# Table2_states.get(3) == true #]{
+			if [# Table2_states.get(3) == 1 #]{
 				onMsg(smartbell_enter_request : smartbell_enter_request (ID)){
 					println("WAITERMIND | Accept the client with ID: ${payloadArg(0)}")
 				}
 			  	replyTo smartbell_enter_request with client_accept : client_accept (2)
+			  	[#
+					Table2_states.set(4, payloadArg(0).toInt())
+				#]
 			  	forward waitermind -m convoy_to_table : convoy_to_table (2)
 			  	
 			} else {
 				forward waitermind -m inform_maxwaittime : inform_maxwaittime (PAYLOAD)
 				
-				if [# Table1_states.get(0) == true #]{
+				if [# Table1_states.get(0) == 1 #]{
 					[#
 						Table_selected = Table1_id
 					#]
 					forward waitermind -m start_sanification : start_sanification (PAYLOAD)
 					
 				} else {
-					if [# Table2_states.get(0) == true #]{
+					if [# Table2_states.get(0) == 1 #]{
 						[#
 							Table_selected = Table2_id
 						#]
@@ -189,33 +197,28 @@ QActor waitermind context ctxtearoom {
 		// Waiter convoy the client to table
 		updateResource [# "convoyTable" #]
 		println("WAITER | Convoy the client to table")
-		[#
-			when(Table_selected) {
-				1 -> {
-					Table1_states.set(0, false)
-					Table1_states.set(1, false)
-					Table1_states.set(2, false)
-					Table1_states.set(3, false)
-				}
-				
-				2 -> {
-					Table2_states.set(0, false)
-					Table2_states.set(1, false)
-					Table2_states.set(2, false)
-					Table2_states.set(3, false)
-				}
-			}
-		#]
-		delay 5000 // PROVA
-		request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-		delay 5000 // PROVA
-		request waiterengine -m moveTo : moveTo ($X_home, $Y_home)
-		delay 5000 // PROVA
-		request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-		delay 5000 // PROVA
-		request waiterengine -m moveTo : moveTo ($X_home, $Y_home)
-		delay 5000 // PROVA
-		request waiterengine -m moveTo : moveTo ($X_exit, $Y_exit)
+		
+		if [# Table_selected == 1 #]{
+			[#
+				Table1_states.set(0, 0)
+				Table1_states.set(1, 0)
+				Table1_states.set(2, 0)
+				Table1_states.set(3, 0)
+			#]
+
+			delay 4000
+			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
+		} else {
+			[#
+				Table2_states.set(0, 0)
+				Table2_states.set(1, 0)
+				Table2_states.set(2, 0)
+				Table2_states.set(3, 0)
+			#]
+			
+			delay 4000
+			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
+		}
 	}
 	Transition t5	whenReply done -> reachHome
 
@@ -224,6 +227,13 @@ QActor waitermind context ctxtearoom {
 		updateResource [# "takeOrder" #]
 		onMsg(client_ready_to_order : client_ready_to_order (ID, ORD)){
 			println("WAITER | take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			
+			if [# Table1_states.get(4) == payloadArg(0).toInt() #]{
+				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
+			} else {
+				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
+			}
+						
 			[#  
 				ID_client = payloadArg(0).toInt()
 				ORD_client = payloadArg(1).toString()
@@ -231,88 +241,139 @@ QActor waitermind context ctxtearoom {
 		}
 //		[# readLine() #]
 	}
-	Goto sendOrderToBarman
+	Transition t6	whenReply done -> sendOrderToBarman
 	
 	State sendOrderToBarman{
 		// Waiter send the order to Barman
 		updateResource [# "sendOrderToBarman" #]
 		println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+		
+		delay 4000
+		request waiterengine -m moveTo : moveTo ($X_barman, $Y_barman)
+
 		forward barman -m send_order : send_order ($ID_client, $ORD_client)
 //		[# readLine() #]
 	}
-	Goto rest
+	Transition t7	whenReply done -> reachHome
+	
+	State reachBarman{
+		// Waiter reach Barman
+		println("WAITERMIND | Reach Barman")
+		updateResource [# "reachBarman" #]
+		onMsg(barman_complete_order : barman_complete_order (ID, ORD)){
+			println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			
+			[#  
+				ID_client = payloadArg(0).toInt()
+				ORD_client = payloadArg(1).toString()
+			#]
+		}
+		
+		request waiterengine -m moveTo : moveTo ($X_barman, $Y_barman)
+	}
+	Transition t8	whenReply done -> serve
 	
 	State serve{
 		// Barman complete the order and send it to Waiter that serve to the Client
 		updateResource [# "serve" #]
-		onMsg(barman_complete_order : barman_complete_order (ID, ORD)){
-			println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+		
+		delay 4000
+		
+		if [# Table1_states.get(4) == ID_client #]{
+			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
+		} else {
+			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
 		}
 //		[# readLine() #]
 	}
-	Goto rest
+	Transition t9	whenReply done -> reachHome
 	
 	State collectPayment {
 		// Waiter collect the payment
 		updateResource [# "collectPayment" #]
 		onMsg(client_payment : client_payment (ID)){
 			println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
+			
+			
+			if [# Table1_states.get(4) == payloadArg(0).toInt() #]{
+				[#
+					Table_selected = 1
+				#]
+				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
+			} else {
+				[#
+					Table_selected = 2
+				#]
+				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
+			}
 		}
 //		[# readLine() #]
 		
 	}
-	Goto convoyExit
+	Transition t10	whenReply done -> convoyExit
 	
 	State convoyExit {
 		// Waiter convoy the Client to the exitdoor
 		println("WAITER | Convoy the Client to the exitdoor")
 		updateResource [# "convoyExit" #]
+		
+		delay 4000
+		request waiterengine -m moveTo : moveTo ($X_exit, $Y_exit)
 		[#
 			when(Table_selected) {
 				1 -> {
-					Table1_states.set(0, true)
+					Table1_states.set(0, 1)
 				}
 				
 				2 -> {
-					Table2_states.set(0, true)
+					Table2_states.set(0, 1)
 				}
 			}
 			
 		#]
 	}
-	Goto tableCleared
+	Transition t11	whenReply done -> tableCleared
 	
 	State tableCleared {
 		// Waiter tableCleared
 		println("WAITER | tableCleared")
 		updateResource [# "tableCleared" #]
+		
+		delay 4000
+		if [# Table_selected == 1 #]{
+			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
+		} else {
+			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
+		}
 		[#
 			when(Table_selected) {
 				1 -> {
-					Table1_states.set(1, true)
+					Table1_states.set(1, 1)
 				}
 					
 				2 -> {
-					Table2_states.set(1, true)
+					Table2_states.set(1, 1)
 				}				
 			}
 		#]
 //		[# readLine() #]
 	}
-	Goto tableCleaned
+	Transition t12	whenReply done -> tableCleaned
 	
 	State tableCleaned {
 		// Waiter tableCleaned
 		println("WAITER | tableCleaned")
 		updateResource [# "tableCleaned" #]
+		
+		delay 4000
 		[#
 			when(Table_selected) {
 				1 -> {
-					Table1_states.set(2, true)
+					Table1_states.set(2, 1)
 				}
 					
 				2 -> {
-					Table2_states.set(2, true)
+					Table2_states.set(2, 1)
 				}				
 			}	
 		#]
@@ -324,21 +385,23 @@ QActor waitermind context ctxtearoom {
 		// Waiter tableSanitized
 		println("WAITER | tableSanitized")
 		updateResource [# "tableSanitized" #]
+		
+		delay 4000
 		[#
 			when(Table_selected) {
 				1 -> {
-					Table1_states.set(3, true)
+					Table1_states.set(3, 1)
 				}
 					
 				2 -> {
-					Table2_states.set(3, true)
+					Table2_states.set(3, 1)
 				}				
 			}
 			Table_selected = 0
 		#]
 //		[# readLine() #]
 	}
-	Goto rest
+	Goto reachHome
 	
 	State endWork {
 		// Waiter end work
@@ -351,7 +414,7 @@ QActor waitermind context ctxtearoom {
 QActor waiterengine context ctxtearoom{
 	[#
 		// Robot
-		var StepTime = 360L
+		var StepTime = 350L
 		val BackTime = 2 * StepTime / 3
 		
 		// Map
@@ -567,7 +630,7 @@ QActor smartbell context ctxtearoom {
 		onMsg(client_accept : client_accept (TABLE)){
 			replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client, $payloadArg(0))
 		}
-//		[# Id_client++ #]
+		[# Id_client++ #]
 	}
 	Goto waitRing
 
@@ -601,7 +664,7 @@ QActor barman context ctxtearoom {
 		updateResource [# "prepareOrder" #]
 		onMsg(send_order : send_order (ID, ORD)){
 			println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-			delay 10000
+			delay 15000
 			println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 			forward waitermind -m barman_complete_order : barman_complete_order($payloadArg(0), $payloadArg(1))
 		}

@@ -18,7 +18,7 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				// Robot
-				var StepTime = 360L
+				var StepTime = 350L
 				val BackTime = 2 * StepTime / 3
 				
 				// Map
@@ -51,8 +51,8 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 						updateResourceRep( "waitCmd"  
 						)
 					}
-					 transition(edgeName="t012",targetState="planDestination",cond=whenRequest("moveTo"))
-					transition(edgeName="t013",targetState="cleanTable",cond=whenDispatch("clean"))
+					 transition(edgeName="t019",targetState="planDestination",cond=whenRequest("moveTo"))
+					transition(edgeName="t020",targetState="cleanTable",cond=whenDispatch("clean"))
 				}	 
 				state("planDestination") { //this:State
 					action { //it:State
@@ -90,8 +90,8 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 						)
 						request("step", "step($StepTime)" ,"basicrobot" )  
 					}
-					 transition(edgeName="t114",targetState="updateMap",cond=whenReply("stepdone"))
-					transition(edgeName="t115",targetState="errorHandler",cond=whenReply("stepfail"))
+					 transition(edgeName="t121",targetState="updateMap",cond=whenReply("stepdone"))
+					transition(edgeName="t122",targetState="errorHandler",cond=whenReply("stepfail"))
 				}	 
 				state("execMove") { //this:State
 					action { //it:State
