@@ -170,8 +170,8 @@ QActor waitermind context ctxtearoom {
 	
 	State inform {
 		// Waiter inform the client about the maximum waiting time if there is no tableclean
-		updateResource [# "inform" #]
 		println("WAITERMIND | Inform the client about the maximum waiting time: $MaxStayTime")
+		updateResource [# "inform" #]
 		onMsg(inform_maxwaittime : inform_maxwaittime (PAYLOAD)){
 			replyTo smartbell_enter_request with client_accept_with_time : client_accept_with_time ($MaxStayTime)
 		}
@@ -189,14 +189,15 @@ QActor waitermind context ctxtearoom {
 			#]
 		}
 		request waiterengine -m moveTo : moveTo($X_entrance, $Y_entrance)
-		
+//		[# readLine() #]
 	}
 	Transition t4	whenReply done -> convoyTable
 	
 	State convoyTable {
 		// Waiter convoy the client to table
-		updateResource [# "convoyTable" #]
 		println("WAITER | Convoy the client to table")
+		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
+		[# readLine() #]
 		
 		if [# Table_selected == 1 #]{
 			[#
@@ -245,14 +246,14 @@ QActor waitermind context ctxtearoom {
 	
 	State sendOrderToBarman{
 		// Waiter send the order to Barman
-		updateResource [# "sendOrderToBarman" #]
 		println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
+		[# readLine() #]
 		
 		delay 4000
 		request waiterengine -m moveTo : moveTo ($X_barman, $Y_barman)
 
 		forward barman -m send_order : send_order ($ID_client, $ORD_client)
-//		[# readLine() #]
 	}
 	Transition t7	whenReply done -> reachHome
 	
@@ -275,7 +276,8 @@ QActor waitermind context ctxtearoom {
 	
 	State serve{
 		// Barman complete the order and send it to Waiter that serve to the Client
-		updateResource [# "serve" #]
+		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
+		[# readLine() #]
 		
 		delay 4000
 		
@@ -306,16 +308,15 @@ QActor waitermind context ctxtearoom {
 				#]
 				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
 			}
-		}
-//		[# readLine() #]
-		
+		}	
 	}
 	Transition t10	whenReply done -> convoyExit
 	
 	State convoyExit {
 		// Waiter convoy the Client to the exitdoor
 		println("WAITER | Convoy the Client to the exitdoor")
-		updateResource [# "convoyExit" #]
+		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
+		[# readLine() #]
 		
 		delay 4000
 		request waiterengine -m moveTo : moveTo ($X_exit, $Y_exit)
@@ -337,7 +338,8 @@ QActor waitermind context ctxtearoom {
 	State tableCleared {
 		// Waiter tableCleared
 		println("WAITER | tableCleared")
-		updateResource [# "tableCleared" #]
+		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
+		[# readLine() #]
 		
 		delay 4000
 		if [# Table_selected == 1 #]{
@@ -356,7 +358,7 @@ QActor waitermind context ctxtearoom {
 				}				
 			}
 		#]
-//		[# readLine() #]
+		[# readLine() #]
 	}
 	Transition t12	whenReply done -> tableCleaned
 	

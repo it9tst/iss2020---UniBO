@@ -29,7 +29,8 @@ QActor client context ctxclient {
 		var Client_temp = 36.0
 		var Client_MaxWaitTime = 1000
 		var Client_table = 1
-		var Client_Ord: String = "the"
+		var Client_Ord: String = ""
+		val Menu : Array<String> = arrayOf("the", "acqua", "brioches", "cioccolata")
 	#]
 	
 	State s0 initial {
@@ -86,9 +87,12 @@ QActor client context ctxclient {
 		[# readLine() #]
 	}
 	Goto order
-	
+
 	State order {
 		// Client would like to order
+		[#
+			Client_Ord = Menu[Random.nextInt(0, 3)]
+		#]
 		println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
 		updateResource [# "order" #]
 		forward waitermind -m client_ready_to_order : client_ready_to_order($Client_ID, $Client_Ord)

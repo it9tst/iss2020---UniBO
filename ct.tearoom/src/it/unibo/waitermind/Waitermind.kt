@@ -130,9 +130,9 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				}	 
 				state("inform") { //this:State
 					action { //it:State
+						println("WAITERMIND | Inform the client about the maximum waiting time: $MaxStayTime")
 						updateResourceRep( "inform"  
 						)
-						println("WAITERMIND | Inform the client about the maximum waiting time: $MaxStayTime")
 						if( checkMsgContent( Term.createTerm("inform_maxwaittime(PAYLOAD)"), Term.createTerm("inform_maxwaittime(PAYLOAD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("smartbell_enter_request", "client_accept_with_time", "client_accept_with_time($MaxStayTime)"   )  
@@ -156,9 +156,10 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				}	 
 				state("convoyTable") { //this:State
 					action { //it:State
-						updateResourceRep( "convoyTable"  
-						)
 						println("WAITER | Convoy the client to table")
+						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
+						)
+						 readLine()  
 						if(  Table_selected == 1  
 						 ){
 										Table1_states.set(0, 0)
@@ -202,9 +203,10 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				}	 
 				state("sendOrderToBarman") { //this:State
 					action { //it:State
-						updateResourceRep( "sendOrderToBarman"  
-						)
 						println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
+						)
+						 readLine()  
 						delay(4000) 
 						request("moveTo", "moveTo($X_barman,$Y_barman)" ,"waiterengine" )  
 						forward("send_order", "send_order($ID_client,$ORD_client)" ,"barman" ) 
@@ -229,8 +231,9 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				}	 
 				state("serve") { //this:State
 					action { //it:State
-						updateResourceRep( "serve"  
+						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
+						 readLine()  
 						delay(4000) 
 						if(  Table1_states.get(4) == ID_client  
 						 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
@@ -265,8 +268,9 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				state("convoyExit") { //this:State
 					action { //it:State
 						println("WAITER | Convoy the Client to the exitdoor")
-						updateResourceRep( "convoyExit"  
+						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
+						 readLine()  
 						delay(4000) 
 						request("moveTo", "moveTo($X_exit,$Y_exit)" ,"waiterengine" )  
 						
@@ -286,8 +290,9 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				state("tableCleared") { //this:State
 					action { //it:State
 						println("WAITER | tableCleared")
-						updateResourceRep( "tableCleared"  
+						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
+						 readLine()  
 						delay(4000) 
 						if(  Table_selected == 1  
 						 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
@@ -305,6 +310,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 											Table2_states.set(1, 1)
 										}				
 									}
+						 readLine()  
 					}
 					 transition(edgeName="t1218",targetState="tableCleaned",cond=whenReply("done"))
 				}	 
