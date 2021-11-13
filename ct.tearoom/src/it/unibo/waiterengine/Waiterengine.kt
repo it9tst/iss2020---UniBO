@@ -18,7 +18,7 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				// Robot
-				var StepTime = 350L
+				var StepTime = 260L
 				val BackTime = 2 * StepTime / 3
 				
 				// Map
@@ -130,7 +130,6 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 								delay(BackT)
 								forward("cmd", "cmd(h)" ,"basicrobot" ) 
 								}
-								itunibo.planner.plannerUtil.updateMapObstacleOnCurrentDirection(  )
 								itunibo.planner.plannerUtil.showCurrentRobotState(  )
 								updateResourceRep( "stepFail"  
 								)

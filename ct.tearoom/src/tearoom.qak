@@ -44,7 +44,7 @@ Dispatch end : end (PAYLOAD)
 
 
 Context ctxtearoom ip [host="localhost" port=50810]
-Context ctxbasicrobot ip [host="192.168.1.20" port=50800]
+Context ctxbasicrobot ip [host="192.168.10.100" port=50800]
 
 ExternalQActor basicrobot context ctxbasicrobot
 
@@ -62,6 +62,11 @@ QActor waitermind context ctxtearoom {
 		var Table2_id = 2
 		var ORD_client: String = ""
 		var Table_selected = 0
+		
+		val CollectTime = 4000L
+		val DelayTakeDrink = 2000L
+		val DelayServeDrink = 2000L
+		val DelayTakeClient = 2000L
 		
 		// Home Position
 		val X_home = "0"
@@ -207,7 +212,7 @@ QActor waitermind context ctxtearoom {
 				Table1_states.set(3, 0)
 			#]
 
-			delay 4000
+			delayVar DelayTakeClient
 			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
 		} else {
 			[#
@@ -217,7 +222,7 @@ QActor waitermind context ctxtearoom {
 				Table2_states.set(3, 0)
 			#]
 			
-			delay 4000
+			delayVar DelayTakeClient
 			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
 		}
 	}
@@ -227,7 +232,7 @@ QActor waitermind context ctxtearoom {
 		// Waiter take the order
 		updateResource [# "takeOrder" #]
 		onMsg(client_ready_to_order : client_ready_to_order (ID, ORD)){
-			println("WAITER | take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			println("WAITER | go to table for take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 			
 			if [# Table1_states.get(4) == payloadArg(0).toInt() #]{
 				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
@@ -246,11 +251,11 @@ QActor waitermind context ctxtearoom {
 	
 	State sendOrderToBarman{
 		// Waiter send the order to Barman
-		println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+		println("WAITER | go to barman for send the order from client with ID: $ID_client and ORD: $ORD_client")
 		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
 		[# readLine() #]
 		
-		delay 4000
+		delayVar DelayTakeDrink
 		request waiterengine -m moveTo : moveTo ($X_barman, $Y_barman)
 
 		forward barman -m send_order : send_order ($ID_client, $ORD_client)
@@ -262,7 +267,7 @@ QActor waitermind context ctxtearoom {
 		println("WAITERMIND | Reach Barman")
 		updateResource [# "reachBarman" #]
 		onMsg(barman_complete_order : barman_complete_order (ID, ORD)){
-			println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+			println("WAITER | go to barman for the order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 			
 			[#  
 				ID_client = payloadArg(0).toInt()
@@ -279,7 +284,7 @@ QActor waitermind context ctxtearoom {
 		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
 		[# readLine() #]
 		
-		delay 4000
+		delayVar DelayServeDrink
 		
 		if [# Table1_states.get(4) == ID_client #]{
 			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
@@ -294,7 +299,7 @@ QActor waitermind context ctxtearoom {
 		// Waiter collect the payment
 		updateResource [# "collectPayment" #]
 		onMsg(client_payment : client_payment (ID)){
-			println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
+			println("WAITER | go to client with ID: ${payloadArg(0)} for collect the payment")
 			
 			
 			if [# Table1_states.get(4) == payloadArg(0).toInt() #]{
@@ -318,7 +323,7 @@ QActor waitermind context ctxtearoom {
 		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
 		[# readLine() #]
 		
-		delay 4000
+		delayVar CollectTime
 		request waiterengine -m moveTo : moveTo ($X_exit, $Y_exit)
 		[#
 			when(Table_selected) {
@@ -358,14 +363,14 @@ QActor waitermind context ctxtearoom {
 				}				
 			}
 		#]
-		[# readLine() #]
 	}
 	Transition t12	whenReply done -> tableCleaned
 	
 	State tableCleaned {
 		// Waiter tableCleaned
 		println("WAITER | tableCleaned")
-		updateResource [# "tableCleaned" #]
+		updateResource [# ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY() #]
+		[# readLine() #]
 		
 		delay 4000
 		[#
@@ -416,7 +421,7 @@ QActor waitermind context ctxtearoom {
 QActor waiterengine context ctxtearoom{
 	[#
 		// Robot
-		var StepTime = 350L
+		var StepTime = 260L
 		val BackTime = 2 * StepTime / 3
 		
 		// Map
@@ -521,7 +526,7 @@ QActor waiterengine context ctxtearoom{
 				delayVar BackT
 				forward basicrobot -m cmd : cmd(h)
 			}	
- 			run itunibo.planner.plannerUtil.updateMapObstacleOnCurrentDirection()
+ 			//run itunibo.planner.plannerUtil.updateMapObstacleOnCurrentDirection()
 	 		run itunibo.planner.plannerUtil.showCurrentRobotState()
 			updateResource [# "stepFail" #]
 			delay 500
@@ -646,6 +651,10 @@ QActor smartbell context ctxtearoom {
 
 QActor barman context ctxtearoom {
 	
+	[#
+		val TimePrepareOrder = 15000L
+	#]
+	
 	State s0 initial {
 		// Barman initial state
 		println("BARMAN | Start")
@@ -666,7 +675,7 @@ QActor barman context ctxtearoom {
 		updateResource [# "prepareOrder" #]
 		onMsg(send_order : send_order (ID, ORD)){
 			println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-			delay 15000
+			delayVar TimePrepareOrder
 			println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 			forward waitermind -m barman_complete_order : barman_complete_order($payloadArg(0), $payloadArg(1))
 		}

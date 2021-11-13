@@ -27,6 +27,11 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				var ORD_client: String = ""
 				var Table_selected = 0
 				
+				val CollectTime = 4000L
+				val DelayTakeDrink = 2000L
+				val DelayServeDrink = 2000L
+				val DelayTakeClient = 2000L
+				
 				// Home Position
 				val X_home = "0"
 				val Y_home = "0"
@@ -166,7 +171,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 										Table1_states.set(1, 0)
 										Table1_states.set(2, 0)
 										Table1_states.set(3, 0)
-						delay(4000) 
+						delay(DelayTakeClient)
 						request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
 						}
 						else
@@ -175,7 +180,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						 				Table2_states.set(1, 0)
 						 				Table2_states.set(2, 0)
 						 				Table2_states.set(3, 0)
-						 delay(4000) 
+						 delay(DelayTakeClient)
 						 request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
 						 }
 					}
@@ -187,7 +192,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						)
 						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID,ORD)"), Term.createTerm("client_ready_to_order(ID,ORD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+								println("WAITER | go to table for take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 								if(  Table1_states.get(4) == payloadArg(0).toInt()  
 								 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
 								}
@@ -203,11 +208,11 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				}	 
 				state("sendOrderToBarman") { //this:State
 					action { //it:State
-						println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
+						println("WAITER | go to barman for send the order from client with ID: $ID_client and ORD: $ORD_client")
 						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
 						 readLine()  
-						delay(4000) 
+						delay(DelayTakeDrink)
 						request("moveTo", "moveTo($X_barman,$Y_barman)" ,"waiterengine" )  
 						forward("send_order", "send_order($ID_client,$ORD_client)" ,"barman" ) 
 					}
@@ -220,7 +225,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						)
 						if( checkMsgContent( Term.createTerm("barman_complete_order(ID,ORD)"), Term.createTerm("barman_complete_order(ID,ORD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+								println("WAITER | go to barman for the order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 								  
 												ID_client = payloadArg(0).toInt()
 												ORD_client = payloadArg(1).toString()
@@ -234,7 +239,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
 						 readLine()  
-						delay(4000) 
+						delay(DelayServeDrink)
 						if(  Table1_states.get(4) == ID_client  
 						 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
 						}
@@ -250,7 +255,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						)
 						if( checkMsgContent( Term.createTerm("client_payment(ID)"), Term.createTerm("client_payment(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
+								println("WAITER | go to client with ID: ${payloadArg(0)} for collect the payment")
 								if(  Table1_states.get(4) == payloadArg(0).toInt()  
 								 ){
 													Table_selected = 1
@@ -271,7 +276,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
 						 readLine()  
-						delay(4000) 
+						delay(CollectTime)
 						request("moveTo", "moveTo($X_exit,$Y_exit)" ,"waiterengine" )  
 						
 									when(Table_selected) {
@@ -310,15 +315,15 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 											Table2_states.set(1, 1)
 										}				
 									}
-						 readLine()  
 					}
 					 transition(edgeName="t1218",targetState="tableCleaned",cond=whenReply("done"))
 				}	 
 				state("tableCleaned") { //this:State
 					action { //it:State
 						println("WAITER | tableCleaned")
-						updateResourceRep( "tableCleaned"  
+						updateResourceRep( ""+itunibo.planner.plannerUtil.getPosX()+","+itunibo.planner.plannerUtil.getPosY()  
 						)
+						 readLine()  
 						delay(4000) 
 						
 									when(Table_selected) {
