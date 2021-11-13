@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlin.random.Random
 	
 class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, scope ){
 
@@ -21,7 +22,8 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				var Client_temp = 36.0
 				var Client_MaxWaitTime = 1000
 				var Client_table = 1
-				var Client_Ord: String = "the"
+				var Client_Ord: String = ""
+				val Menu : Array<String> = arrayOf("the", "acqua", "brioches", "cioccolata")
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -81,16 +83,20 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 												Client_table = payloadArg(1).toInt()
 						}
 						println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="order", cond=doswitch() )
 				}	 
 				state("order") { //this:State
 					action { //it:State
+						
+									Client_Ord = Menu[Random.nextInt(0, 3)]
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
 						updateResourceRep( "order"  
 						)
-						forward("client_ready_to_order", "client_ready_to_order($Client_ID,$Client_Ord)" ,"waiter" ) 
+						forward("client_ready_to_order", "client_ready_to_order($Client_ID,$Client_Ord)" ,"waitermind" ) 
 						println("CLIENT | Premi invio per continuare e farlo pagare")
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="pay", cond=doswitch() )
 				}	 
@@ -99,7 +105,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
 						updateResourceRep( "pay"  
 						)
-						forward("client_payment", "client_payment($Client_ID)" ,"waiter" ) 
+						forward("client_payment", "client_payment($Client_ID)" ,"waitermind" ) 
 					}
 					 transition( edgeName="goto",targetState="exit", cond=doswitch() )
 				}	 

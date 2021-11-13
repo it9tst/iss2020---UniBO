@@ -18,7 +18,7 @@ Dispatch client_payment : client_payment (ID)
 Context ctxclient ip [host="127.0.0.1" port=50820] 
 Context ctxtearoom ip [host="localhost" port=50810]
 
-ExternalQActor waiter context ctxtearoom
+ExternalQActor waitermind context ctxtearoom
 ExternalQActor smartbell context ctxtearoom
 
 
@@ -29,7 +29,8 @@ QActor client context ctxclient {
 		var Client_temp = 36.0
 		var Client_MaxWaitTime = 1000
 		var Client_table = 1
-		var Client_Ord: String = "the"
+		var Client_Ord: String = ""
+		val Menu : Array<String> = arrayOf("the", "acqua", "brioches", "cioccolata")
 	#]
 	
 	State s0 initial {
@@ -83,17 +84,20 @@ QActor client context ctxclient {
 			#]
 		}
 		println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
-//		[# readLine() #]
+		[# readLine() #]
 	}
 	Goto order
-	
+
 	State order {
 		// Client would like to order
+		[#
+			Client_Ord = Menu[Random.nextInt(0, 3)]
+		#]
 		println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
 		updateResource [# "order" #]
-		forward waiter -m client_ready_to_order : client_ready_to_order($Client_ID, $Client_Ord)
+		forward waitermind -m client_ready_to_order : client_ready_to_order($Client_ID, $Client_Ord)
 		println("CLIENT | Premi invio per continuare e farlo pagare")
-//		[# readLine() #]
+		[# readLine() #]
 	}
 	Goto pay
 	
@@ -101,7 +105,7 @@ QActor client context ctxclient {
 		// Client would like to pay
 		println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
 		updateResource [# "pay" #]
-		forward waiter -m client_payment : client_payment($Client_ID)
+		forward waitermind -m client_payment : client_payment($Client_ID)
 	}
 	Goto exit
 	

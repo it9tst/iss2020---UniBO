@@ -35,8 +35,8 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						updateResourceRep( "waitRing"  
 						)
 					}
-					 transition(edgeName="t08",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
-					transition(edgeName="t09",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t023",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
+					transition(edgeName="t024",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
@@ -50,7 +50,7 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						}
 						if(  Client_temp < Temp_max  
 						 ){println("SMARTBELL | The client can enter - Temp Ok")
-						request("smartbell_enter_request", "smartbell_enter_request($Id_client)" ,"waiter" )  
+						request("smartbell_enter_request", "smartbell_enter_request($Id_client)" ,"waitermind" )  
 						}
 						else
 						 {println("SMARTBELL | The client can't enter - Temp Ko")
@@ -58,9 +58,9 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						 forward("go_to_wait_ring", "go_to_wait_ring(PAYLOAD)" ,"smartbell" ) 
 						 }
 					}
-					 transition(edgeName="t110",targetState="clientEnter",cond=whenReply("client_accept"))
-					transition(edgeName="t111",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
-					transition(edgeName="t112",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
+					 transition(edgeName="t125",targetState="clientEnter",cond=whenReply("client_accept"))
+					transition(edgeName="t126",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
+					transition(edgeName="t127",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
 				}	 
 				state("clientEnterWithTime") { //this:State
 					action { //it:State
@@ -84,6 +84,7 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client,${payloadArg(0)})"   )  
 						}
+						 Id_client++  
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
