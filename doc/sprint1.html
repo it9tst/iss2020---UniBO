@@ -101,6 +101,7 @@
                 <hr class="my-4">
 			</div>
 			<div>
+				<p>Consideriamo uno scenario semplificato, che non richieda interruzioni e cominciamo a modellarlo.</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -131,11 +132,11 @@
                         </tr>
 						<tr>
                             <th scope="row">Step 1</th>
-                            <td>Il cliente arriva alla tearoom con temperatura non idonea, quindi lo smartbell, dopo aver misurato la temperatura, nega l'accesso al tearoom.</td>
+                            <td>Il cliente numero 1 arriva alla tearoom con temperatura non idonea, quindi lo smartbell, dopo aver misurato la temperatura, nega l'accesso alla tearoom.</td>
                         </tr>
 						<tr>
                             <th scope="row">Step 2</th>
-                            <td>Il cliente arriva alla tearoom con temperatura idonea, il waiter controlla che ci siano tavoli <br>liberi e sanificati, non essendocene comunica al cliente un tempo di attesa di MAXSTAYTIME. </td>
+                            <td>Il cliente numero 2 arriva alla tearoom con temperatura idonea, il waiter controlla che ci siano tavoli <br>liberi e sanificati, non essendocene comunica al cliente un tempo di attesa di MAXSTAYTIME. </td>
                         </tr>
 						<tr>
                             <th scope="row">Step 3</th>
@@ -152,9 +153,9 @@
 				<hr class="my-4">
 			</div>
             <div>
-				<p>Si assume che il cliente sia virtuale.</p>
-				<p><b>1.</b> Il cliente arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
-				<p><b>2.</b> Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio). A questo punto il waiter pulisce in fasi il tavolo 1 attraversando tutti e tre gli stati (stampa degli stati). Una volta che il tavolo 1 risulta pulito e libero, fa accomodare il cliente (stampa del messaggio). Il cliente ordina (stampa del messaggio), il waiter comunica al barman l'ordinazione (stampa del messaggio), il barmana la prepara (stampa dello stato) e comunica al waiter quando è pronta (stampa del messaggio), il waiter la prende per servirla al cliente (stampa del messaggio) che una volta finito di consumare (stampa del messaggio) paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
+				<p>Si assume che i clienti siano virtuali.</p>
+				<p><b>1.</b> Il cliente numero 1 arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
+				<p><b>2.</b> Il cliente numero 2 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio). A questo punto il waiter pulisce in fasi il tavolo 1 attraversando tutti e tre gli stati (stampa degli stati). Una volta che il tavolo 1 risulta pulito e libero, fa accomodare il cliente (stampa del messaggio). Il cliente ordina (stampa del messaggio), il waiter comunica al barman l'ordinazione (stampa del messaggio), il barmana la prepara (stampa dello stato) e comunica al waiter quando è pronta (stampa del messaggio), il waiter la prende per servirla al cliente (stampa del messaggio) che una volta finito di consumare (stampa del messaggio) paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
             </div>
 			<br>
 			<hr>
@@ -189,7 +190,7 @@
             <div>
 				<p>Si assume che il cliente sia virtuale.</p>
 				<ul>
-					<li>Ripetere il test plan dell'analisi dei requisiti, con l'aggiunta del movimento, sfruttando un <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.mvirtual2020/userDocs/LabUsingVirtualRobot.html">virtualrobot</a>.</li>
+					<li>Ripetere il test plan dell'analisi dei requisiti, con l'aggiunta del movimento, sfruttando un <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.mvirtual2020/userDocs/LabUsingVirtualRobot.html">virtualrobot</a> e verificando le effettive posizioni del Waiter tra i vari step.</li>
 				</ul>
             </div>
 			<br>
