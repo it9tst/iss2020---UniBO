@@ -1,5 +1,3 @@
-/.metadata/
-
 .classpath
-*.prefs
 .DS_Store
+*.prefs
