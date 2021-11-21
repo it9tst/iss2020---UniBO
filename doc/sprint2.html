@@ -20,7 +20,7 @@
     <body>
 		<div class="jumbotron jumbotron-fluid text-center" style="padding: 5px">
 			<h1 class="display-4">LABORATORIO DI SISTEMI SOFTWARE 2020</h1>
-			<p class="lead">Sprint 1</p>
+			<p class="lead">Sprint 2</p>
 		</div>
 		<div class="container">
 			<div class="row text-center">
@@ -101,6 +101,7 @@
                 <hr class="my-4">
 			</div>
 			<div>
+				<p>Partendo dall'analisi dei problemi dello sprint precedente, procediamo con uno scenario in cui si richiedano delle interruzioni e cominciamo a modellarlo.</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -115,11 +116,11 @@
                         </tr>
                         <tr>
                             <th scope="row">Clienti idonei</th>
-                            <td>1</td>
+                            <td>N</td>
                         </tr>
 						<tr>
                             <th scope="row">Clienti non idonei</th>
-                            <td>1</td>
+                            <td>NAN</td>
                         </tr>
                         <tr>
                             <th scope="row">Tavoli liberi</th>
@@ -127,19 +128,17 @@
                         </tr>
 						<tr>
                             <th scope="row">Tavoli sanificati</th>
-                            <td>0</td>
+                            <td>2</td>
                         </tr>
 						<tr>
                             <th scope="row">Step 1</th>
-                            <td>Il cliente arriva alla tearoom con temperatura non idonea, quindi lo smartbell, dopo aver misurato la temperatura, nega l'accesso al tearoom.</td>
+                            <td>Il waiter fa accomodare i clienti ai tavoli liberi e sanificati, prende le ordinazioni, <br>le comunica al barman, che le prepara, e una volta pronte le serve ai clienti rispettivamente in base all'ordine cronologico delle ordinazioni.
+						  </td>
                         </tr>
 						<tr>
                             <th scope="row">Step 2</th>
-                            <td>Il cliente arriva alla tearoom con temperatura idonea, il waiter controlla che ci siano tavoli <br>liberi e sanificati, non essendocene comunica al cliente un tempo di attesa di MAXSTAYTIME. </td>
-                        </tr>
-						<tr>
-                            <th scope="row">Step 3</th>
-                            <td>Il waiter va al primo tavolo libero non sanificato, lo sparecchia, lo pulisce e lo apparecchia in sequenza. <br>Successivamente fa accomodare il cliente al tavolo libero e sanificato, prende l'ordinazione, <br>la comunica al barman, che la prepara, e una volta pronta l'ordinazione, la serve al cliente. <br>Al termine fa pagare il cliente e lo accompagna all'uscita.</td>
+                            <td>Uno dei clienti termina di consumare e il waiter dopo averlo fatto pagare, lo accompagna all'uscita <br>e si avvivicina al tavolo liberato per sanificarlo. <br> Quando il waiter si trova al secondo step di pulizia il cliente del tavolo occupato vuole effettuare un'altra ordinazione.<br>Il waiter quindi interrompe la sua attività e va dal cliente a prendere l'ordine, lo consegna al barman e <br>e prima di ritornare alla homa controlla se ci sono tavolo da sanificare. A questo punto torna al tavolo che stava pulendo, termina la sua attività e ritorna alla home.
+							</td>
                         </tr>
                     </tbody>
                 </table>
@@ -152,7 +151,7 @@
 				<hr class="my-4">
 			</div>
             <div>
-				<p>Si assume che il cliente sia virtuale.</p>
+				<p>Si assume che i clienti siano virtuali.</p>
 				<p><b>1.</b> Il cliente arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
 				<p><b>2.</b> Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio). A questo punto il waiter pulisce in fasi il tavolo 1 attraversando tutti e tre gli stati (stampa degli stati). Una volta che il tavolo 1 risulta pulito e libero, fa accomodare il cliente (stampa del messaggio). Il cliente ordina (stampa del messaggio), il waiter comunica al barman l'ordinazione (stampa del messaggio), il barmana la prepara (stampa dello stato) e comunica al waiter quando è pronta (stampa del messaggio), il waiter la prende per servirla al cliente (stampa del messaggio) che una volta finito di consumare (stampa del messaggio) paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
             </div>
