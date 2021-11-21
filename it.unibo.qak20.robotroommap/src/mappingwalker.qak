@@ -1,0 +1,144 @@
+/*  
+ * mappingwalker.qak 
+ */    
+System  mappingwalker
+mqttBroker "localhost" : 1883 eventTopic "unibo/boundarywalker"  
+
+Dispatch start   : start(ARG)
+Dispatch stop    : stop(ARG)
+Dispatch resume  : resume(ARG) 
+
+Dispatch cmd     : cmd(MOVE)
+Dispatch end     : end(ARG) 
+ 
+Request step       : step( TIME )	 
+Reply   stepdone   : stepdone(V)  
+Reply   stepfail   : stepfail(DURATION, CAUSE)
+  
+Context ctxmappingwalker   ip [host="localhost" port=8030]
+Context ctxbasicrobot    ip [host="127.0.0.1" port=50800]
+   
+ExternalQActor basicrobot context ctxbasicrobot 
+
+QActor mappingwalker context ctxmappingwalker  {   
+
+[# 
+var NumStep      = 0  
+var GoalOk       = true 
+val StepTime     = 260L
+val BackTime     = 2 * StepTime / 3
+var StartTime    = 0L
+var Workduration = 0L    
+var CurrentPlannedMove = ""
+val inmapname    = "tearoomBoundary"
+val outmapname   = "teaRoomExplored"
+#] 
+
+	State s0 initial { 	  
+		println("mappingwalker | START")	
+		discardMsg Off  //WE MUST RECEIVE stop
+ 		run itunibo.planner.plannerUtil.initAI()
+ 		forward basicrobot -m cmd : cmd(l)
+		delay 300
+		forward basicrobot -m cmd : cmd(r)    
+		delay 300
+/* 
+ * 1) Load the map of the empty-room
+ */		
+		run itunibo.planner.plannerUtil.loadRoomMap( inmapname )
+		run itunibo.planner.plannerUtil.showCurrentRobotState()
+		updateResource [# "initial" #]
+		//forward mappingwalker -m start : start(go)  //automsg
+	}	
+ 	Goto exploreDirties  
+ 	//Transition t0 whenMsg start -> exploreDirties
+ 	
+ 	  
+ 	State exploreDirties{
+ 		printCurrentMessage
+ 		run itunibo.planner.plannerUtil.resetActions()
+ 		run itunibo.planner.plannerUtil.planForNextDirty()
+ 		delay 1000	
+ 		//[# readLine() #]
+ 	}
+ 	Goto execPlannedMoves if [# itunibo.planner.plannerUtil.existActions() #] else endOfJob 
+   	
+ 	State execPlannedMoves{ 
+ 		[#  CurrentPlannedMove = itunibo.planner.plannerUtil.getNextPlannedMove() 
+ 			//println("			execPlannedMovessssss = $CurrentPlannedMove")
+  		#]
+ 	}
+ 	Goto wMove if [# CurrentPlannedMove == "w" #] else otherPlannedMove
+ 
+ 	State wMove {  
+ 		request basicrobot -m step : step( $StepTime  )
+ 	}
+ 	Transition t0  whenReply stepdone -> stepDone
+				   whenReply stepfail -> stepFail
+
+ 	
+ 	State otherPlannedMove{
+ 		//println("otherPlannedMove $CurrentPlannedMove")
+ 		if [# CurrentPlannedMove == "l" || CurrentPlannedMove == "r"  #]{
+ 			forward basicrobot -m cmd : cmd($CurrentPlannedMove) 
+ 			delay 300
+			run itunibo.planner.plannerUtil.updateMap( "$CurrentPlannedMove" )
+  		} 
+ 	}   
+ 	Goto execPlannedMoves  if [# CurrentPlannedMove.length > 0 #] else exploreDirties 
+    	
+	State backToHome{
+		println("GOING BACK to HOME ... ")
+ 		if [# ! itunibo.planner.plannerUtil.atHome() #]{
+ 			run itunibo.planner.plannerUtil.planForGoal("0","0")
+ 		}else{
+ 			println("AT HOME !!")
+ 		}
+  	}  
+ 	Goto  endWork if [# itunibo.planner.plannerUtil.atHome() #] else execPlannedMoves
+	
+	State stepDone{ //change the map
+	    //println("robotmapper | stepDone  ")   
+	    updateResource [# "stepDone " #]
+  	    run itunibo.planner.plannerUtil.updateMap( "w" )
+  	} 
+	Goto execPlannedMoves  
+ 	
+ 	
+	State stepFail{
+	    println("				robotmapper | stepFail  ")
+ 		onMsg(stepfail : stepfail(DURATION, CAUSE) ){
+			[# val D = payloadArg(0).toLong()  ; val Dt = Math.abs(StepTime-D); val BackT = D/2 #] 
+			println("robotmapper stepFail D= $D, BackTime = ${BackTime} BackT=$BackT")
+ 			if [# D > BackTime #] {    
+				forward basicrobot -m cmd : cmd( s )
+				delayVar BackT
+				forward basicrobot -m cmd : cmd( h )
+			}	
+//	 		if [# ! itunibo.planner.plannerUtil.atHome() #]{
+	 			run itunibo.planner.plannerUtil.updateMapObstacleOnCurrentDirection()
+//	 		}
+	 		run itunibo.planner.plannerUtil.showCurrentRobotState()
+			updateResource [# "stepFail" #]
+			delay 500	
+		}	    
+  	}
+  	Goto exploreDirties  
+  	 
+ 	State endWork{
+ 		setDuration Workduration from StartTime
+		println("robotmapper | ends; duration=$Workduration")
+		run itunibo.planner.plannerUtil.showCurrentRobotState()
+		run itunibo.planner.plannerUtil.saveRoomMap(outmapname)
+		updateResource [# "terminated" #]
+		terminate 0
+ 	}
+
+	
+	State endOfJob{
+		run itunibo.planner.plannerUtil.getDuration()
+	}
+	Goto backToHome
+}
+
+  
