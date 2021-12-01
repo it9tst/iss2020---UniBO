@@ -25,15 +25,11 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("s0") { //this:State
 					action { //it:State
 						println("WAITER | Start")
-						updateResourceRep( "s0 waiter"  
-						)
 					}
 					 transition(edgeName="t00",targetState="accept",cond=whenRequest("smartbell_enter_request"))
 				}	 
 				state("accept") { //this:State
 					action { //it:State
-						updateResourceRep( "accept"  
-						)
 						if( checkMsgContent( Term.createTerm("smartbell_enter_request(ID)"), Term.createTerm("smartbell_enter_request(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("WAITER | Accept the client with ID: ${payloadArg(0)}")
@@ -57,7 +53,7 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						)
 						if( checkMsgContent( Term.createTerm("client_ready_to_order(ID)"), Term.createTerm("client_ready_to_order(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITER | take the order from client with ID: ${payloadArg(0)}")
+								println("WAITER | Take the order from client with ID: ${payloadArg(0)}")
 						}
 						 readLine()  
 					}
@@ -78,16 +74,12 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("endService") { //this:State
 					action { //it:State
 						println("WAITER | End service")
-						updateResourceRep( "endService"  
-						)
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
 						println("WAITER | End work")
-						updateResourceRep( "endWork"  
-						)
 						terminate(0)
 					}
 				}	 

@@ -24,8 +24,6 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 				state("s0") { //this:State
 					action { //it:State
 						println("SMARTBELL | Start")
-						updateResourceRep( "s0 smartbell"  
-						)
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
@@ -39,7 +37,7 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
-						println("SMARTBELL | Check temp client")
+						println("SMARTBELL | Check temperature client")
 						updateResourceRep( "checkTempClient"  
 						)
 						if( checkMsgContent( Term.createTerm("enter_request_client(TEMP)"), Term.createTerm("enter_request_client(TEMP)"), 
@@ -57,17 +55,14 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 				}	 
 				state("clientEnter") { //this:State
 					action { //it:State
-						updateResourceRep( "clientEnter"  
-						)
 						answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client)"   )  
 						 Id_client++  
 					}
+					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
 						println("SMARTBELL | End work")
-						updateResourceRep( "endWork"  
-						)
 						terminate(0)
 					}
 				}	 

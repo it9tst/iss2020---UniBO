@@ -14,7 +14,6 @@ Reply   client_accept		: client_accept (TABLE)
 Dispatch client_ready_to_order 	: client_ready_to_order (ID)
 Dispatch client_payment 		: client_payment (ID)
 
-
 Context ctxtearoom ip [host="localhost" port=50810]
 
 
@@ -30,13 +29,11 @@ QActor waiter context ctxtearoom {
 	State s0 initial {
 		// Initial state
 		println("WAITER | Start")
-		updateResource [# "s0 waiter" #]
 	}
 	Transition t0 whenRequest smartbell_enter_request -> accept
 
 	State accept {
 		// Waiter accept the client
-		updateResource [# "accept" #]
 		onMsg(smartbell_enter_request : smartbell_enter_request(ID)){
 			println("WAITER | Accept the client with ID: ${payloadArg(0)}")
 		}
@@ -48,7 +45,9 @@ QActor waiter context ctxtearoom {
 		// Waiter convoy the client to table
 		updateResource [# "convoyTable" #]
 		println("WAITER | Convoy the client to table")
+		// TEST01
 		[# readLine() #]
+		// TEST01
 	}
 	Transition t1 whenMsg client_ready_to_order -> takeOrder
 
@@ -56,9 +55,11 @@ QActor waiter context ctxtearoom {
 		// Waiter take the order
 		updateResource [# "takeOrder" #]
 		onMsg(client_ready_to_order : client_ready_to_order(ID)){
-			println("WAITER | take the order from client with ID: ${payloadArg(0)}")
+			println("WAITER | Take the order from client with ID: ${payloadArg(0)}")
 		}
+		// TEST01
 		[# readLine() #]
+		// TEST01
 	}
 	Transition t2 whenMsg client_payment -> collectPayment
 	
@@ -68,7 +69,9 @@ QActor waiter context ctxtearoom {
 		onMsg(client_payment : client_payment(ID)){
 			println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
 		}
+		// TEST01
 		[# readLine() #]
+		// TEST01
 		
 	}
 	Goto endService
@@ -76,14 +79,12 @@ QActor waiter context ctxtearoom {
 	State endService {
 		// Waiter end service
 		println("WAITER | End service")
-		updateResource [# "endService" #]
 	}
 	Goto endWork
 
 	State endWork {
 		// Waiter end work
 		println("WAITER | End work")
-		updateResource [# "endWork" #]
 		terminate 0
 	}
 }
@@ -98,7 +99,6 @@ QActor smartbell context ctxtearoom {
 	State s0 initial {
 		// Smartbell initial state
 		println("SMARTBELL | Start")
-		updateResource [# "s0 smartbell" #]
 	}
 	Goto waitRing
 	
@@ -111,9 +111,8 @@ QActor smartbell context ctxtearoom {
 								
 	State checkTempClient {
 		// Smartbell check temp client
-		println("SMARTBELL | Check temp client")
+		println("SMARTBELL | Check temperature client")
 		updateResource [# "checkTempClient" #]
-		
 		
 		onMsg(enter_request_client : enter_request_client(TEMP)){
 			println("SMARTBELL | Entry request from CLIENT with ID: $Id_client and TEMP: ${payloadArg(0)}")
@@ -124,22 +123,22 @@ QActor smartbell context ctxtearoom {
 			println("SMARTBELL | The client can enter")
 			request waiter -m smartbell_enter_request : smartbell_enter_request ($Id_client)
 		}
+		// TEST01
 		[# readLine() #]
+		// TEST01
 	}
 	Transition t1 whenReply client_accept -> clientEnter
 	
 	State clientEnter{
 		// Smartbell reply to waiter
-		updateResource [# "clientEnter" #]
 		replyTo enter_request_client with enter_reply_from_smartbell : enter_reply_from_smartbell ($Id_client)
 		[# Id_client++ #]
 	}
-	//Goto endWork
+	Goto endWork
 
 	State endWork {
 		// Smartbell end work
 		println("SMARTBELL | End work")
-		updateResource [# "endWork" #]
 		terminate 0
 	}
 }

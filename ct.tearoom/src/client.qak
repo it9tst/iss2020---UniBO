@@ -19,7 +19,6 @@ ExternalQActor waiter context ctxtearoom
 ExternalQActor smartbell context ctxtearoom
 
 
-
 QActor client context ctxclient {
 	[#
 		var ID = 0

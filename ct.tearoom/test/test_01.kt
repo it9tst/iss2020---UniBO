@@ -63,26 +63,30 @@ class Test01 {
  			}
 			
 			
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client","smartbell"),smartbell!!)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
 			delay(15000)
+			println("TEST | start check 'checkTempClient'")
 			checkState("checkTempClient", 2)
 			println("TEST | checkTempClient checked")
 			println("TEST | click enter to continue")
 			 
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","smartbell_enter_request","smartbell_enter_request","waiter"),waiter!!)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","smartbell_enter_request","smartbell_enter_request(0)","waiter"),waiter!!)
 			delay(15000)
+			println("TEST | start check 'convoyTable'")
 			checkState("convoyTable", 1)
 			println("TEST | convoyTable checked")
 			println("TEST | click enter to continue")
 			
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("waiter","client_ready_to_order","client_ready_to_order","waiter"),waiter!!)
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waiter","client_ready_to_order","client_ready_to_order(0)","waiter"),waiter!!)
 			delay(10000)
+			println("TEST | start check 'takeOrder'")
 			checkState("takeOrder", 1)
 			println("TEST | takeOrder checked")
 			println("TEST | click enter to continue")
 			 
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("waiter","client_payment","client_payment","waiter"),waiter!!)
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waiter","client_payment","client_payment(0)","waiter"),waiter!!)
 			delay(10000)
+			println("TEST | start check 'collectPayment'")
 			checkState("collectPayment", 1)
 			println("TEST | collectPayment checked")
 			println("TEST | click enter to continue")

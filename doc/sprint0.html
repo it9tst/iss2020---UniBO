@@ -101,8 +101,84 @@
                 <hr class="my-4">
 			</div>
             <div>
-				<p> Dai requisiti si deduce che il waiter è un ddr robot che deve seguire una serie di attività in una tearoom, ovvero un locale adibito al consumo dell’afternoon tea. All’interno della stanza vi è una servicearea dove opera un barman, su un servicedesk, che gestisce le comande ricevute dal waiter. Vi sono anche due teatable riservati ai clienti che presentano un proprio stato di utilizzo (occupato/libero, sporco/pulito). L’entrata (entrancedoor) e l’uscita (exitdoor) sono ad ingressi separati per questioni di sicurezza. Esse collegano la tearoom e la hall. In essa si trova uno smartbell, che è un dispositivo, che se attivato, segnala la presenza di un client al waiter e inoltre ne misura la temperatura corporea, attraverso un termometro integrato. Troviamo anche un presencedetector che segnala la presenza di persone all’interno della hall.</p>
+				<p>Dai requisiti si deduce che il waiter è un ddr robot che deve seguire una serie di attività in una tearoom, ovvero un locale adibito al consumo dell’afternoon tea. All’interno della stanza vi è una servicearea dove opera un barman, su un servicedesk, che gestisce le comande ricevute dal waiter. Vi sono anche due teatable riservati ai clienti che presentano un proprio stato di utilizzo (occupato/libero, sporco/pulito). L’entrata (entrancedoor) e l’uscita (exitdoor) sono ad ingressi separati per questioni di sicurezza. Esse collegano la tearoom e la hall. In essa si trova uno smartbell, che è un dispositivo, che se attivato, segnala la presenza di un client al waiter e inoltre ne misura la temperatura corporea, attraverso un termometro integrato. Troviamo anche un presencedetector che segnala la presenza di persone all’interno della hall.</p>
                 <p>Il manager è un applicazione web che tiene traccia dello stato corrente di tutte le entità presenti nella tearoom.</p>
+				<p>Dai requisiti sono emerse le seguenti entità:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Entità</th>
+                            <th scope="col">Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+						<tr>
+                            <th scope="row">Waiter</th>
+                            <td>Risulta essere il cameriere della tearoom. Il suo scopo è quello di accogliere i clienti, prendere gli ordini, comunicarli al barman, servire i clienti, accompagnarli all'uscita e pulire i tavoli sporchi. Interagisce con tutte le altre entità.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Smartbell</th>
+                            <td>Ha lo scopo di segnalare la presenza di un client che vuole entrare nella tearoom. Interagisce con il cliente e il waiter.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Barman</th>
+                            <td>Risulta essere colui che prepara le ordinazioni e avvisa il waiter quando sono pronte. Interagisce solo con il waiter.</td>
+                        </tr>
+						<tr>
+                            <th scope="row">Client</th>
+                            <td>E' un cliente virtuale che accede alla tearoom. Il suo comportamento tipico prevede di entrare, ordinare, consumare ed uscire dalla tearoom. Interagisce con il waiter e lo smartbell.</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Dai requisiti emersi dall'analisi, i messaggi scambiati, tra le entità prese attualmente in esame, sono i seguenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+                            <th scope="col">Descrizione</th>
+							<th scope="col">Entità</th>
+							<th scope="col">Parametri</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+						<tr>
+                            <th scope="row">enter_request_client</th>
+                            <td>Il client chiede di entrare nella tearoom</td>
+							<td>smartbell - client</td>
+							<td>Temperatura</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">enter_reply_from_smartbell</th>
+                            <td>E' la risposta di  enter_request_client</td>
+							<td>smartbell - client</td>
+							<td>ID Cliente</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">smartbell_enter_request</th>
+                            <td>Lo smartbell chiede se il client può entrare nella tearoom</td>
+							<td>smartbell - waiter</td>
+							<td>ID Cliente</td>
+                        </tr>
+						<tr>
+                            <th scope="row">client_accept</th>
+                            <td>E' la risposta di  smartbell_enter_request</td>
+							<td>smartbell - waiter</td>
+							<td>ID Tavolo</td>
+                        </tr>
+						<tr>
+                            <th scope="row">client_ready_to_order</th>
+                            <td>Il client vuole ordinare</td>
+							<td>waiter - client</td>
+							<td>ID Cliente</td>
+                        </tr>
+						<tr>
+                            <th scope="row">client_payment</th>
+                            <td>Il client vuole pagare</td>
+							<td>waiter - client</td>
+							<td>ID Cliente</td>
+                        </tr>
+                    </tbody>
+                </table>
 				<p>Consideriamo uno scenario semplificato, che non richieda interruzioni e cominciamo a modellarlo.</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
@@ -138,17 +214,8 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-			<br>
-			<hr>
-			<br>
-			<div class="row text-center">
-				<div class="col-lg-6 offset-lg-3"><u><h2>Test plan</h2></u></div>
-				<hr class="my-4">
-			</div>
-            <div>
-				<p>Si assume che il cliente sia virtuale.</p>
-               <p>Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo aver misurato la temperatura, viene accettato (stampa del messaggio). Il waiter lo fa accomodare al tavolo 1 (stampa del messaggio), il cliente ordina (stampa del messaggio), il cliente paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
+				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
+				<center><img src="assets/logico.png" alt="logico.png" width="75%"/></center>
             </div>
 			<br>
 			<hr>
@@ -163,6 +230,12 @@
 					<li>Gestione della sincronia o asincronia di alcuni segnali di comunicazione tra le varie entità. Quindi dobbiamo approfondire le modalità di comunicazione tra entità, che per nostra scelta implementativa saranno degli attori, ovvero l'utilizzo efficiente di request/reply, polling, event_driven.</li>
 					<li>Scelta progettuale riguardo l'implementazione del sistema in logica distribuita o centralizzato.</li>
                 </ul>
+				<p>Dall'analisi dei requisiti si evince che le azioni svolte dalle varie entità ci permettono di trattarle come se fossero macchine a stati finiti e quindi sceglieremo di modellare le entità attraverso il metamodello dei <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.qakactor/userDocs/LabQakIntro2020.html">QAK</a>.</p>
+				<p>La realizzazione di un sistema misto è la scelta migliore perché consente di gestire meglio i problemi di sincronizzazione e di prevenire al meglio il verificarsi di bottleneck.</p>
+				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
+				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="90%"/></center>
+				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
+				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="65%"/></center>
             </div>
 			<br>
 			<hr>
@@ -172,7 +245,9 @@
 				<hr class="my-4">
 			</div>
             <div>
+				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/ct.tearoom/test/test_01.kt">TEST</a></p>
 				<p>Si assume che il cliente sia virtuale.</p>
+				<p>Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo aver misurato la temperatura, viene accettato (stampa del messaggio). Il waiter lo fa accomodare al tavolo 1 (stampa del messaggio), il cliente ordina (stampa del messaggio), il cliente paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
 				<ul>
 					<li>Il cliente effettua una request allo smartbell e riceverà una reply dopo la verifica della temperatura idonea.</li>
 					<li>Lo smartbell effettua una request al waiter per verificare che il cliente possa entrare e riceverà una reply dopo la verifica dei tavoli liberi.</li>
