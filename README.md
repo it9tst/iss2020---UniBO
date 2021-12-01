@@ -8,7 +8,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 - Eclipse dsl 2020-06
 - Kotlin Plugin for Eclipse 0.8.22
-- Dropins files that constitute the support to the qak meta-model: it.unibo.Qactork.ide_1.2.4.jar, it.unibo.Qactork.ui_1.2.4.jar, it.unibo.Qactork_1.2.4.jar
+- Dropins files that constitute the support to the qak meta-model: [``it.unibo.Qactork.ide_1.2.4.jar``](dropins/it.unibo.Qactork.ide_1.2.4.jar), [``it.unibo.Qactork.ui_1.2.4.jar``](dropins/it.unibo.Qactork.ui_1.2.4.jar), [``it.unibo.Qactork_1.2.4.jar``](dropins/it.unibo.Qactork_1.2.4.jar)
 - Gradle 6.2.2
 - Java 1.8.0
 
@@ -18,10 +18,10 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 2. In workspace folder, copy [``unibolibs``](unibolibs) directory
 3. In src folder, copy [``client.qak``](ct.tearoom/src/client.qak) and [``tearoom.qak``](ct.tearoom/src/tearoom.qak)
 4. In test folder, copy [``test_01.kt``](ct.tearoom/test/test_01.kt)
-5. From terminal, in workspace folder, run command "gradle -b build_ctxtearoom.gradle eclipse"
+5. From terminal, in workspace folder, run command [``gradle -b build_ctxtearoom.gradle eclipse``]
 6. Select Configure Kotlin -> Add Kotlin nature
-7. Run MainCtxtearoom.kt
-8. Run test_01.kt
+7. Run [``MainCtxtearoom.kt``]
+8. Run [``test_01.kt``]
 
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
