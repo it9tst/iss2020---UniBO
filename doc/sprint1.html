@@ -144,6 +144,172 @@
                         </tr>
                     </tbody>
                 </table>
+				<p>In questo sprint aggiungiamo una nuova entità: il Barman.</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Entità</th>
+							<th scope="col">Modello</th>
+                            <th scope="col">Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+						<tr>
+                            <th scope="row">Waiter</th>
+							<td>Attore</td>
+                            <td>Risulta essere il cameriere della tearoom. Il suo scopo è quello di accogliere i clienti, prendere gli ordini, comunicarli al barman, servire i clienti, accompagnarli all'uscita e pulire i tavoli sporchi. Interagisce con tutte le altre entità.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Smartbell</th>
+							<td>Attore</td>
+                            <td>Ha lo scopo di segnalare la presenza di un client che vuole entrare nella tearoom. Interagisce con il cliente e il waiter.</td>
+                        </tr>
+						<tr>
+                            <th scope="row">Client</th>
+							<td>Attore</td>
+                            <td>E' un cliente virtuale che accede alla tearoom. Il suo comportamento tipico prevede di entrare, ordinare, consumare ed uscire dalla tearoom. Interagisce con il waiter e lo smartbell.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Barman</th>
+							<td>Attore</td>
+                            <td>Risulta essere colui che prepara le ordinazioni e avvisa il waiter quando sono pronte. Interagisce solo con il waiter.</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Dai requisiti emersi dall'analisi, i messaggi scambiati, tra le entità prese attualmente in esame, sono i seguenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+							<th scope="col">Tipologia</th>
+                            <th scope="col">Descrizione</th>
+                            <th scope="col">Entità</th>
+                            <th scope="col">Parametri</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">enter_request_client</th>
+							<td>Request</td>
+                            <td>Il client chiede di entrare nella tearoom</td>
+                            <td>smartbell - client</td>
+                            <td>Temperatura</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">enter_reply_from_smartbell</th>
+							<td>Reply</td>
+                            <td>E' la risposta positiva di enter_request_client</td>
+                            <td>smartbell - client</td>
+                            <td>ID Cliente, ID Tavolo</td>
+                        </tr>
+						<tr>
+                            <th scope="row">enter_reply_from_smartbell_n</th>
+							<td>Reply</td>
+                            <td>E' la risposta negativa di enter_request_client</td>
+                            <td>smartbell - client</td>
+                            <td>-</td>
+                        </tr>
+						<tr>
+                            <th scope="row">enter_reply_from_smartbell_with_time</th>
+							<td>Reply</td>
+                            <td>E' la risposta di negativa con tempo di attesa di enter_request_client</td>
+                            <td>smartbell - client</td>
+                            <td>ID Cliente, MaxStayTime</td>
+                        </tr>
+						<tr>
+                            <th scope="row">go_to_wait_ring</th>
+							<td>Dispatch</td>
+                            <td>Lo smartbell torna in attesa che un cliente suoni al campanello</td>
+                            <td>smartbell</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">smartbell_enter_request</th>
+							<td>Request</td>
+                            <td>Lo smartbell chiede se il client può entrare nella tearoom</td>
+                            <td>smartbell - waiter</td>
+                            <td>ID Cliente</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">client_accept</th>
+							<td>Reply</td>
+                            <td>E' la risposta di positiva smartbell_enter_request</td>
+                            <td>smartbell - waiter</td>
+                            <td>ID Tavolo</td>
+                        </tr>
+						<tr>
+                            <th scope="row">client_accept_with_time</th>
+							<td>Reply</td>
+                            <td>E' la risposta di negativa con tempo di attesa di smartbell_enter_request</td>
+                            <td>smartbell - waiter</td>
+                            <td>MaxStayTime</td>
+                        </tr>
+						<tr>
+                            <th scope="row">send_order</th>
+							<td>Dispatch</td>
+                            <td>Il waiter invia al barman l'ordine</td>
+                            <td>barman - waiter</td>
+                            <td>ID Cliente, Ordine</td>
+                        </tr>
+						<tr>
+                            <th scope="row">barman_complete_order</th>
+							<td>Dispatch</td>
+                            <td>Il barman ha completato la preparazione dell'ordine</td>
+                            <td>barman - waiter</td>
+                            <td>ID Cliente, Ordine</td>
+                        </tr>
+						<tr>
+                            <th scope="row">inform_maxwaittime</th>
+							<td>Dispatch</td>
+                            <td>Il waiter informa il cliente sul tempo di attesa</td>
+                            <td>waiter</td>
+                            <td>-</td>
+                        </tr>
+						<tr>
+                            <th scope="row">convoy_to_table</th>
+							<td>Dispatch</td>
+                            <td>Il waiter accompagna il cliente al tavolo</td>
+                            <td>waiter</td>
+                            <td>ID Tavolo</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">client_ready_to_order</th>
+							<td>Dispatch</td>
+                            <td>Il client vuole ordinare</td>
+                            <td>waiter - client</td>
+                            <td>ID Cliente, Ordine</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">client_payment</th>
+							<td>Dispatch</td>
+                            <td>Il client vuole pagare</td>
+                            <td>waiter - client</td>
+                            <td>ID Cliente</td>
+                        </tr>
+						<tr>
+                            <th scope="row">start_sanification</th>
+							<td>Dispatch</td>
+                            <td>Il waiter pulisce il tavolo</td>
+                            <td>waiter</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Per la gestione dello stato dei singoli tavoli abbiamo utilizzato un array di booleani che descrivono:</p>
+				<ul>
+					<li>0. Table_isFree (Il tavolo è libero)</li>
+					<li>1. Table_isCleared (Il tavolo è sparecchiato)</li>
+					<li>2. Table_isCleaned (Il tavolo è pulito)</li>
+					<li>3. Table_isSanitized (Il tavolo è sanificato)</li>
+				</ul>
+				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
+				<center><img src="assets/logico.png" alt="logico.png" width="75%"/></center>
+				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
+				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="90%"/></center>
+				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
+				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="65%"/></center>
+				<p>Ecco il grafo degli stati che compongono il Barman.</p>
+				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="65%"/></center>
             </div>
 			<br>
 			<hr>
@@ -179,6 +345,14 @@
 				<p>Per ciò che riguarda l'interazione tra le due parti sfrutteremo dei messaggi appositi modellati come Dispatch in vista delle successive implementazioni che richiederanno l'introduzione di interrupt.</p>
 				<p>Per far muovere il Waiter all'interno della tearoom abbiamo bisogno di conoscere la posizione degli oggetti e delle varie entità e per fare ciò utilizzeremo un tool sviluppato direttamente dalla nostra software house: <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.planner20/userDocs/LabPlanner.html">it.unibo.planner20</a>.</p>
 				<p>Questo comporta l'introduzione di una mappa che dovrà essere gestita da un componente. La mappa viene divisa in celle e chiamiamo con il termine step l'unità dello spostamento del Waiter da una cella ad un'altra adiacente corrispondente alla lunghezza del robot. I veri spostamenti vengono effettuati dal basicrobot: il WaiterMind chiede uno spostamento al WaiterEngine che a sua volta inoltra la richiesta al <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.qak20.basicrobot/userDocs/Qak20Basicrobot.html">basicrobot</a>.</p>
+				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
+				<center><img src="assets/logico.png" alt="logico.png" width="75%"/></center>
+				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
+				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="90%"/></center>
+				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
+				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="65%"/></center>
+				<p>Ecco il grafo degli stati che compongono il Barman.</p>
+				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="65%"/></center>
             </div>
 			<br>
 			<hr>
