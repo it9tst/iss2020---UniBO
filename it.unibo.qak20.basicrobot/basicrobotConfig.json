@@ -1,4 +1,0 @@
-{"type":"virtual", "port":"8999", "ip":"192.168.10.100"}
-{"_comment": "", "type":"realmbot", "port":"COM6", "ip":"localhost"}
-{"_comment": "", "type":"realmbot", "port":"/dev/ttyACM0", "ip":"localhost"}
-{"_comment": "", "type":"mockrobot", "port":"", "ip":"localhost"}
