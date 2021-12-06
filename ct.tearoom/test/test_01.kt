@@ -68,7 +68,7 @@ class Test01 {
 		
 	}
 	
-	fun checkPosition(x: String, y: String){		
+	fun checkPosition(x: String, y: String){
 		if( waitermind != null ){
 			println("TEST |  --- stato letto Waiter  --- ${waitermind!!.geResourceRep()}")
 			assertTrue( waitermind!!.geResourceRep() == "$x,$y")
@@ -89,46 +89,50 @@ class Test01 {
 			
 			
 			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
-			delay(10000)
+			delay(15000)
+			println("TEST | start check 0,4")
 			checkPosition("0", "4")
 			println("TEST | position entrance checked")
 			println("TEST | click enter to continue")
 						
 			
 			MsgUtil.sendMsg(MsgUtil.buildDispatch("waitermind","client_ready_to_order","client_ready_to_order(0, cioccolata)","waitermind"),waitermind!!)
+			delay(25000)
+			println("TEST | start check 2,2")
+			checkPosition("2", "2")
+			println("TEST | position table checked")
+			println("TEST | click enter to continue")
+			
+			delay(30000)
+			println("TEST | start check 6,0")
+			checkPosition("6", "0")
+			println("TEST | position barman checked")
+			println("TEST | click enter to continue")
+			delay(20000)
+			
+			
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waitermind","client_payment","client_payment(0)","waitermind"),waitermind!!)
 			delay(10000)
+			println("TEST | start check 2,2")
 			checkPosition("2", "2")
 			println("TEST | position table checked")
 			println("TEST | click enter to continue")
 			
 			
 			delay(15000)
-			checkPosition("6", "0")
-			println("TEST | position barman checked")
-			println("TEST | click enter to continue")
-			
-			
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("waitermind","client_payment","client_payment","waitermind"),waitermind!!)
-			delay(25000)
-			checkPosition("2", "2")
-			println("TEST | position table checked")
-			println("TEST | click enter to continue")
-			
-			
-			delay(25000)
 			checkPosition("6", "4")
 			println("TEST | position exit checked")
 			println("TEST | click enter to continue")
 			
 			
-			delay(25000)
+			delay(20000)
 			checkPosition("2", "2")
 			println("TEST | position table checked")
 			println("TEST | click enter to continue")
 						
 			
 			
-			delay(5000)
+			delay(10000)
 			MsgUtil.sendMsg("end","end","end",waitermind!!)
 			MsgUtil.sendMsg("end","end","end",waiterengine!!)
 			MsgUtil.sendMsg("end","end","end",smartbell!!)

@@ -36,8 +36,6 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				state("s0") { //this:State
 					action { //it:State
 						println("WAITERENGINE | Start")
-						updateResourceRep( "s0 waiterengine"  
-						)
 						itunibo.planner.plannerUtil.initAI(  )
 						itunibo.planner.plannerUtil.loadRoomMap( mapRoom  )
 						itunibo.planner.plannerUtil.showCurrentRobotState(  )
@@ -48,11 +46,9 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				state("waitCmd") { //this:State
 					action { //it:State
 						println("WAITERENGINE | Wait Cmd")
-						updateResourceRep( "waitCmd"  
-						)
 					}
 					 transition(edgeName="t019",targetState="planDestination",cond=whenRequest("moveTo"))
-					transition(edgeName="t020",targetState="cleanTable",cond=whenDispatch("clean"))
+					transition(edgeName="t020",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("planDestination") { //this:State
 					action { //it:State
@@ -73,8 +69,6 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				state("readStep") { //this:State
 					action { //it:State
 						println("WAITERENGINE | Read Step")
-						updateResourceRep( "readStep"  
-						)
 						 
 									CmdToMove = itunibo.planner.plannerUtil.getNextPlannedMove()
 					}
@@ -141,43 +135,22 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 					transition( edgeName="goto",targetState="endDestination", cond=doswitchGuarded({! ( CmdToMove.length > 0  
 					) }) )
 				}	 
-				state("cleanTable") { //this:State
-					action { //it:State
-						println("WAITERENGINE | Clean Table")
-						if( checkMsgContent( Term.createTerm("clean(TASK)"), Term.createTerm("clean(TASK)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												when(payloadArg(0).toInt()) {
-													1 -> {
-														println("WAITERENGINE | tableCleared")
-														delay(TableClearTime)
-													}
-													
-													2 -> {
-														println("WAITERENGINE | tableCleaned")
-														delay(TableCleanTime)
-													}
-													
-													3 -> {
-														println("WAITERENGINE | tableSanitized")
-														delay(TableSanitizedTime)
-													}
-												}
-						}
-						forward("doneCleanRun", "doneCleanRun(PAYLOAD)" ,"waitermind" ) 
-					}
-					 transition( edgeName="goto",targetState="waitCmd", cond=doswitch() )
-				}	 
 				state("endDestination") { //this:State
 					action { //it:State
 						println("WAITERENGINE | End Destination")
-						updateResourceRep( "endDestination"  
-						)
 						println("WAITERENGINE | Done moveTo($XPoint,$YPoint)")
 						itunibo.planner.plannerUtil.showCurrentRobotState(  )
 						answer("moveTo", "done", "done($XPoint,$YPoint)"   )  
 					}
 					 transition( edgeName="goto",targetState="waitCmd", cond=doswitch() )
+				}	 
+				state("endWork") { //this:State
+					action { //it:State
+						println("WAITERENGINE | End work")
+						updateResourceRep( "endWork"  
+						)
+						terminate(0)
+					}
 				}	 
 			}
 		}
