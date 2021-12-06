@@ -57,6 +57,7 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						 answer("enter_request_client", "enter_reply_from_smartbell_n", "enter_reply_from_smartbell_n($Id_client)"   )  
 						 forward("go_to_wait_ring", "go_to_wait_ring(PAYLOAD)" ,"smartbell" ) 
 						 }
+						 readLine()  
 					}
 					 transition(edgeName="t110",targetState="clientEnter",cond=whenReply("client_accept"))
 					transition(edgeName="t111",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
@@ -72,6 +73,7 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 								answer("enter_request_client", "enter_reply_from_smartbell_with_time", "enter_reply_from_smartbell_with_time($Id_client,${payloadArg(0)})"   )  
 						}
 						 Id_client++  
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 

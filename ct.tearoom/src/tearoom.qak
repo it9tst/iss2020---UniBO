@@ -37,7 +37,7 @@ QActor waiter context ctxtearoom {
 	[#
 		var MaxStayTime = 2000
 		var Table1_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
-		var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+		var Table2_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
 		var ID_client = 0
 		var Table1_id = 1
 		var Table2_id = 2
@@ -103,7 +103,9 @@ QActor waiter context ctxtearoom {
 				}
 			}
 		}
-//		[# readLine() #]
+		// TEST02
+		[# readLine() #]
+		// TEST02
 	}
 	Transition t1	whenMsg inform_maxwaittime -> inform
 					whenMsg convoy_to_table -> convoyTable
@@ -115,7 +117,9 @@ QActor waiter context ctxtearoom {
 		onMsg(inform_maxwaittime : inform_maxwaittime (PAYLOAD)){
 			replyTo smartbell_enter_request with client_accept_with_time : client_accept_with_time ($MaxStayTime)
 		}
-//		[# readLine() #]
+		// TEST02
+		[# readLine() #]
+		// TEST02
 	}
 	Goto rest
 	
@@ -143,7 +147,6 @@ QActor waiter context ctxtearoom {
 				}
 			#]
 		}
-//		[# readLine() #]
 	}
 	Goto rest
 
@@ -157,7 +160,6 @@ QActor waiter context ctxtearoom {
 				ORD_client = payloadArg(1).toString()
 			#]
 		}
-//		[# readLine() #]
 	}
 	Goto sendOrderToBarman
 	
@@ -166,7 +168,6 @@ QActor waiter context ctxtearoom {
 		updateResource [# "sendOrderToBarman" #]
 		println("WAITER | send the order to Barman from client with ID: $ID_client and ORD: $ORD_client")
 		forward barman -m send_order : send_order ($ID_client, $ORD_client)
-//		[# readLine() #]
 	}
 	Goto rest
 	
@@ -176,7 +177,6 @@ QActor waiter context ctxtearoom {
 		onMsg(barman_complete_order : barman_complete_order (ID, ORD)){
 			println("WAITER | serve the order to client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
 		}
-//		[# readLine() #]
 	}
 	Goto rest
 	
@@ -186,7 +186,6 @@ QActor waiter context ctxtearoom {
 		onMsg(client_payment : client_payment (ID)){
 			println("WAITER | Collect the payment from client with ID: ${payloadArg(0)}")
 		}
-//		[# readLine() #]
 		
 	}
 	Goto convoyExit
@@ -225,7 +224,6 @@ QActor waiter context ctxtearoom {
 				}				
 			}
 		#]
-//		[# readLine() #]
 	}
 	Goto tableCleaned
 	
@@ -244,7 +242,6 @@ QActor waiter context ctxtearoom {
 				}				
 			}	
 		#]
-//		[# readLine() #]
 	}
 	Goto tableSanitized
 	
@@ -264,7 +261,6 @@ QActor waiter context ctxtearoom {
 			}
 			Table_selected = 0
 		#]
-//		[# readLine() #]
 	}
 	Goto rest
 
@@ -316,7 +312,9 @@ QActor smartbell context ctxtearoom {
 			replyTo enter_request_client with enter_reply_from_smartbell_n : enter_reply_from_smartbell_n ($Id_client)
 			forward smartbell -m go_to_wait_ring : go_to_wait_ring (PAYLOAD)
 		}
-//		[# readLine() #]
+		// TEST01 - TEST02
+		[# readLine() #]
+		// TEST01 - TEST02
 	}
 	Transition t1	whenReply client_accept -> clientEnter
 					whenReply client_accept_with_time -> clientEnterWithTime
@@ -330,7 +328,9 @@ QActor smartbell context ctxtearoom {
 			replyTo enter_request_client with enter_reply_from_smartbell_with_time : enter_reply_from_smartbell_with_time ($Id_client, $payloadArg(0))
 		}
 		[# Id_client++ #]
-//		[# readLine() #]
+		// TEST02
+		[# readLine() #]
+		// TEST02
 	}
 	Goto waitRing
 

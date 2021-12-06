@@ -72,26 +72,30 @@ class Test02 {
  			}
 			
 			
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client","smartbell"),smartbell!!)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.0)","smartbell"),smartbell!!)
 			delay(5000)
+			println("TEST | start check 'checkTempClient'")
 			checkState("checkTempClient", 2)
 			println("TEST | checkTempClient checked")
 			println("TEST | click enter to continue")
 			
-			MsgUtil.sendMsg(MsgUtil.buildRequest("waiter","smartbell_enter_request","smartbell_enter_request","waiter"),waiter!!)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("waiter","smartbell_enter_request","smartbell_enter_request(0)","waiter"),waiter!!)
 			delay(5000)
+			println("TEST | start check 'accept'")
 			checkState("accept", 1)
 			println("TEST | accept checked")
 			println("TEST | click enter to continue")
 			
 			MsgUtil.sendMsg(MsgUtil.buildRequest("waiter","inform_maxwaittime","inform_maxwaittime","waiter"),waiter!!)
 			delay(5000)
+			println("TEST | start check 'inform'")
 			checkState("inform", 1)
 			println("TEST | inform checked")
 			println("TEST | click enter to continue")
 					
 			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","client_accept_with_time","client_accept_with_time","smartbell"),waiter!!)
 			delay(5000)
+			println("TEST | start check 'clientEnterWithTime'")
 			checkState("clientEnterWithTime", 2)
 			println("TEST | clientEnterWithTime checked")
 			println("TEST | click enter to continue")

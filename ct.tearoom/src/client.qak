@@ -13,7 +13,6 @@ Dispatch client_ready_to_order : client_ready_to_order (ID, ORD)
 Dispatch client_payment : client_payment (ID)
 
 
-
 // CONTEXT
 Context ctxclient ip [host="127.0.0.1" port=50820] 
 Context ctxtearoom ip [host="localhost" port=50810]
@@ -83,7 +82,6 @@ QActor client context ctxclient {
 			#]
 		}
 		println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
-//		[# readLine() #]
 	}
 	Goto order
 	
@@ -93,7 +91,6 @@ QActor client context ctxclient {
 		updateResource [# "order" #]
 		forward waiter -m client_ready_to_order : client_ready_to_order($Client_ID, $Client_Ord)
 		println("CLIENT | Premi invio per continuare e farlo pagare")
-//		[# readLine() #]
 	}
 	Goto pay
 	

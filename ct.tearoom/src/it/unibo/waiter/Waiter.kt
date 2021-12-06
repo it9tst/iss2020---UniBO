@@ -19,7 +19,7 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 		
 				var MaxStayTime = 2000
 				var Table1_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
-				var Table2_states = arrayOf(false, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
+				var Table2_states = arrayOf(true, false, false, false) // 1. Table_isFree, 2. Table_isCleared, 3. Table_isCleaned, 4. Table_isSanitized
 				var ID_client = 0
 				var Table1_id = 1
 				var Table2_id = 2
@@ -84,6 +84,7 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						   }
 						  }
 						 }
+						 readLine()  
 					}
 					 transition(edgeName="t16",targetState="inform",cond=whenDispatch("inform_maxwaittime"))
 					transition(edgeName="t17",targetState="convoyTable",cond=whenDispatch("convoy_to_table"))
@@ -97,6 +98,7 @@ class Waiter ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("smartbell_enter_request", "client_accept_with_time", "client_accept_with_time($MaxStayTime)"   )  
 						}
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 

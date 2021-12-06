@@ -303,13 +303,19 @@
 					<li>3. Table_isSanitized (Il tavolo è sanificato)</li>
 				</ul>
 				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico.png" alt="logico.png" width="75%"/></center>
+				<center><img src="assets/logico.png" alt="logico.png" width="65%"/></center>
+				<br>
+				<br>
 				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
-				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="90%"/></center>
+				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="65%"/></center>
+				<br>
+				<br>
 				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
-				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="65%"/></center>
+				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="50%"/></center>
+				<br>
+				<br>
 				<p>Ecco il grafo degli stati che compongono il Barman.</p>
-				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="65%"/></center>
+				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="50%"/></center>
             </div>
 			<br>
 			<hr>
@@ -320,54 +326,13 @@
 			</div>
             <div>
 				<p>Si assume che i clienti siano virtuali.</p>
-				<p><b>1.</b> Il cliente numero 1 arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
-				<p><b>2.</b> Il cliente numero 2 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio). A questo punto il waiter pulisce in fasi il tavolo 1 attraversando tutti e tre gli stati (stampa degli stati). Una volta che il tavolo 1 risulta pulito e libero, fa accomodare il cliente (stampa del messaggio). Il cliente ordina (stampa del messaggio), il waiter comunica al barman l'ordinazione (stampa del messaggio), il barmana la prepara (stampa dello stato) e comunica al waiter quando è pronta (stampa del messaggio), il waiter la prende per servirla al cliente (stampa del messaggio) che una volta finito di consumare (stampa del messaggio) paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
+				<p>Il test 1 è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/ct.tearoom/test/test_01.kt">TEST_01</a></p>
+				<p><b>1.</b> Il cliente arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
+				<p>Il test 2 è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/ct.tearoom/test/test_02.kt">TEST_02</a></p>
+				<p><b>2.</b> Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio).</p>
             </div>
 			<br>
 			<hr>
-			<br>
-			<div class="row text-center">
-				<div class="col-lg-6 offset-lg-3"><u><h2>Analisi dei problemi</h2></u></div>
-                <hr class="my-4">
-			</div>
-            <div>
-                <p>Dall'analisi dei requisiti si evince che il waiter presenti le seguenti capacità:</p>
-				<ul>
-					<li>1) capacità di intraprendere le varie azioni di propria iniziativa</li>
-					<li>2) reagire agli stimoli esterni</li>
-				</ul>
-				<p>Visto e considerato che l'esecuzione di una qualsiasi azione del Waiter è una combinazione di azioni appartenenti a 3 categorie: invio di un messaggio, movimento nella tearoom, interazione con oggetti della tearoom e che il Waiter deve essere in grado di eseguire un task e ascoltare nuovi messaggi contemporaneamente, allora siamo spinti a suddividerlo in parti:</p>
-				<ul>
-					<li>1) WaiterMind: che comunica con le altre entità e gestisce il WaiterEngine (movimento)</li>
-					<li>2) WaiterEngine: che gestisca il movimento del robot e la pulizia dei table</li>
-				</ul>
-				<p>Queste due parti sostituiranno il Waiter dell'analisi dei requisiti, in due nuove attori, dove il primo mantiene la logica di esecuzione del Waiter e il secondo si occuperà di gestire le azioni che interessano la tearoom.</p>
-				<p>Per ciò che riguarda l'interazione tra le due parti sfrutteremo dei messaggi appositi modellati come Dispatch in vista delle successive implementazioni che richiederanno l'introduzione di interrupt.</p>
-				<p>Per far muovere il Waiter all'interno della tearoom abbiamo bisogno di conoscere la posizione degli oggetti e delle varie entità e per fare ciò utilizzeremo un tool sviluppato direttamente dalla nostra software house: <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.planner20/userDocs/LabPlanner.html">it.unibo.planner20</a>.</p>
-				<p>Questo comporta l'introduzione di una mappa che dovrà essere gestita da un componente. La mappa viene divisa in celle e chiamiamo con il termine step l'unità dello spostamento del Waiter da una cella ad un'altra adiacente corrispondente alla lunghezza del robot. I veri spostamenti vengono effettuati dal basicrobot: il WaiterMind chiede uno spostamento al WaiterEngine che a sua volta inoltra la richiesta al <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.qak20.basicrobot/userDocs/Qak20Basicrobot.html">basicrobot</a>.</p>
-				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico.png" alt="logico.png" width="75%"/></center>
-				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
-				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="90%"/></center>
-				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
-				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="65%"/></center>
-				<p>Ecco il grafo degli stati che compongono il Barman.</p>
-				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="65%"/></center>
-            </div>
-			<br>
-			<hr>
-			<br>
-			<div class="row text-center">
-				<div class="col-lg-6 offset-lg-3"><u><h2>Test plan</h2></u></div>
-				<hr class="my-4">
-			</div>
-            <div>
-				<p>Si assume che il cliente sia virtuale.</p>
-				<ul>
-					<li>Ripetere il test plan dell'analisi dei requisiti, con l'aggiunta del movimento, sfruttando un <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.mvirtual2020/userDocs/LabUsingVirtualRobot.html">virtualrobot</a> e verificando le effettive posizioni del Waiter tra i vari step.</li>
-				</ul>
-            </div>
-			<br>
 			<br>
 		</div>
         <div class="container-fluid" style="background-color: #e9ecef; padding: 15px 0px">

@@ -72,8 +72,9 @@ class Test01 {
  			}
 			
 			
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client","smartbell"),smartbell!!)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(38.0)","smartbell"),smartbell!!)
 			delay(5000)
+			println("TEST | start check 'checkTempClient'")
 			checkState("checkTempClient", 2)
 			println("TEST | checkTempClient checked")
 			println("TEST | click enter to continue")
