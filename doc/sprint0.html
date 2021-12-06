@@ -226,12 +226,18 @@
                 </ul>
 				<p>Dall'analisi dei requisiti si evince che le azioni svolte dalle varie entità ci permettono di trattarle come se fossero macchine a stati finiti e quindi sceglieremo di modellare le entità attraverso il metamodello dei <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.qakactor/userDocs/LabQakIntro2020.html">QAK</a>.</p>
 				<p>La realizzazione di un sistema misto è la scelta migliore perché consente di gestire meglio i problemi di sincronizzazione e di prevenire al meglio il verificarsi di bottleneck.</p>
+				<br>
+				<br>
 				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico.png" alt="logico.png" width="75%"/></center>
+				<center><img src="assets/logico.png" alt="logico.png" width="65%"/></center>
+				<br>
+				<br>
 				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
-				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="90%"/></center>
+				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="75%"/></center>
+				<br>
+				<br>
 				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
-				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="65%"/></center>
+				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="55%"/></center>
             </div>
 			<br>
 			<hr>
@@ -241,15 +247,9 @@
 				<hr class="my-4">
 			</div>
             <div>
-				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/ct.tearoom/test/test_01.kt">TEST</a></p>
+				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/ct.tearoom/test/test_01.kt">TEST_01</a></p>
 				<p>Si assume che il cliente sia virtuale.</p>
 				<p>Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo aver misurato la temperatura, viene accettato (stampa del messaggio). Il waiter lo fa accomodare al tavolo 1 (stampa del messaggio), il cliente ordina (stampa del messaggio), il cliente paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
-				<ul>
-					<li>Il cliente effettua una request allo smartbell e riceverà una reply dopo la verifica della temperatura idonea.</li>
-					<li>Lo smartbell effettua una request al waiter per verificare che il cliente possa entrare e riceverà una reply dopo la verifica dei tavoli liberi.</li>
-					<li>Il cliente effettua un dispatch per richiedere di ordinare.</li>
-					<li>Il cliente effettua un dispatch per richiedere di pagare.</li>
-				</ul>
             </div>
 			<br>
 			<br>
