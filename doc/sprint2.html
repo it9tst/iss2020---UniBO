@@ -132,16 +132,86 @@
                         </tr>
 						<tr>
                             <th scope="row">Step 1</th>
-                            <td>Il waiter fa accomodare i clienti ai tavoli liberi e sanificati, prende le ordinazioni, <br>le comunica al barman, che le prepara, e una volta pronte le serve ai clienti rispettivamente in base all'ordine cronologico delle ordinazioni.
+                            <td>Il waiter fa accomodare un cliente al tavolo libero e sanificato, prende l'ordinazione, la comunica al barman che la prepara,<br> e una volta pronta la serve al cliente.<br> Nel frattempo arriva un altro cliente che segue esattamente lo stesso iter dell'altro.
 						  </td>
                         </tr>
 						<tr>
                             <th scope="row">Step 2</th>
-                            <td>Uno dei clienti termina di consumare e il waiter dopo averlo fatto pagare, lo accompagna all'uscita <br>e si avvivicina al tavolo liberato per sanificarlo. <br> Quando il waiter si trova al secondo step di pulizia il cliente del tavolo occupato vuole effettuare un'altra ordinazione.<br>Il waiter quindi interrompe la sua attività e va dal cliente a prendere l'ordine, lo consegna al barman e <br>e prima di ritornare alla homa controlla se ci sono tavolo da sanificare. A questo punto torna al tavolo che stava pulendo, termina la sua attività e ritorna alla home.
+                            <td>Uno dei clienti termina di consumare e il waiter dopo averlo fatto pagare, lo accompagna all'uscita e si avvicina al tavolo liberato per sanificarlo.<br> Quando il waiter si trova al secondo step di pulizia, il cliente dell'altro tavolo occupato vuole effettuare un'altra ordinazione.<br> Il waiter quindi interrompe la sua attività e va dal cliente a prendere l'ordine, lo comunica al barman e prima di ritornare alla home controlla se ci sono tavoli da sanificare.<br> A questo punto torna al tavolo che stava pulendo, termina la sua attività e ritorna alla home.
 							</td>
                         </tr>
                     </tbody>
                 </table>
+				<p>Definiamo i task che saranno interrompibili a runtime.</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Task prioritari</th>
+							<th scope="col">Conviene interrompere?</th>
+							<th scope="col">Task che interrompono</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Clean</th>
+							<td>Si</td>
+							<td>Tutti</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Rest</th>
+							<td>Si</td>
+							<td>Tutti</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Per quanto riguarda l'interrompibilità del task clean, il waiter riprenderà l'attività di pulizia dal punto in cui era stata interrotta.
+					<br>
+					Al termine di un task, il waiter controllerà che non ci siano ulteriori richieste da parte dei clienti in attesa o che non siano presenti tavoli da pulire. In tal caso il waiter tornerà nella home.
+					<br>
+					A tale scopo, introduciamo 4 nuovi messaggi che distinguono e definiscono le varie fasi della pulizia dei tavoli già descritte nello <a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html">sprint 1</a>.</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+							<th scope="col">Tipologia</th>
+                            <th scope="col">Descrizione</th>
+                            <th scope="col">Entità</th>
+                            <th scope="col">Parametri</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">goToClearing</th>
+							<td>Dispatch</td>
+                            <td>Il WaiterEngine è pronto per ricevere comandi.</td>
+                            <td>waiterengine - waitermind</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">goToSanitizing</th>
+							<td>Dispatch</td>
+                            <td>Il WaiterMind richiede un movimento al WaiterEngine</td>
+                            <td>waiterengine - waitermind</td>
+                            <td>Coordinate X e Y dell'obiettivo da raggiungere</td>
+                        </tr>
+						<tr>
+                            <th scope="row">goToCleaning</th>
+							<td>Dispatch</td>
+                            <td>E' la risposta positiva di moveTo</td>
+                            <td>waiterengine - waitermind</td>
+                            <td>Coordinate X e Y dell'obiettivo da raggiungere</td>
+                        </tr>
+						<tr>
+                            <th scope="row">stopClean</th>
+							<td>Dispatch</td>
+                            <td>Il WaiterEngine comunica con il BasicRobot</td>
+                            <td>waiterengine - basicrobot</td>
+                            <td>STEPTIME</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Ecco il grafo aggiornato degli stati che compongono il WaiterMind.</p>
+				<center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" width="80%"/></center>
             </div>
 			<br>
 			<hr>
