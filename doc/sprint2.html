@@ -168,7 +168,7 @@
 					<br>
 					Al termine di un task, il waiter controllerà che non ci siano ulteriori richieste da parte dei clienti in attesa o che non siano presenti tavoli da pulire. In tal caso il waiter tornerà nella home.
 					<br>
-					A tale scopo, introduciamo 4 nuovi messaggi che distinguono e definiscono le varie fasi della pulizia dei tavoli già descritte nello <a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html">sprint 1</a>.</p>
+					A tale scopo, introduciamo 5 nuovi messaggi che distinguono e definiscono le varie fasi della pulizia dei tavoli già descritte nello <a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html">sprint 1</a>.</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -183,35 +183,46 @@
                         <tr>
                             <th scope="row">goToClearing</th>
 							<td>Dispatch</td>
-                            <td>Il WaiterEngine è pronto per ricevere comandi.</td>
-                            <td>waiterengine - waitermind</td>
+                            <td>Il WaiterMind passa allo stato tableCleared.</td>
+                            <td>waitermind</td>
                             <td>-</td>
                         </tr>
                         <tr>
                             <th scope="row">goToSanitizing</th>
 							<td>Dispatch</td>
-                            <td>Il WaiterMind richiede un movimento al WaiterEngine</td>
-                            <td>waiterengine - waitermind</td>
-                            <td>Coordinate X e Y dell'obiettivo da raggiungere</td>
+                            <td>Il WaiterMind passa allo stato tableCleaned.</td>
+                            <td>waitermind</td>
+                            <td>-</td>
                         </tr>
 						<tr>
                             <th scope="row">goToCleaning</th>
 							<td>Dispatch</td>
-                            <td>E' la risposta positiva di moveTo</td>
-                            <td>waiterengine - waitermind</td>
-                            <td>Coordinate X e Y dell'obiettivo da raggiungere</td>
+                            <td>Il WaiterMind passa allo stato tableSanitized.</td>
+                            <td>waitermind</td>
+                            <td>-</td>
                         </tr>
 						<tr>
-                            <th scope="row">stopClean</th>
-							<td>Dispatch</td>
-                            <td>Il WaiterEngine comunica con il BasicRobot</td>
-                            <td>waiterengine - basicrobot</td>
-                            <td>STEPTIME</td>
+                            <th scope="row">clean</th>
+							<td>Request</td>
+                            <td>Il WaiterMind comunica al WaiterEngine di iniziare uno dei tre stati di pulizia.</td>
+                            <td>waiterengine - waitermind</td>
+                            <td>STATE</td>
+                        </tr>
+						<tr>
+                            <th scope="row">cleanDone</th>
+							<td>Reply</td>
+                            <td>Il WaiterEngine comunica al WaiterMind di aver completato uno dei tre stati di pulizia.</td>
+                            <td>waiterengine - waitermind</td>
+                            <td>-</td>
                         </tr>
                     </tbody>
                 </table>
 				<p>Ecco il grafo aggiornato degli stati che compongono il WaiterMind.</p>
-				<center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" width="80%"/></center>
+				<center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" width="95%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo aggiornato degli stati che compongono il WaiterEngine.</p>
+				<center><img src="assets/statiWaiterEngine.png" alt="statiWaiterEngine.png" width="65%"/></center>
             </div>
 			<br>
 			<hr>
@@ -221,10 +232,15 @@
 				<hr class="my-4">
 			</div>
             <div>
+				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_req/ct.tearoom/test/test_01.kt">TEST_01</a></p>
 				<p>Si assume che i clienti siano virtuali.</p>
-				<p><b>1.</b> Il cliente arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
-				<p><b>2.</b> Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio). A questo punto il waiter pulisce in fasi il tavolo 1 attraversando tutti e tre gli stati (stampa degli stati). Una volta che il tavolo 1 risulta pulito e libero, fa accomodare il cliente (stampa del messaggio). Il cliente ordina (stampa del messaggio), il waiter comunica al barman l'ordinazione (stampa del messaggio), il barmana la prepara (stampa dello stato) e comunica al waiter quando è pronta (stampa del messaggio), il waiter la prende per servirla al cliente (stampa del messaggio) che una volta finito di consumare (stampa del messaggio) paga il waiter (stampa del messaggio) ed esce dalla tearoom (stampa del messaggio).</p>
-            </div>
+				<ul>
+				<li>Il cliente numero 1 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter. Dopo aver controllato che vi è almeno un tavolo pulito e libero, fa accomodare il cliente. Il cliente ordina, il waiter comunica al barman l'ordinazione, il barman la prepara e comunica al waiter quando è pronta, il waiter la prende per servirla al cliente e torna nella home.</li>
+				<li>Il cliente numero 2 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter. Dopo aver controllato che vi è almeno un tavolo pulito e libero, fa accomodare il cliente. Il cliente ordina, il waiter comunica al barman l'ordinazione, il barman la prepara e comunica al waiter quando è pronta, il waiter la prende per servirla al cliente e torna nella home.</li>
+				<li>Il cliente numero 1, una volta finito di consumare, paga il waiter che lo accompagna all'uscita dalla tearoom. Quindi il waiter, dopo aver controllato se ci sono tavoli sporchi da pulire o finire di pulire, comincia a pulire in fasi il tavolo sporco.
+				<li>A questo punto il waiter viene interrotto dal cliente numero 2 che decide di ordinare di nuovo. Quindi il waiter comunica al barman l'ordinazione, e mentre aspetta che il barman la prepara, controlla se ci sono tavoli da pulire o finire di pulire e finisce il lavoro dallo stato intermedio.</li>
+				</ul>
+			</div>
 			<br>
 			<br>
 		</div>
