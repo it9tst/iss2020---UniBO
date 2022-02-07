@@ -28,11 +28,14 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 				state("wait") { //this:State
 					action { //it:State
 						println("MAXSTAYTIME | Wait")
+						updateResourceRep( "maxstaytime_wait"  
+						)
 					}
 					 transition(edgeName="t037",targetState="newTimer",cond=whenDispatch("startTimer"))
 					transition(edgeName="t038",targetState="resume",cond=whenDispatch("resumeTimer"))
 					transition(edgeName="t039",targetState="stop",cond=whenDispatch("stopTimer"))
 					transition(edgeName="t040",targetState="timerExpired",cond=whenDispatch("maxStayTimerExpired"))
+					transition(edgeName="t041",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("newTimer") { //this:State
 					action { //it:State
@@ -81,14 +84,24 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 				}	 
 				state("timerExpired") { //this:State
 					action { //it:State
+						println("MAXSTAYTIME | timerExpired")
 						if( checkMsgContent( Term.createTerm("maxStayTimerExpired(TABLE)"), Term.createTerm("maxStayTimerExpired(TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												Table = payloadArg(0).toInt()
 								forward("maxStayTimerExpired", "maxStayTimerExpired($Table)" ,"waitermind" ) 
 						}
+						updateResourceRep( "maxstaytime_timerExpired"  
+						)
+						 readLine()  
 					}
 					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+				}	 
+				state("endWork") { //this:State
+					action { //it:State
+						println("MAXSTAYTIME | End work")
+						terminate(0)
+					}
 				}	 
 			}
 		}

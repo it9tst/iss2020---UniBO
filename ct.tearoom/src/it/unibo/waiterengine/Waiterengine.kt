@@ -36,8 +36,6 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				state("s0") { //this:State
 					action { //it:State
 						println("WAITERENGINE | Start")
-						updateResourceRep( "s0 waiterengine"  
-						)
 						itunibo.planner.plannerUtil.initAI(  )
 						itunibo.planner.plannerUtil.loadRoomMap( mapRoom  )
 						itunibo.planner.plannerUtil.showCurrentRobotState(  )
@@ -171,8 +169,6 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				state("endWork") { //this:State
 					action { //it:State
 						println("WAITERENGINE | End work")
-						updateResourceRep( "endWork"  
-						)
 						terminate(0)
 					}
 				}	 

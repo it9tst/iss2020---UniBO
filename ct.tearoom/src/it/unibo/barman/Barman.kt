@@ -34,6 +34,7 @@ class Barman ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("prepareOrder") { //this:State
 					action { //it:State
+						println("BARMAN | prepareOrder")
 						if( checkMsgContent( Term.createTerm("send_order(ID,ORD)"), Term.createTerm("send_order(ID,ORD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
