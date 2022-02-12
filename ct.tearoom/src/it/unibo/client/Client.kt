@@ -20,7 +20,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 		
 				var Client_ID = 0
 				var Client_temp = 36.0
-				var Client_MaxWaitTime = 1000
+				var Client_MaxWaitingTime = 1000
 				var Client_table = 1
 				var Client_Ord: String = ""
 				val Menu : Array<String> = arrayOf("the", "acqua", "brioches", "cioccolata")
@@ -28,16 +28,12 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("s0") { //this:State
 					action { //it:State
 						println("CLIENT | Start")
-						updateResourceRep( "START"  
-						)
 					}
 					 transition( edgeName="goto",targetState="ringBell", cond=doswitch() )
 				}	 
 				state("ringBell") { //this:State
 					action { //it:State
 						println("CLIENT | Rings the doorbell")
-						updateResourceRep( "ringBell"  
-						)
 						request("enter_request_client", "enter_request_client($Client_temp)" ,"smartbell" )  
 					}
 					 transition(edgeName="t00",targetState="enter",cond=whenReply("enter_reply_from_smartbell"))
@@ -46,11 +42,9 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("enterWithTime") { //this:State
 					action { //it:State
-						updateResourceRep( "enterWithTime"  
-						)
-						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXSTAYTIME)"), Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXSTAYTIME)"), 
+						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXWAITINGTIME)"), Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXWAITINGTIME)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(  Client_MaxWaitTime < payloadArg(1).toInt()  
+								if(  Client_MaxWaitingTime < payloadArg(1).toInt()  
 								 ){println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)}")
 								}
 								else
@@ -62,8 +56,6 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("goAway") { //this:State
 					action { //it:State
-						updateResourceRep( "goAway"  
-						)
 						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell_n(PAYLOAD)"), Term.createTerm("enter_reply_from_smartbell_n(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("CLIENT | ID: ${payloadArg(0)} | Go away because temp is KO: $Client_temp")
@@ -73,8 +65,6 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("enter") { //this:State
 					action { //it:State
-						updateResourceRep( "enter"  
-						)
 						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell(ID,TABLE)"), Term.createTerm("enter_reply_from_smartbell(ID,TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("CLIENT | ID: ${payloadArg(0)} | Enter")
@@ -92,8 +82,6 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						
 									Client_Ord = Menu[Random.nextInt(0, 3)]
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
-						updateResourceRep( "order"  
-						)
 						forward("client_ready_to_order", "client_ready_to_order($Client_ID,$Client_Ord)" ,"waitermind" ) 
 						println("CLIENT | Premi invio per continuare e farlo pagare")
 						 readLine()  
@@ -103,8 +91,6 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("pay") { //this:State
 					action { //it:State
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
-						updateResourceRep( "pay"  
-						)
 						forward("client_payment", "client_payment($Client_ID)" ,"waitermind" ) 
 					}
 					 transition( edgeName="goto",targetState="exit", cond=doswitch() )
@@ -112,16 +98,12 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("exit") { //this:State
 					action { //it:State
 						println("CLIENT || ID: ${payloadArg(0)} | Exit")
-						updateResourceRep( "exit"  
-						)
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("endWork") { //this:State
 					action { //it:State
 						println("CLIENT | ID: ${payloadArg(0)} | End work")
-						updateResourceRep( "endWork"  
-						)
 						terminate(0)
 					}
 				}	 

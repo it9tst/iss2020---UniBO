@@ -24,25 +24,19 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 				state("s0") { //this:State
 					action { //it:State
 						println("SMARTBELL | Start")
-						updateResourceRep( "s0 smartbell"  
-						)
 					}
 					 transition( edgeName="goto",targetState="waitRing", cond=doswitch() )
 				}	 
 				state("waitRing") { //this:State
 					action { //it:State
 						println("SMARTBELL | Wait ring")
-						updateResourceRep( "waitRing"  
-						)
 					}
-					 transition(edgeName="t023",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
-					transition(edgeName="t024",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t030",targetState="checkTempClient",cond=whenRequest("enter_request_client"))
+					transition(edgeName="t031",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkTempClient") { //this:State
 					action { //it:State
 						println("SMARTBELL | Check temp client")
-						updateResourceRep( "checkTempClient"  
-						)
 						if( checkMsgContent( Term.createTerm("enter_request_client(TEMP)"), Term.createTerm("enter_request_client(TEMP)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("SMARTBELL | Entry request from CLIENT with ID: $Id_client and TEMP: ${payloadArg(0)}")
@@ -58,16 +52,14 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 						 forward("go_to_wait_ring", "go_to_wait_ring(PAYLOAD)" ,"smartbell" ) 
 						 }
 					}
-					 transition(edgeName="t125",targetState="clientEnter",cond=whenReply("client_accept"))
-					transition(edgeName="t126",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
-					transition(edgeName="t127",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
+					 transition(edgeName="t132",targetState="clientEnter",cond=whenReply("client_accept"))
+					transition(edgeName="t133",targetState="clientEnterWithTime",cond=whenReply("client_accept_with_time"))
+					transition(edgeName="t134",targetState="waitRing",cond=whenDispatch("go_to_wait_ring"))
 				}	 
 				state("clientEnterWithTime") { //this:State
 					action { //it:State
 						println("SMARTBELL | The client must wait time")
-						updateResourceRep( "clientEnterWithTime"  
-						)
-						if( checkMsgContent( Term.createTerm("client_accept_with_time(MAXSTAYTIME)"), Term.createTerm("client_accept_with_time(MAXSTAYTIME)"), 
+						if( checkMsgContent( Term.createTerm("client_accept_with_time(MAXSTAYTIME)"), Term.createTerm("client_accept_with_time(MAXWAITINGTIME)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("enter_request_client", "enter_reply_from_smartbell_with_time", "enter_reply_from_smartbell_with_time($Id_client,${payloadArg(0)})"   )  
 						}
@@ -78,8 +70,6 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 				state("clientEnter") { //this:State
 					action { //it:State
 						println("SMARTBELL | The client can enter")
-						updateResourceRep( "clientEnter"  
-						)
 						if( checkMsgContent( Term.createTerm("client_accept(TABLE)"), Term.createTerm("client_accept(TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("enter_request_client", "enter_reply_from_smartbell", "enter_reply_from_smartbell($Id_client,${payloadArg(0)})"   )  
@@ -91,8 +81,6 @@ class Smartbell ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, 
 				state("endWork") { //this:State
 					action { //it:State
 						println("SMARTBELL | End work")
-						updateResourceRep( "endWork"  
-						)
 						terminate(0)
 					}
 				}	 
