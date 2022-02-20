@@ -124,6 +124,7 @@ QActor waitermind context ctxtearoom {
 					whenMsg client_ready_to_order -> takeOrder
 					whenMsg barman_complete_order -> reachBarman
 					whenMsg client_payment -> collectPayment
+					whenMsg maxStayTimerExpired -> collectPayment
 					whenMsg end -> endWork
 	
 	State checkTableToClean{
@@ -345,7 +346,23 @@ QActor waitermind context ctxtearoom {
 				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
 				forward maxstaytime -m stopTimer : stopTimer(2)
 			}
-		}	
+		}
+
+		onMsg(maxStayTimerExpired : maxStayTimerExpired (TABLE)){
+			println("WAITERMIND | go to client of the table ${payloadArg(0)} for collect the payment, because the time has expired")
+			
+			if [# payloadArg(0).toInt() == 1 #]{
+				[#
+					TableSelectedToClean = 1
+				#]
+				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
+			} else {
+				[#
+					TableSelectedToClean = 2
+				#]
+				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
+			}
+		}		
 	}
 	Transition t10	whenReply done -> convoyExit
 	
