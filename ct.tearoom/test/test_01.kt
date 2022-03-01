@@ -115,64 +115,33 @@ class Test01 {
  			}
 			
 			delay(5000)
-			println("TEST | start check 'maxstaytime_wait'")
-			checkState("maxstaytime_wait", 5)
-			println("TEST | maxstaytime_wait checked")
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("maxstaytime","startTimer","startTimer(1)","maxstaytime"),maxstaytime!!)
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("maxstaytime","startTimer","startTimer(2)","maxstaytime"),maxstaytime!!)
 			
+			// Entra il primo cliente
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
+			delay(15000)
 			
-			delay(3000)
-			println("TEST | start check 'maxstaytimetable1_newTimer'")
-			checkState("maxstaytimetable1_newTimer", 6)
-			println("TEST | maxstaytimetable1_newTimer checked")
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("maxstaytime","stopTimer","stopTimer(1)","maxstaytime"),maxstaytime!!)
- 			delay(3000)
-			println("TEST | start check 'maxstaytimetable1_stop'")
-			checkState("maxstaytimetable1_stop", 6)
-			println("TEST | maxstaytimetable1_stop checked")
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("maxstaytime","resumeTimer","resumeTimer(1)","maxstaytime"),maxstaytime!!)
-			delay(3000)
-			println("TEST | start check 'maxstaytimetable1_resume'")
-			checkState("maxstaytimetable1_resume", 6)
-			println("TEST | maxstaytimetable1_resume checked")
+			// Entra il secondo cliente
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
+			delay(15000)
 			
-			
-			delay(3000)
-			println("TEST | start check 'maxstaytimetable2_newTimer'")
-			checkState("maxstaytimetable2_newTimer", 7)
-			println("TEST | maxstaytimetable2_newTimer checked")
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("maxstaytime","stopTimer","stopTimer(2)","maxstaytime"),maxstaytime!!)
- 			delay(3000)
-			println("TEST | start check 'maxstaytimetable2_stop'")
-			checkState("maxstaytimetable2_stop", 7)
-			println("TEST | maxstaytimetable2_stop checked")
-			MsgUtil.sendMsg(MsgUtil.buildDispatch("maxstaytime","resumeTimer","resumeTimer(2)","maxstaytime"),maxstaytime!!)
-			delay(3000)
-			println("TEST | start check 'maxstaytimetable2_resume'")
-			checkState("maxstaytimetable2_resume", 7)
-			println("TEST | maxstaytimetable2_resume checked")
-			
-			
-			delay(100000)
-			println("TEST | start check 'maxstaytime_timerExpired'")
-			checkState("maxstaytime_timerExpired", 5)
-			println("TEST | maxstaytime_timerExpired checked")
-			println("TEST | double click enter to continue")
+			// Ci sono due tavoli occupati e un terzo cliente chiede di entrare
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
 			delay(10000)
-			println("TEST | start check 'maxstaytime_wait'")
-			checkState("maxstaytime_wait", 5)
-			println("TEST | maxstaytime_wait checked")
-			delay(1000)
-			println("TEST | start check 'maxstaytimetable1_wait'")
-			checkState("maxstaytimetable1_wait", 6)
-			println("TEST | maxstaytime_wait checked")
-			delay(1000)
-			println("TEST | start check 'maxstaytimetable2_wait'")
-			checkState("maxstaytimetable2_wait", 7)
-			println("TEST | maxstaytime_wait checked")
-	
 			
+			println("TEST | start check MaxWaitingTime value")
+			println(waitermind!!.geResourceRep())
+			println("TEST | MaxWaitingTime value checked")
+			println("TEST | click enter to continue")
+			
+			// Ci sono due tavoli occupati e un quarto cliente chiede di entrare
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
+			delay(10000)
+			
+			println("TEST | start check MaxWaitingTime value")
+			println("TEST | MaxWaitingTime value: " + waitermind!!.geResourceRep())
+			println("TEST | MaxWaitingTime value checked")
+			println("TEST | click enter to continue")
+
 			delay(5000)
 			MsgUtil.sendMsg("end","end","end",maxstaytime!!)
 			MsgUtil.sendMsg("end","end","end",maxstaytimetable1!!)

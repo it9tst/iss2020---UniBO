@@ -19,9 +19,9 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
 				var Client_ID = 0
-				var Client_temp = 36.0
-				var Client_MaxWaitingTime = 1000
-				var Client_table = 1
+				var Client_Temp = 36.0
+				var Client_MaxWaitingTime = 8000L
+				var Client_Table = 1
 				var Client_Ord: String = ""
 				val Menu : Array<String> = arrayOf("the", "acqua", "brioches", "cioccolata")
 		return { //this:ActionBasciFsm
@@ -34,18 +34,18 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("ringBell") { //this:State
 					action { //it:State
 						println("CLIENT | Rings the doorbell")
-						request("enter_request_client", "enter_request_client($Client_temp)" ,"smartbell" )  
+						request("enterRequestClient", "enterRequestClient($Client_Temp)" ,"smartbell" )  
 					}
-					 transition(edgeName="t00",targetState="enter",cond=whenReply("enter_reply_from_smartbell"))
-					transition(edgeName="t01",targetState="goAway",cond=whenReply("enter_reply_from_smartbell_n"))
-					transition(edgeName="t02",targetState="enterWithTime",cond=whenReply("enter_reply_from_smartbell_with_time"))
+					 transition(edgeName="t00",targetState="enter",cond=whenReply("enterReplyFromSmartbell"))
+					transition(edgeName="t01",targetState="goAway",cond=whenReply("enterReplyFromSmartbellNeg"))
+					transition(edgeName="t02",targetState="enterWithTime",cond=whenReply("enterReplyFromSmartbellWithTime"))
 				}	 
 				state("enterWithTime") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXWAITINGTIME)"), Term.createTerm("enter_reply_from_smartbell_with_time(ID,MAXWAITINGTIME)"), 
+						if( checkMsgContent( Term.createTerm("enterReplyFromSmartbellWithTime(ID,MAXWAITINGTIME)"), Term.createTerm("enterReplyFromSmartbellWithTime(ID,MAXWAITINGTIME)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								if(  Client_MaxWaitingTime < payloadArg(1).toInt()  
-								 ){println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)}")
+								 ){println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)} milliseconds")
 								}
 								else
 								 {println("CLIENT | ID: ${payloadArg(0)} | Not Wait")
@@ -56,21 +56,21 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("goAway") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell_n(PAYLOAD)"), Term.createTerm("enter_reply_from_smartbell_n(ID)"), 
+						if( checkMsgContent( Term.createTerm("enterReplyFromSmartbellNeg(PAYLOAD)"), Term.createTerm("enterReplyFromSmartbellNeg(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("CLIENT | ID: ${payloadArg(0)} | Go away because temp is KO: $Client_temp")
+								println("CLIENT | ID: ${payloadArg(0)} | Go away because temp is KO: $Client_Temp")
 						}
 					}
 					 transition( edgeName="goto",targetState="endWork", cond=doswitch() )
 				}	 
 				state("enter") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("enter_reply_from_smartbell(ID,TABLE)"), Term.createTerm("enter_reply_from_smartbell(ID,TABLE)"), 
+						if( checkMsgContent( Term.createTerm("enterReplyFromSmartbell(ID,TABLE)"), Term.createTerm("enterReplyFromSmartbell(ID,TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("CLIENT | ID: ${payloadArg(0)} | Enter")
 								 
 												Client_ID = payloadArg(0).toInt()
-												Client_table = payloadArg(1).toInt()
+												Client_Table = payloadArg(1).toInt()
 						}
 						println("CLIENT | Premi invio per continuare e farlo ordinare e mangiare")
 						 readLine()  
@@ -82,7 +82,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 						
 									Client_Ord = Menu[Random.nextInt(0, 3)]
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to order $Client_Ord")
-						forward("client_ready_to_order", "client_ready_to_order($Client_ID,$Client_Ord)" ,"waitermind" ) 
+						forward("clientReadyToOrder", "clientReadyToOrder($Client_ID,$Client_Ord)" ,"waitermind" ) 
 						println("CLIENT | Premi invio per continuare e farlo pagare")
 						 readLine()  
 					}
@@ -91,7 +91,7 @@ class Client ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				state("pay") { //this:State
 					action { //it:State
 						println("CLIENT | ID: ${payloadArg(0)} | Would like to pay")
-						forward("client_payment", "client_payment($Client_ID)" ,"waitermind" ) 
+						forward("clientPayment", "clientPayment($Client_ID)" ,"waitermind" ) 
 					}
 					 transition( edgeName="goto",targetState="exit", cond=doswitch() )
 				}	 

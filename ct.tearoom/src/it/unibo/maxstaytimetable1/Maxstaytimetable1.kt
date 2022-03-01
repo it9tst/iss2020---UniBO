@@ -22,6 +22,7 @@ class Maxstaytimetable1 ( name: String, scope: CoroutineScope  ) : ActorBasicFsm
 				var TimerDone 		= 0L
 				var TimerGlobalDone = 0L
 				var TimeAfterResume = 0L
+				var TimerToReturn   = 0L
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -32,52 +33,46 @@ class Maxstaytimetable1 ( name: String, scope: CoroutineScope  ) : ActorBasicFsm
 				state("wait") { //this:State
 					action { //it:State
 						println("MAXSTAYTIMETABLE1 | Wait")
-						updateResourceRep( "maxstaytimetable1_wait"  
-						)
 					}
-					 transition(edgeName="t042",targetState="newTimer",cond=whenDispatch("startTimer"))
-					transition(edgeName="t043",targetState="wait",cond=whenDispatch("stopTimer"))
-					transition(edgeName="t044",targetState="resume",cond=whenDispatch("resumeTimer"))
-					transition(edgeName="t045",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t050",targetState="newTimer",cond=whenDispatch("startTimer"))
+					transition(edgeName="t051",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("newTimer") { //this:State
 					action { //it:State
 						println("MAXSTAYTIMETABLE1 | newTimer")
-						updateResourceRep( "maxstaytimetable1_newTimer"  
-						)
 						StartTime = getCurrentTime()
 						
 									TimerGlobalDone = 0
 						stateTimer = TimerActor("timer_newTimer", 
 							scope, context!!, "local_tout_maxstaytimetable1_newTimer", MaxStayTime )
 					}
-					 transition(edgeName="t146",targetState="timerExpired",cond=whenTimeout("local_tout_maxstaytimetable1_newTimer"))   
-					transition(edgeName="t147",targetState="stop",cond=whenDispatch("stopTimer"))
+					 transition(edgeName="t152",targetState="timerExpired",cond=whenTimeout("local_tout_maxstaytimetable1_newTimer"))   
+					transition(edgeName="t153",targetState="stop",cond=whenDispatch("stopTimer"))
+					transition(edgeName="t154",targetState="returnTimerDone",cond=whenRequest("maxStayTimerLeftRequestToTable"))
 				}	 
 				state("stop") { //this:State
 					action { //it:State
 						println("MAXSTAYTIMETABLE1 | stop")
-						updateResourceRep( "maxstaytimetable1_stop"  
-						)
 						TimerDone = getDuration(StartTime)
 						
 									TimerGlobalDone += TimerDone
 					}
-					 transition(edgeName="t248",targetState="resume",cond=whenDispatch("resumeTimer"))
+					 transition(edgeName="t255",targetState="resume",cond=whenDispatch("resumeTimer"))
+					transition(edgeName="t256",targetState="newTimer",cond=whenDispatch("startTimer"))
+					transition(edgeName="t257",targetState="returnTimerDoneStop",cond=whenRequest("maxStayTimerLeftRequestToTable"))
 				}	 
 				state("resume") { //this:State
 					action { //it:State
 						println("MAXSTAYTIMETABLE1 | resume")
-						updateResourceRep( "maxstaytimetable1_resume"  
-						)
 						
 									TimeAfterResume = MaxStayTime - TimerGlobalDone
 						StartTime = getCurrentTime()
 						stateTimer = TimerActor("timer_resume", 
 							scope, context!!, "local_tout_maxstaytimetable1_resume", TimeAfterResume )
 					}
-					 transition(edgeName="t349",targetState="timerExpired",cond=whenTimeout("local_tout_maxstaytimetable1_resume"))   
-					transition(edgeName="t350",targetState="stop",cond=whenDispatch("stopTimer"))
+					 transition(edgeName="t358",targetState="timerExpired",cond=whenTimeout("local_tout_maxstaytimetable1_resume"))   
+					transition(edgeName="t359",targetState="stop",cond=whenDispatch("stopTimer"))
+					transition(edgeName="t360",targetState="returnTimerDone",cond=whenRequest("maxStayTimerLeftRequestToTable"))
 				}	 
 				state("timerExpired") { //this:State
 					action { //it:State
@@ -85,6 +80,28 @@ class Maxstaytimetable1 ( name: String, scope: CoroutineScope  ) : ActorBasicFsm
 						forward("maxStayTimerExpired", "maxStayTimerExpired(1)" ,"maxstaytime" ) 
 					}
 					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+				}	 
+				state("returnTimerDone") { //this:State
+					action { //it:State
+						println("MAXSTAYTIMETABLE1 | returnTimerDone")
+						TimerDone = getDuration(StartTime)
+						 
+									TimerGlobalDone += TimerDone
+									TimerToReturn = MaxStayTime - TimerGlobalDone
+						answer("maxStayTimerLeftRequestToTable", "maxStayTimerLeftReplyFromTable", "maxStayTimerLeftReplyFromTable($TimerToReturn)"   )  
+					}
+					 transition( edgeName="goto",targetState="resume", cond=doswitch() )
+				}	 
+				state("returnTimerDoneStop") { //this:State
+					action { //it:State
+						println("MAXSTAYTIMETABLE1 | returnTimerDoneStop")
+						 
+									TimerToReturn = MaxStayTime - TimerGlobalDone
+						answer("maxStayTimerLeftRequestToTable", "maxStayTimerLeftReplyFromTable", "maxStayTimerLeftReplyFromTable($TimerToReturn)"   )  
+					}
+					 transition(edgeName="t461",targetState="resume",cond=whenDispatch("resumeTimer"))
+					transition(edgeName="t462",targetState="newTimer",cond=whenDispatch("startTimer"))
+					transition(edgeName="t463",targetState="returnTimerDoneStop",cond=whenRequest("maxStayTimerLeftRequestToTable"))
 				}	 
 				state("endWork") { //this:State
 					action { //it:State

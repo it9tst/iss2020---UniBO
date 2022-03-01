@@ -27,9 +27,9 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				var YPoint = "0"
 		
 				// Table state delay
-				val TableClearTime = 4000L
-				val TableCleanTime = 4000L
-				val TableSanitizedTime = 4000L
+				val TableClearTime = 6000L
+				val TableCleanTime = 6000L
+				val TableSanitizedTime = 5000L
 		
 				var CmdToMove = ""
 		return { //this:ActionBasciFsm
@@ -47,9 +47,9 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 					action { //it:State
 						println("WAITERENGINE | Wait Cmd")
 					}
-					 transition(edgeName="t025",targetState="planDestination",cond=whenRequest("moveTo"))
-					transition(edgeName="t026",targetState="cleanTable",cond=whenRequest("clean"))
-					transition(edgeName="t027",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t029",targetState="planDestination",cond=whenRequest("moveTo"))
+					transition(edgeName="t030",targetState="cleanTable",cond=whenRequest("clean"))
+					transition(edgeName="t031",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("planDestination") { //this:State
 					action { //it:State
@@ -81,8 +81,8 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 						println("WAITERENGINE | Exec Step")
 						request("step", "step($StepTime)" ,"basicrobot" )  
 					}
-					 transition(edgeName="t128",targetState="updateMap",cond=whenReply("stepdone"))
-					transition(edgeName="t129",targetState="errorHandler",cond=whenReply("stepfail"))
+					 transition(edgeName="t132",targetState="updateMap",cond=whenReply("stepdone"))
+					transition(edgeName="t133",targetState="errorHandler",cond=whenReply("stepfail"))
 				}	 
 				state("execMove") { //this:State
 					action { //it:State
