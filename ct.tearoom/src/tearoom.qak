@@ -266,14 +266,14 @@ QActor waitermind context ctxtearoom {
 		
 		replyTo smartbellEnterRequest with clientAcceptWithTime : clientAcceptWithTime ($MaxWaitingTime)
 		
-		[#
-			MaxWaitingTime = 0L 
-		#]
-		
 		// TEST01
 		updateResource [# "$MaxWaitingTime" #]
 		[# readLine() #]
 		// TEST01
+		
+		[#
+			MaxWaitingTime = 0L 
+		#]
 	}
 	Goto rest
 	

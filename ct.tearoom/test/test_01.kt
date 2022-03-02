@@ -114,35 +114,32 @@ class Test01 {
 				maxstaytimetable2 = it.unibo.kactor.sysUtil.getActor("maxstaytimetable2")
  			}
 			
-			delay(5000)
-			
-			// Entra il primo cliente
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
-			delay(15000)
-			
-			// Entra il secondo cliente
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
-			delay(15000)
+			// Il primo cliente chiede di entrare
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
+			// Il secondo cliente chiede di entrare
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
+			delay(40000)
 			
 			// Ci sono due tavoli occupati e un terzo cliente chiede di entrare
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
-			delay(10000)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
+			delay(5000)
 			
 			println("TEST | start check MaxWaitingTime value")
-			println(waitermind!!.geResourceRep())
+			println("TEST | MaxWaitingTime value: " + waitermind!!.geResourceRep())
 			println("TEST | MaxWaitingTime value checked")
 			println("TEST | click enter to continue")
 			
+			delay(15000)
 			// Ci sono due tavoli occupati e un quarto cliente chiede di entrare
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enter_request_client","enter_request_client(36.5)","smartbell"),smartbell!!)
-			delay(10000)
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
+			delay(5000)
 			
 			println("TEST | start check MaxWaitingTime value")
 			println("TEST | MaxWaitingTime value: " + waitermind!!.geResourceRep())
 			println("TEST | MaxWaitingTime value checked")
 			println("TEST | click enter to continue")
 
-			delay(5000)
+			delay(20000)
 			MsgUtil.sendMsg("end","end","end",maxstaytime!!)
 			MsgUtil.sendMsg("end","end","end",maxstaytimetable1!!)
 			MsgUtil.sendMsg("end","end","end",maxstaytimetable2!!)

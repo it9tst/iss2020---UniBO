@@ -207,11 +207,11 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						 }
 						println("WAITERMIND | The total maximum waiting time is $MaxWaitingTime milliseconds")
 						answer("smartbellEnterRequest", "clientAcceptWithTime", "clientAcceptWithTime($MaxWaitingTime)"   )  
-						
-									MaxWaitingTime = 0L 
 						updateResourceRep( "$MaxWaitingTime"  
 						)
 						 readLine()  
+						
+									MaxWaitingTime = 0L 
 					}
 					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
 				}	 
