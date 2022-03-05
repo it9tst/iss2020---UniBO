@@ -239,8 +239,14 @@
 			</div>
             <div>
 				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_req/ct.tearoom/test/test_01.kt">TEST_01</a></p>
-				<p>Si assume che i clienti siano virtuali.</p>
 				<p>Testiamo il task inform: se i tavoli sono sporchi e occupati, il waiter comunica al cliente il corretto tempo di attesa prima di poter entrare.</p>
+				<p>Si assume che i clienti siano virtuali.</p>
+				<ul>
+				<li>Il cliente numero 1 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter. Dopo aver controllato che vi è almeno un tavolo pulito e libero, fa accomodare il cliente.</li>
+				<li>Il cliente numero 2 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter. Dopo aver controllato che vi è almeno un tavolo pulito e libero, fa accomodare il cliente.</li>
+				<li>Il cliente numero 3 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Quindi il waiter, dopo aver controllato se ci sono tavoli liberi, vedendo che sono tutti occupati, comunica il massimo tempo di attesa.
+				<li>Il cliente numero 4 arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Quindi il waiter, dopo aver controllato se ci sono tavoli liberi, vedendo che sono tutti occupati, comunica il massimo tempo di attesa che è minore del tempo di attesa precedentemente comunicato.</li>
+				</ul>
 			</div>
 			<hr>
 			<br>
