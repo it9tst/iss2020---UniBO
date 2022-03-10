@@ -27,19 +27,22 @@ class Barman ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, sco
 				}	 
 				state("waitOrder") { //this:State
 					action { //it:State
-						println("BARMAN | Wait order")
+						println("BARMAN | waitOrder")
+						forward("setBarmanState", "setBarmanState(waitOrder)" ,"tearoomstatemanager" ) 
 					}
-					 transition(edgeName="t039",targetState="prepareOrder",cond=whenDispatch("sendOrder"))
-					transition(edgeName="t040",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t041",targetState="prepareOrder",cond=whenDispatch("sendOrder"))
+					transition(edgeName="t042",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("prepareOrder") { //this:State
 					action { //it:State
 						println("BARMAN | prepareOrder")
-						if( checkMsgContent( Term.createTerm("sendOrder(ID,ORD)"), Term.createTerm("sendOrder(ID,ORD)"), 
+						if( checkMsgContent( Term.createTerm("sendOrder(ID,ORDER)"), Term.createTerm("sendOrder(ID,ORDER)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+								println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
+								forward("setBarmanState", "setBarmanState(prepareOrder(${payloadArg(0)},${payloadArg(1)}))" ,"tearoomstatemanager" ) 
 								delay(TimePrepareOrder)
-								println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+								println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
+								forward("addOrderReady", "addOrderReady(${payloadArg(0)})" ,"tearoomstatemanager" ) 
 								forward("barmanCompleteOrder", "barmanCompleteOrder(${payloadArg(0)},${payloadArg(1)})" ,"waitermind" ) 
 						}
 					}

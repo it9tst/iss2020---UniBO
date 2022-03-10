@@ -17,61 +17,41 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 	@kotlinx.coroutines.ExperimentalCoroutinesApi			
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		
-				// Init variable
-				var Table1_states = arrayOf(1, 1, 1, 1, -1) // 0. Table_isFree, 1. Table_isCleared, 2. Table_isCleaned, 3. Table_isSanitized, 4. ID_client
-				var Table2_states = arrayOf(1, 1, 1, 1, -1) // 0. Table_isFree, 1. Table_isCleared, 2. Table_isCleaned, 3. Table_isSanitized, 4. ID_client
-				var ID_client = 0
-				var Table1_ID = 1
-				var Table2_ID = 2
-				var ORD_client: String = ""
+				var OrderClient: String = ""
+				
+				var IdClientToConvoy = 0
 				var TableSelectedToConvoy = 0
+				
+				var IdClientForOrder = 0
+				var TableSelectedForOrder = 0
+				
+				var IdClientForCollect = 0
+				var TableSelectedForCollect = 0
+				
+				var TableStateToClean = ""
 				var TableSelectedToClean = 0
 				
+				val DelayHome = 2000L
 				val DelayTakeClient = 2000L
-				val DelayTakeOrder = 5000L
-				val DelayTakeDrink = 2000L
+				val DelayTakeOrder = 4000L
+				val DelayServeOrder = 2000L
 				val DelayCollectTime = 4000L
 				
-				// Table state delay
-				var MaxWaitingTime = 0L
-				var MaxWaitingTime1 = 0L
-				var MaxWaitingTime2 = 0L
-				var TableDelayCleaning = arrayOf(0, 6000, 6000, 5000)
-				
-				// Home Position
-				val X_home = "0"
-				val Y_home = "0"
-				
-				// Barman Position
-				val X_barman = "6"
-				val Y_barman = "0"
-			
-				// Entrance Position
-				val X_entrance = "0"
-				val Y_entrance = "4"
-				
-				// Exit Position
-				val X_exit = "6"
-				val Y_exit = "4"
-				
-				// Table1 Position
-				val X_table1 = "2"
-				val Y_table1 = "2"
-				
-				// Table2 Position
-				val X_table2 = "4"
-				val Y_table2 = "2"
+				var MoveX = 0
+				var MoveY = 0
 		
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						println("WAITERMIND | Start")
+						solve("consult('storage.pl')","") //set resVar	
 					}
 					 transition(edgeName="t00",targetState="rest",cond=whenDispatch("engineReady"))
 				}	 
 				state("rest") { //this:State
 					action { //it:State
-						println("WAITERMIND | Rest")
+						println("WAITERMIND | rest")
+						forward("setWaiterState", "setWaiterState(home)" ,"tearoomstatemanager" ) 
 					}
 					 transition( edgeName="goto",targetState="checkQueue", cond=doswitch() )
 				}	 
@@ -82,26 +62,29 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 							scope, context!!, "local_tout_waitermind_checkQueue", 100.toLong() )
 					}
 					 transition(edgeName="t11",targetState="checkTableToClean",cond=whenTimeout("local_tout_waitermind_checkQueue"))   
-					transition(edgeName="t12",targetState="accept",cond=whenRequest("smartbellEnterRequest"))
-					transition(edgeName="t13",targetState="takeOrder",cond=whenDispatch("clientReadyToOrder"))
+					transition(edgeName="t12",targetState="checkAcceptOrInform",cond=whenRequest("smartbellEnterRequest"))
+					transition(edgeName="t13",targetState="checkTableForOrderIn",cond=whenDispatch("clientReadyToOrder"))
 					transition(edgeName="t14",targetState="reachBarman",cond=whenDispatch("barmanCompleteOrder"))
-					transition(edgeName="t15",targetState="collectPayment",cond=whenDispatch("clientPayment"))
-					transition(edgeName="t16",targetState="collectPayment",cond=whenDispatch("maxStayTimerExpired"))
+					transition(edgeName="t15",targetState="checkTableToCollect",cond=whenDispatch("clientPayment"))
+					transition(edgeName="t16",targetState="reachTableToKick",cond=whenDispatch("maxStayTimerExpired"))
 					transition(edgeName="t17",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkTableToClean") { //this:State
 					action { //it:State
 						println("WAITERMIND | checkTableToClean")
-						if(  Table1_states.get(0) == 1 && Table1_states.get(1) == 0  
-						 ){
-											TableSelectedToClean = 1
+						request("getTableToCleanRequest", "getTableToCleanRequest(PAYLOAD)" ,"tearoomstatemanager" )  
+					}
+					 transition(edgeName="t28",targetState="replyCheckTableToClean",cond=whenReply("getTableToCleanReply"))
+				}	 
+				state("replyCheckTableToClean") { //this:State
+					action { //it:State
+						println("WAITERMIND | replyCheckTableToClean")
+						if( checkMsgContent( Term.createTerm("getTableToCleanReply(TABLE,STATE)"), Term.createTerm("getTableToCleanReply(TABLE,STATE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 
+												TableSelectedToClean = payloadArg(0).toInt()
+												TableStateToClean = payloadArg(1)
 						}
-						else
-						 {if(  Table2_states.get(0) == 1 && Table2_states.get(1) == 0  
-						  ){
-						 						TableSelectedToClean = 2
-						 }
-						 }
 					}
 					 transition( edgeName="goto",targetState="reachHome", cond=doswitchGuarded({ TableSelectedToClean == 0  
 					}) )
@@ -110,404 +93,359 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 				}	 
 				state("reachHome") { //this:State
 					action { //it:State
-						println("WAITERMIND | Reach Home")
-						delay(3000) 
-						request("moveTo", "moveTo($X_home,$Y_home)" ,"waiterengine" )  
-					}
-					 transition(edgeName="t28",targetState="rest",cond=whenReply("done"))
-				}	 
-				state("accept") { //this:State
-					action { //it:State
-						println("WAITERMIND | accept")
-						if(  Table1_states.get(3) == 1  
-						 ){if( checkMsgContent( Term.createTerm("smartbellEnterRequest(ID)"), Term.createTerm("smartbellEnterRequest(ID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | Accept the client with ID: ${payloadArg(0)}")
-						}
-						answer("smartbellEnterRequest", "clientAccept", "clientAccept(1)"   )  
-						
-										Table1_states.set(4, payloadArg(0).toInt())
-						forward("convoyToTable", "convoyToTable(1)" ,"waitermind" ) 
+						println("WAITERMIND | reachHome")
+						delay(DelayHome)
+						forward("setWaiterState", "setWaiterState(reachHome)" ,"tearoomstatemanager" ) 
+						solve("pos(home,X,Y)","") //set resVar	
+						if( currentSolution.isSuccess() ) { 
+										MoveX = getCurSol("X").toString().toInt()
+						            	MoveY = getCurSol("Y").toString().toInt()
+						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
 						}
 						else
-						 {if(  Table2_states.get(3) == 1  
-						  ){if( checkMsgContent( Term.createTerm("smartbellEnterRequest(ID)"), Term.createTerm("smartbellEnterRequest(ID)"), 
-						                         currentMsg.msgContent()) ) { //set msgArgList
-						 		println("WAITERMIND | Accept the client with ID: ${payloadArg(0)}")
-						 }
-						 answer("smartbellEnterRequest", "clientAccept", "clientAccept(2)"   )  
-						 
-						 					Table2_states.set(4, payloadArg(0).toInt())
-						 forward("convoyToTable", "convoyToTable(2)" ,"waitermind" ) 
-						 }
-						 else
-						  {if(  Table1_states.get(0) == 0 && Table2_states.get(0) == 0  
-						   ){request("maxStayTimerLeftCompareRequest", "maxStayTimerLeftCompareRequest(1)" ,"maxstaytime" )  
-						  }
-						  else
-						   {if(  Table1_states.get(0) == 0  
-						    ){request("maxStayTimerLeftRequest", "maxStayTimerLeftRequest(1)" ,"maxstaytime" )  
-						   }
-						   else
-						    {if(  Table2_states.get(0) == 0  
-						     ){request("maxStayTimerLeftRequest", "maxStayTimerLeftRequest(2)" ,"maxstaytime" )  
-						    }
-						    else
-						     {forward("informMaxWaitingTime", "informMaxWaitingTime(PAYLOAD)" ,"waitermind" ) 
-						     }
-						    }
-						   }
-						  }
-						 }
+						{}
 					}
-					 transition(edgeName="t39",targetState="reachDoor",cond=whenDispatch("convoyToTable"))
-					transition(edgeName="t310",targetState="inform",cond=whenDispatch("informMaxWaitingTime"))
-					transition(edgeName="t311",targetState="maxStayTimeLeft",cond=whenReply("maxStayTimerLeftReply"))
-					transition(edgeName="t312",targetState="maxStayTimeLeftTable2",cond=whenReply("maxStayTimerLeftCompareReply"))
-				}	 
-				state("maxStayTimeLeftTable2") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("maxStayTimerLeftCompareReply(TIMERLEFT)"), Term.createTerm("maxStayTimerLeftCompareReply(TIMERLEFT)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | Maximum waiting time from the busy table is: ${payloadArg(0)} milliseconds")
-								
-												MaxWaitingTime1 = payloadArg(0).toLong()
-						}
-						request("maxStayTimerLeftCompareRequest", "maxStayTimerLeftCompareRequest(2)" ,"maxstaytime" )  
-					}
-					 transition(edgeName="t1513",targetState="maxStayTimeLeftCompare",cond=whenReply("maxStayTimerLeftCompareReply"))
-				}	 
-				state("maxStayTimeLeftCompare") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("maxStayTimerLeftCompareReply(TIMERLEFT)"), Term.createTerm("maxStayTimerLeftCompareReply(TIMERLEFT)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | Maximum waiting time from the busy table is: ${payloadArg(0)} milliseconds")
-								
-												MaxWaitingTime2 = payloadArg(0).toLong()
-						}
-						if(  MaxWaitingTime1 < MaxWaitingTime2  
-						 ){
-										MaxWaitingTime += MaxWaitingTime1
-										
-										for (i in 1..3){
-											if (Table1_states.get(i) == 0) {
-												MaxWaitingTime += TableDelayCleaning.get(i)
-											}
-										}
-						}
-						else
-						 {
-						 				MaxWaitingTime += MaxWaitingTime2
-						 				
-						 				for (i in 1..3){
-						 					if (Table2_states.get(i) == 0) {
-						 						MaxWaitingTime += TableDelayCleaning.get(i)
-						 					}
-						 				}
-						 }
-						println("WAITERMIND | The total maximum waiting time is $MaxWaitingTime milliseconds")
-						answer("smartbellEnterRequest", "clientAcceptWithTime", "clientAcceptWithTime($MaxWaitingTime)"   )  
-						updateResourceRep( "$MaxWaitingTime"  
-						)
-						 readLine()  
-						
-									MaxWaitingTime = 0L 
-					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("maxStayTimeLeft") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("maxStayTimerLeftReply(TIMERLEFT)"), Term.createTerm("maxStayTimerLeftReply(TIMERLEFT)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | Maximum waiting time from the busy table is: ${payloadArg(0)} milliseconds")
-								
-												MaxWaitingTime = payloadArg(0).toLong()
-						}
-					}
-					 transition( edgeName="goto",targetState="inform", cond=doswitch() )
-				}	 
-				state("inform") { //this:State
-					action { //it:State
-						println("WAITERMIND | Inform the client about the total maximum waiting time")
-						if(  Table1_states.get(0) == 0  
-						 ){
-										for (i in 1..3){
-											if (Table1_states.get(i) == 0) {
-												MaxWaitingTime += TableDelayCleaning.get(i)
-											}
-										}
-						}
-						else
-						 {if(  Table2_states.get(0) == 0  
-						  ){
-						 					for (i in 1..3){
-						 						if (Table2_states.get(i) == 0) {
-						 							MaxWaitingTime += TableDelayCleaning.get(i)
-						 						}
-						 					}
-						 }
-						 }
-						println("WAITERMIND | The total maximum waiting time is $MaxWaitingTime milliseconds")
-						answer("smartbellEnterRequest", "clientAcceptWithTime", "clientAcceptWithTime($MaxWaitingTime)"   )  
-						
-									MaxWaitingTime = 0L 
-					}
-					 transition( edgeName="goto",targetState="rest", cond=doswitch() )
-				}	 
-				state("reachDoor") { //this:State
-					action { //it:State
-						println("WAITERMIND | Reach Door")
-						if( checkMsgContent( Term.createTerm("convoyToTable(TABLE)"), Term.createTerm("convoyToTable(TABLE)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												TableSelectedToConvoy = payloadArg(0).toInt()
-						}
-						request("moveTo", "moveTo($X_entrance,$Y_entrance)" ,"waiterengine" )  
-					}
-					 transition(edgeName="t414",targetState="convoyTable",cond=whenReply("done"))
-				}	 
-				state("convoyTable") { //this:State
-					action { //it:State
-						delay(DelayTakeClient)
-						println("WAITERMIND | Convoy the client to table")
-						if(  TableSelectedToConvoy == 1  
-						 ){
-										Table1_states.set(0, 0)
-										Table1_states.set(1, 0)
-										Table1_states.set(2, 0)
-										Table1_states.set(3, 0)
-						request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
-						forward("startTimer", "startTimer(1)" ,"maxstaytime" ) 
-						}
-						else
-						 {
-						 				Table2_states.set(0, 0)
-						 				Table2_states.set(1, 0)
-						 				Table2_states.set(2, 0)
-						 				Table2_states.set(3, 0)
-						 request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
-						 forward("startTimer", "startTimer(2)" ,"maxstaytime" ) 
-						 }
-					}
-					 transition(edgeName="t515",targetState="reachHome",cond=whenReply("done"))
-				}	 
-				state("takeOrder") { //this:State
-					action { //it:State
-						println("WAITERMIND | takeOrder")
-						if( checkMsgContent( Term.createTerm("clientReadyToOrder(ID,ORD)"), Term.createTerm("clientReadyToOrder(ID,ORD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | go to table for take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-								if(  Table1_states.get(4) == payloadArg(0).toInt()  
-								 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
-								forward("stopTimer", "stopTimer(1)" ,"maxstaytime" ) 
-								}
-								else
-								 {request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
-								 forward("stopTimer", "stopTimer(2)" ,"maxstaytime" ) 
-								 }
-								  
-												ID_client = payloadArg(0).toInt()
-												ORD_client = payloadArg(1).toString()
-						}
-					}
-					 transition(edgeName="t616",targetState="sendOrderToBarman",cond=whenReply("done"))
-				}	 
-				state("sendOrderToBarman") { //this:State
-					action { //it:State
-						delay(DelayTakeOrder)
-						println("WAITERMIND | sendOrderToBarman")
-						println("WAITERMIND | go to barman for send the order from client with ID: $ID_client and ORD: $ORD_client")
-						request("moveTo", "moveTo($X_barman,$Y_barman)" ,"waiterengine" )  
-						forward("sendOrder", "sendOrder($ID_client,$ORD_client)" ,"barman" ) 
-					}
-					 transition(edgeName="t717",targetState="reachHome",cond=whenReply("done"))
-				}	 
-				state("reachBarman") { //this:State
-					action { //it:State
-						println("WAITERMIND | Reach Barman")
-						if( checkMsgContent( Term.createTerm("barmanCompleteOrder(ID,ORD)"), Term.createTerm("barmanCompleteOrder(ID,ORD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | go to barman for the order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-								  
-												ID_client = payloadArg(0).toInt()
-												ORD_client = payloadArg(1).toString()
-						}
-						request("moveTo", "moveTo($X_barman,$Y_barman)" ,"waiterengine" )  
-					}
-					 transition(edgeName="t818",targetState="serve",cond=whenReply("done"))
-				}	 
-				state("serve") { //this:State
-					action { //it:State
-						delay(DelayTakeDrink)
-						println("WAITERMIND | serve")
-						if(  Table1_states.get(4) == ID_client  
-						 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
-						forward("resumeTimer", "resumeTimer(1)" ,"maxstaytime" ) 
-						}
-						else
-						 {request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
-						 forward("resumeTimer", "resumeTimer(2)" ,"maxstaytime" ) 
-						 }
-					}
-					 transition(edgeName="t919",targetState="reachHome",cond=whenReply("done"))
-				}	 
-				state("collectPayment") { //this:State
-					action { //it:State
-						println("WAITERMIND | collectPayment")
-						if( checkMsgContent( Term.createTerm("clientPayment(ID)"), Term.createTerm("clientPayment(ID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | go to client with ID: ${payloadArg(0)} for collect the payment")
-								if(  Table1_states.get(4) == payloadArg(0).toInt()  
-								 ){
-													TableSelectedToClean = 1
-								request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
-								forward("stopTimer", "stopTimer(1)" ,"maxstaytime" ) 
-								}
-								else
-								 {
-								 					TableSelectedToClean = 2
-								 request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
-								 forward("stopTimer", "stopTimer(2)" ,"maxstaytime" ) 
-								 }
-						}
-						if( checkMsgContent( Term.createTerm("maxStayTimerExpired(TABLE)"), Term.createTerm("maxStayTimerExpired(TABLE)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								println("WAITERMIND | go to client of the table ${payloadArg(0)} for collect the payment, because the time has expired")
-								if(  payloadArg(0).toInt() == 1  
-								 ){
-													TableSelectedToClean = 1
-								request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
-								}
-								else
-								 {
-								 					TableSelectedToClean = 2
-								 request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
-								 }
-						}
-					}
-					 transition(edgeName="t1020",targetState="convoyExit",cond=whenReply("done"))
-				}	 
-				state("convoyExit") { //this:State
-					action { //it:State
-						delay(DelayCollectTime)
-						println("WAITERMIND | Convoy the Client to the exitdoor")
-						request("moveTo", "moveTo($X_exit,$Y_exit)" ,"waiterengine" )  
-						
-									when(TableSelectedToClean) {
-										1 -> {
-											Table1_states.set(0, 1)
-										}
-										
-										2 -> {
-											Table2_states.set(0, 1)
-										}
-									}
-									
-					}
-					 transition(edgeName="t1121",targetState="checkQueue",cond=whenReply("done"))
+					 transition(edgeName="t39",targetState="rest",cond=whenReply("done"))
 				}	 
 				state("reachTableClean") { //this:State
 					action { //it:State
 						println("WAITERMIND | reachTableClean")
-						delay(1000) 
-						if(  TableSelectedToClean == 1  
-						 ){request("moveTo", "moveTo($X_table1,$Y_table1)" ,"waiterengine" )  
+						forward("setWaiterState", "setWaiterState(reachTableClean)" ,"tearoomstatemanager" ) 
+						solve("pos('table$TableSelectedToClean',X,Y)","") //set resVar	
+						if( currentSolution.isSuccess() ) {
+										MoveX = getCurSol("X").toString().toInt()
+						               	MoveY = getCurSol("Y").toString().toInt()
+						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
 						}
-						if(  TableSelectedToClean == 2  
-						 ){request("moveTo", "moveTo($X_table2,$Y_table2)" ,"waiterengine" )  
-						}
+						else
+						{}
 					}
-					 transition(edgeName="t1222",targetState="whichCleanState",cond=whenReply("done"))
+					 transition(edgeName="t410",targetState="whichCleanState",cond=whenReply("done"))
 				}	 
 				state("whichCleanState") { //this:State
 					action { //it:State
 						println("WAITERMIND | whichCleanState")
-						if(  TableSelectedToClean == 1  
-						 ){if(  Table1_states.get(1) == 0  
+						if(  TableStateToClean == "tableDirty"  
 						 ){forward("goToClearing", "goToClearing(PAYLOAD)" ,"waitermind" ) 
 						}
-						else
-						 {if(  Table1_states.get(2) == 0  
-						  ){forward("goToCleaning", "goToCleaning(PAYLOAD)" ,"waitermind" ) 
-						 }
-						 else
-						  {if(  Table1_states.get(3) == 0  
-						   ){forward("goToSanitizing", "goToSanitizing(PAYLOAD)" ,"waitermind" ) 
-						  }
-						  }
-						 }
+						if(  TableStateToClean == "tableCleared"  
+						 ){forward("goToCleaning", "goToCleaning(PAYLOAD)" ,"waitermind" ) 
 						}
-						if(  TableSelectedToClean == 2  
-						 ){if(  Table2_states.get(1) == 0  
-						 ){forward("goToClearing", "goToClearing(PAYLOAD)" ,"waitermind" ) 
-						}
-						else
-						 {if(  Table2_states.get(2) == 0  
-						  ){forward("goToCleaning", "goToCleaning(PAYLOAD)" ,"waitermind" ) 
-						 }
-						 else
-						  {if(  Table2_states.get(3) == 0  
-						   ){forward("goToSanitizing", "goToSanitizing(PAYLOAD)" ,"waitermind" ) 
-						  }
-						  }
-						 }
+						if(  TableStateToClean == "tableCleaned"  
+						 ){forward("goToSanitizing", "goToSanitizing(PAYLOAD)" ,"waitermind" ) 
 						}
 					}
-					 transition(edgeName="t1323",targetState="tableCleared",cond=whenDispatch("goToClearing"))
-					transition(edgeName="t1324",targetState="tableCleaned",cond=whenDispatch("goToCleaning"))
-					transition(edgeName="t1325",targetState="tableSanitized",cond=whenDispatch("goToSanitizing"))
+					 transition(edgeName="t511",targetState="tableCleared",cond=whenDispatch("goToClearing"))
+					transition(edgeName="t512",targetState="tableCleaned",cond=whenDispatch("goToCleaning"))
+					transition(edgeName="t513",targetState="tableSanitized",cond=whenDispatch("goToSanitizing"))
 				}	 
 				state("tableCleared") { //this:State
 					action { //it:State
 						println("WAITERMIND | tableCleared")
-						request("clean", "clean(1)" ,"waiterengine" )  
-						
-									when(TableSelectedToClean) {
-										1 -> {
-											Table1_states.set(1, 1)
-										}
-											
-										2 -> {
-											Table2_states.set(1, 1)
-										}				
-									}
+						forward("setWaiterState", "setWaiterState(tableCleared)" ,"tearoomstatemanager" ) 
+						request("clean", "clean($TableSelectedToClean,1)" ,"waiterengine" )  
 					}
-					 transition(edgeName="t1426",targetState="checkQueue",cond=whenReply("cleanDone"))
+					 transition(edgeName="t614",targetState="checkQueue",cond=whenReply("cleanDone"))
 				}	 
 				state("tableCleaned") { //this:State
 					action { //it:State
 						println("WAITERMIND | tableCleaned")
-						request("clean", "clean(2)" ,"waiterengine" )  
-						
-									when(TableSelectedToClean) {
-										1 -> {
-											Table1_states.set(2, 1)
-										}
-											
-										2 -> {
-											Table2_states.set(2, 1)
-										}				
-									}	
+						forward("setWaiterState", "setWaiterState(tableCleaned)" ,"tearoomstatemanager" ) 
+						request("clean", "clean($TableSelectedToClean,2)" ,"waiterengine" )  
 					}
-					 transition(edgeName="t1527",targetState="checkQueue",cond=whenReply("cleanDone"))
+					 transition(edgeName="t715",targetState="checkQueue",cond=whenReply("cleanDone"))
 				}	 
 				state("tableSanitized") { //this:State
 					action { //it:State
 						println("WAITERMIND | tableSanitized")
-						request("clean", "clean(3)" ,"waiterengine" )  
-						
-									when(TableSelectedToClean) {
-										1 -> {
-											Table1_states.set(3, 1)
-										}
-											
-										2 -> {
-											Table2_states.set(3, 1)
-										}				
-									}
-									TableSelectedToClean = 0
+						forward("setWaiterState", "setWaiterState(tableSanitized)" ,"tearoomstatemanager" ) 
+						request("clean", "clean($TableSelectedToClean,3)" ,"waiterengine" )  
 					}
-					 transition(edgeName="t1628",targetState="checkQueue",cond=whenReply("cleanDone"))
+					 transition(edgeName="t816",targetState="checkQueue",cond=whenReply("cleanDone"))
+				}	 
+				state("checkAcceptOrInform") { //this:State
+					action { //it:State
+						println("WAITERMIND | checkAcceptOrInform")
+						request("getTableFreeCleanRequest", "getTableFreeCleanRequest(PAYLOAD)" ,"tearoomstatemanager" )  
+						if( checkMsgContent( Term.createTerm("smartbellEnterRequest(ID)"), Term.createTerm("smartbellEnterRequest(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("WAITERMIND | Request from the client with ID: ${payloadArg(0)}")
+								
+												IdClientToConvoy = payloadArg(0).toInt()
+						}
+					}
+					 transition(edgeName="t917",targetState="replyCheckAcceptOrInform",cond=whenReply("getTableFreeCleanReply"))
+				}	 
+				state("replyCheckAcceptOrInform") { //this:State
+					action { //it:State
+						println("WAITERMIND | replyCheckAcceptOrInform")
+						if( checkMsgContent( Term.createTerm("getTableFreeCleanReply(TABLE)"), Term.createTerm("getTableFreeCleanReply(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												TableSelectedToConvoy = payloadArg(0).toInt() 	
+						}
+					}
+					 transition( edgeName="goto",targetState="checkInform", cond=doswitchGuarded({ TableSelectedToConvoy == 0  
+					}) )
+					transition( edgeName="goto",targetState="accept", cond=doswitchGuarded({! ( TableSelectedToConvoy == 0  
+					) }) )
+				}	 
+				state("checkInform") { //this:State
+					action { //it:State
+						println("WAITERMIND | checkInform")
+						
+									IdClientToConvoy = 0
+						request("getTimerForInformRequest", "getTimerForInformRequest(PAYLOAD)" ,"tearoomstatemanager" )  
+					}
+					 transition(edgeName="t1018",targetState="replyInform",cond=whenReply("getTimerForInformReply"))
+				}	 
+				state("replyInform") { //this:State
+					action { //it:State
+						println("WAITERMIND | replyInform")
+						if( checkMsgContent( Term.createTerm("getTimerForInformReply(TIMERLEFT)"), Term.createTerm("getTimerForInformReply(TIMERLEFT)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								answer("smartbellEnterRequest", "clientAcceptWithTime", "clientAcceptWithTime($IdClientToConvoy,${payloadArg(0)})"   )  
+						}
+					}
+					 transition( edgeName="goto",targetState="checkQueue", cond=doswitch() )
+				}	 
+				state("accept") { //this:State
+					action { //it:State
+						println("WAITERMIND | accept")
+						println("WAITERMIND | Accept the client with ID: $IdClientToConvoy")
+						answer("smartbellEnterRequest", "clientAccept", "clientAccept($IdClientToConvoy)"   )  
+					}
+					 transition( edgeName="goto",targetState="reachDoor", cond=doswitch() )
+				}	 
+				state("reachDoor") { //this:State
+					action { //it:State
+						println("WAITERMIND | reachDoor")
+						forward("setWaiterState", "setWaiterState(reachDoor)" ,"tearoomstatemanager" ) 
+						solve("pos(entrance,X,Y)","") //set resVar	
+						if( currentSolution.isSuccess() ) {
+										MoveX = getCurSol("X").toString().toInt()
+						            	MoveY = getCurSol("Y").toString().toInt()
+						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						}
+						else
+						{}
+					}
+					 transition(edgeName="t1119",targetState="convoyTable",cond=whenReply("done"))
+				}	 
+				state("convoyTable") { //this:State
+					action { //it:State
+						println("WAITERMIND | convoyTable")
+						forward("setWaiterState", "setWaiterState(convoyTable)" ,"tearoomstatemanager" ) 
+						delay(DelayTakeClient)
+						forward("occupyTable", "occupyTable($TableSelectedToConvoy,$IdClientToConvoy)" ,"tearoomstatemanager" ) 
+						solve("pos('table$TableSelectedToConvoy',X,Y)","") //set resVar	
+						if( currentSolution.isSuccess() ) {
+										MoveX = getCurSol("X").toString().toInt()
+						            	MoveY = getCurSol("Y").toString().toInt()
+						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						forward("startTimer", "startTimer($TableSelectedToConvoy)" ,"maxstaytime" ) 
+						}
+						else
+						{}
+					}
+					 transition(edgeName="t1220",targetState="reachHome",cond=whenReply("done"))
+				}	 
+				state("checkTableForOrderIn") { //this:State
+					action { //it:State
+						println("WAITERMIND | checkTableForOrderIn")
+						forward("setWaiterState", "setWaiterState(reachTableOrder)" ,"tearoomstatemanager" ) 
+						if( checkMsgContent( Term.createTerm("clientReadyToOrder(ID)"), Term.createTerm("clientReadyToOrder(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("WAITERMIND | go to table for take the order from client with ID: ${payloadArg(0)}")
+								  
+												IdClientForOrder = payloadArg(0).toInt()
+								request("getTableFromIdRequest", "getTableFromIdRequest($IdClientForOrder)" ,"tearoomstatemanager" )  
+						}
+					}
+					 transition(edgeName="t1321",targetState="replyCheckTableForOrderIn",cond=whenReply("getTableFromIdReply"))
+				}	 
+				state("replyCheckTableForOrderIn") { //this:State
+					action { //it:State
+						println("WAITERMIND | replyCheckReachTableForOrder")
+						if( checkMsgContent( Term.createTerm("getTableFromIdReply(TABLE)"), Term.createTerm("getTableFromIdReply(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												TableSelectedForOrder = payloadArg(0).toInt()
+								solve("pos('table$TableSelectedForOrder',X,Y)","") //set resVar	
+								if( currentSolution.isSuccess() ) {
+													MoveX = getCurSol("X").toString().toInt()
+								                	MoveY = getCurSol("Y").toString().toInt()
+								}
+								else
+								{}
+								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						}
+					}
+					 transition(edgeName="t1422",targetState="takeOrder",cond=whenReply("done"))
+				}	 
+				state("takeOrder") { //this:State
+					action { //it:State
+						println("WAITERMIND | takeOrder")
+						forward("setWaiterState", "setWaiterState(takeOrder)" ,"tearoomstatemanager" ) 
+					}
+					 transition(edgeName="t1523",targetState="sendOrderToBarman",cond=whenDispatch("clientOrder"))
+				}	 
+				state("sendOrderToBarman") { //this:State
+					action { //it:State
+						println("WAITERMIND | sendOrderToBarman")
+						if( checkMsgContent( Term.createTerm("clientOrder(ID,ORDER)"), Term.createTerm("clientOrder(ID,ORDER)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								  
+												IdClientForOrder = payloadArg(0).toInt()
+												OrderClient = payloadArg(1).toString()
+								println("WAITERMIND | send to barman the order from client with ID: $IdClientForOrder and ORDER: $OrderClient")
+								forward("setWaiterState", "setWaiterState(sendOrderToBarman)" ,"tearoomstatemanager" ) 
+								forward("stopTimer", "stopTimer($TableSelectedForOrder)" ,"maxstaytime" ) 
+								forward("sendOrder", "sendOrder($IdClientForOrder,$OrderClient)" ,"barman" ) 
+								
+												IdClientForOrder = 0
+												OrderClient = ""
+						}
+					}
+					 transition( edgeName="goto",targetState="reachHome", cond=doswitch() )
+				}	 
+				state("reachBarman") { //this:State
+					action { //it:State
+						println("WAITERMIND | reachBarman")
+						if( checkMsgContent( Term.createTerm("barmanCompleteOrder(ID,ORDER)"), Term.createTerm("barmanCompleteOrder(ID,ORDER)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("WAITERMIND | go to barman for the order for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
+								  
+												IdClientForOrder = payloadArg(0).toInt()
+												OrderClient = payloadArg(1).toString()
+								forward("setWaiterState", "setWaiterState(reachBarman)" ,"tearoomstatemanager" ) 
+								solve("pos(bar,X,Y)","") //set resVar	
+								if( currentSolution.isSuccess() ) {
+													MoveX = getCurSol("X").toString().toInt()
+								                	MoveY = getCurSol("Y").toString().toInt()
+								}
+								else
+								{}
+								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						}
+					}
+					 transition(edgeName="t1624",targetState="checkTableForOrderOut",cond=whenReply("done"))
+				}	 
+				state("checkTableForOrderOut") { //this:State
+					action { //it:State
+						println("WAITERMIND | checkTableForOrderOut")
+						delay(DelayTakeOrder)
+						forward("setWaiterState", "setWaiterState(getOrderFromBarman)" ,"tearoomstatemanager" ) 
+						forward("removeOrderReady", "removeOrderReady($IdClientForOrder)" ,"tearoomstatemanager" ) 
+						request("getTableFromIdRequest", "getTableFromIdRequest($IdClientForOrder)" ,"tearoomstatemanager" )  
+					}
+					 transition(edgeName="t1725",targetState="replyCheckTableForOrderOut",cond=whenReply("getTableFromIdReply"))
+				}	 
+				state("replyCheckTableForOrderOut") { //this:State
+					action { //it:State
+						println("WAITERMIND | replyCheckTableForOrderOut")
+						if( checkMsgContent( Term.createTerm("getTableFromIdReply(TABLE)"), Term.createTerm("getTableFromIdReply(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												TableSelectedForOrder = payloadArg(0).toInt()
+								solve("pos('table$TableSelectedForOrder',X,Y)","") //set resVar	
+								if( currentSolution.isSuccess() ) {
+													MoveX = getCurSol("X").toString().toInt()
+								                	MoveY = getCurSol("Y").toString().toInt()
+								}
+								else
+								{}
+								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						}
+					}
+					 transition(edgeName="t1826",targetState="serve",cond=whenReply("done"))
+				}	 
+				state("serve") { //this:State
+					action { //it:State
+						println("WAITERMIND | serve")
+						delay(DelayServeOrder)
+						forward("resumeTimer", "resumeTimer($TableSelectedForOrder)" ,"maxstaytime" ) 
+					}
+					 transition( edgeName="goto",targetState="reachHome", cond=doswitch() )
+				}	 
+				state("reachTableToKick") { //this:State
+					action { //it:State
+						println("WAITERMIND | reachTableToKick")
+						forward("setWaiterState", "setWaiterState(reachTableCollect)" ,"tearoomstatemanager" ) 
+						if( checkMsgContent( Term.createTerm("maxStayTimerExpired(TABLE)"), Term.createTerm("maxStayTimerExpired(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("WAITERMIND | go to client of the table ${payloadArg(0)} for collect the payment, because the time has expired")
+								
+												TableSelectedForCollect = payloadArg(0).toInt()
+								solve("pos('table$TableSelectedForCollect',X,Y)","") //set resVar	
+								if( currentSolution.isSuccess() ) {
+													MoveX = getCurSol("X").toString().toInt()
+								                	MoveY = getCurSol("Y").toString().toInt()
+								}
+								else
+								{}
+								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						}
+					}
+					 transition(edgeName="t1927",targetState="collectPayment",cond=whenReply("done"))
+				}	 
+				state("checkTableToCollect") { //this:State
+					action { //it:State
+						println("WAITERMIND | checkTableToCollect")
+						forward("setWaiterState", "setWaiterState(reachTableCollect)" ,"tearoomstatemanager" ) 
+						if( checkMsgContent( Term.createTerm("clientPayment(ID)"), Term.createTerm("clientPayment(ID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								println("WAITERMIND | go to client with ID: ${payloadArg(0)} for collect the payment")
+								
+												IdClientForCollect = payloadArg(0).toInt()
+								request("getTableFromIdRequest", "getTableFromIdRequest($IdClientForCollect)" ,"tearoomstatemanager" )  
+						}
+					}
+					 transition(edgeName="t2028",targetState="replyCheckTableToCollect",cond=whenReply("getTableFromIdReply"))
+				}	 
+				state("replyCheckTableToCollect") { //this:State
+					action { //it:State
+						println("WAITERMIND | replyCheckTableToCollect")
+						if( checkMsgContent( Term.createTerm("getTableFromIdReply(TABLE)"), Term.createTerm("getTableFromIdReply(TABLE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												TableSelectedForCollect = payloadArg(0).toInt()
+								solve("pos('table$TableSelectedForCollect',X,Y)","") //set resVar	
+								if( currentSolution.isSuccess() ) {
+													MoveX = getCurSol("X").toString().toInt()
+								                	MoveY = getCurSol("Y").toString().toInt()
+								}
+								else
+								{}
+								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+								forward("stopTimer", "stopTimer($TableSelectedForCollect)" ,"maxstaytime" ) 
+						}
+					}
+					 transition(edgeName="t2129",targetState="collectPayment",cond=whenReply("done"))
+				}	 
+				state("collectPayment") { //this:State
+					action { //it:State
+						println("WAITERMIND | collectPayment")
+						delay(DelayCollectTime)
+						forward("setWaiterState", "setWaiterState(collectPayment)" ,"tearoomstatemanager" ) 
+					}
+					 transition( edgeName="goto",targetState="convoyExit", cond=doswitch() )
+				}	 
+				state("convoyExit") { //this:State
+					action { //it:State
+						println("WAITERMIND | convoyExit")
+						forward("setWaiterState", "setWaiterState(convoyExit)" ,"tearoomstatemanager" ) 
+						forward("setTableState", "setTableState($TableSelectedForCollect,tableDirty)" ,"tearoomstatemanager" ) 
+						solve("pos(exit,X,Y)","") //set resVar	
+						if( currentSolution.isSuccess() ) {
+											MoveX = getCurSol("X").toString().toInt()
+						                	MoveY = getCurSol("Y").toString().toInt()
+						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						}
+						else
+						{}
+					}
+					 transition(edgeName="t2230",targetState="checkQueue",cond=whenReply("done"))
 				}	 
 				state("endWork") { //this:State
 					action { //it:State

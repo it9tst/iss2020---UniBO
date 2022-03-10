@@ -11,4 +11,5 @@ context(ctxbasicrobot, "192.168.10.100",  "TCP", "50800").
   qactor( maxstaytime, ctxtearoom, "it.unibo.maxstaytime.Maxstaytime").
   qactor( maxstaytimetable1, ctxtearoom, "it.unibo.maxstaytimetable1.Maxstaytimetable1").
   qactor( maxstaytimetable2, ctxtearoom, "it.unibo.maxstaytimetable2.Maxstaytimetable2").
+  qactor( tearoomstatemanager, ctxtearoom, "it.unibo.tearoomstatemanager.Tearoomstatemanager").
 msglogging.

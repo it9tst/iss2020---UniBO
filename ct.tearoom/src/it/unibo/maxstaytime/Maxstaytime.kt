@@ -27,15 +27,14 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 				}	 
 				state("wait") { //this:State
 					action { //it:State
-						println("MAXSTAYTIME | Wait")
+						println("MAXSTAYTIME | wait")
 					}
-					 transition(edgeName="t041",targetState="newTimer",cond=whenDispatch("startTimer"))
-					transition(edgeName="t042",targetState="resume",cond=whenDispatch("resumeTimer"))
-					transition(edgeName="t043",targetState="stop",cond=whenDispatch("stopTimer"))
-					transition(edgeName="t044",targetState="timerExpired",cond=whenDispatch("maxStayTimerExpired"))
-					transition(edgeName="t045",targetState="timerLeft",cond=whenRequest("maxStayTimerLeftRequest"))
-					transition(edgeName="t046",targetState="timerLeftCompare",cond=whenRequest("maxStayTimerLeftCompareRequest"))
-					transition(edgeName="t047",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t043",targetState="newTimer",cond=whenDispatch("startTimer"))
+					transition(edgeName="t044",targetState="resume",cond=whenDispatch("resumeTimer"))
+					transition(edgeName="t045",targetState="stop",cond=whenDispatch("stopTimer"))
+					transition(edgeName="t046",targetState="timerExpired",cond=whenDispatch("maxStayTimerExpired"))
+					transition(edgeName="t047",targetState="timerLeft",cond=whenRequest("maxStayTimerLeftRequest"))
+					transition(edgeName="t048",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("newTimer") { //this:State
 					action { //it:State
@@ -94,31 +93,9 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 					}
 					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
-				state("timerLeftCompare") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("maxStayTimerLeftCompareRequest(TABLE)"), Term.createTerm("maxStayTimerLeftCompareRequest(TABLE)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(  payloadArg(0).toInt() == 1  
-								 ){request("maxStayTimerLeftRequestToTable", "maxStayTimerLeftRequestToTable(1)" ,"maxstaytimetable1" )  
-								}
-								if(  payloadArg(0).toInt() == 2  
-								 ){request("maxStayTimerLeftRequestToTable", "maxStayTimerLeftRequestToTable(2)" ,"maxstaytimetable2" )  
-								}
-						}
-					}
-					 transition(edgeName="t048",targetState="forwardRemainingTimeCompare",cond=whenReply("maxStayTimerLeftReplyFromTable"))
-				}	 
-				state("forwardRemainingTimeCompare") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("maxStayTimerLeftReplyFromTable(TIMERLEFT)"), Term.createTerm("maxStayTimerLeftReplyFromTable(TIMERLEFT)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								answer("maxStayTimerLeftCompareRequest", "maxStayTimerLeftCompareReply", "maxStayTimerLeftCompareReply(${payloadArg(0)})"   )  
-						}
-					}
-					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
-				}	 
 				state("timerLeft") { //this:State
 					action { //it:State
+						println("MAXSTAYTIME | timerLeft")
 						if( checkMsgContent( Term.createTerm("maxStayTimerLeftRequest(TABLE)"), Term.createTerm("maxStayTimerLeftRequest(TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								if(  payloadArg(0).toInt() == 1  
@@ -133,6 +110,7 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 				}	 
 				state("forwardRemainingTime") { //this:State
 					action { //it:State
+						println("MAXSTAYTIME | forwardRemainingTime")
 						if( checkMsgContent( Term.createTerm("maxStayTimerLeftReplyFromTable(TIMERLEFT)"), Term.createTerm("maxStayTimerLeftReplyFromTable(TIMERLEFT)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								answer("maxStayTimerLeftRequest", "maxStayTimerLeftReply", "maxStayTimerLeftReply(${payloadArg(0)})"   )  

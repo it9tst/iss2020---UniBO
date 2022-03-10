@@ -45,15 +45,15 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("waitCmd") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Wait Cmd")
+						println("WAITERENGINE | waitCmd")
 					}
-					 transition(edgeName="t029",targetState="planDestination",cond=whenRequest("moveTo"))
-					transition(edgeName="t030",targetState="cleanTable",cond=whenRequest("clean"))
-					transition(edgeName="t031",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t031",targetState="planDestination",cond=whenRequest("moveTo"))
+					transition(edgeName="t032",targetState="cleanTable",cond=whenRequest("clean"))
+					transition(edgeName="t033",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("planDestination") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Plan Destination")
+						println("WAITERENGINE | planDestination")
 						if( checkMsgContent( Term.createTerm("moveTo(X,Y)"), Term.createTerm("moveTo(X,Y)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 
@@ -67,7 +67,7 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("readStep") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Read Step")
+						println("WAITERENGINE | readStep")
 						 
 									CmdToMove = itunibo.planner.plannerUtil.getNextPlannedMove()
 					}
@@ -78,11 +78,11 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("execStep") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Exec Step")
+						println("WAITERENGINE | execStep")
 						request("step", "step($StepTime)" ,"basicrobot" )  
 					}
-					 transition(edgeName="t132",targetState="updateMap",cond=whenReply("stepdone"))
-					transition(edgeName="t133",targetState="errorHandler",cond=whenReply("stepfail"))
+					 transition(edgeName="t134",targetState="updateMap",cond=whenReply("stepdone"))
+					transition(edgeName="t135",targetState="errorHandler",cond=whenReply("stepfail"))
 				}	 
 				state("execMove") { //this:State
 					action { //it:State
@@ -94,7 +94,7 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("updateMap") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Update Map")
+						println("WAITERENGINE | updateMap")
 						updateResourceRep( itunibo.planner.plannerUtil.getMapOneLine()  
 						)
 						itunibo.planner.plannerUtil.updateMap( "$CmdToMove"  )
@@ -106,7 +106,7 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("errorHandler") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Error Handler")
+						println("WAITERENGINE | errorHandler")
 						if( checkMsgContent( Term.createTerm("stepfail(DURATION,CAUSE)"), Term.createTerm("stepfail(DURATION,CAUSE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
@@ -120,8 +120,6 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 								forward("cmd", "cmd(h)" ,"basicrobot" ) 
 								}
 								itunibo.planner.plannerUtil.showCurrentRobotState(  )
-								updateResourceRep( "stepFail"  
-								)
 								delay(500) 
 						}
 					}
@@ -132,24 +130,32 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("cleanTable") { //this:State
 					action { //it:State
-						println("WAITERENGINE | Clean Table")
-						if( checkMsgContent( Term.createTerm("clean(STATE)"), Term.createTerm("clean(STATE)"), 
+						println("WAITERENGINE | cleanTable")
+						if( checkMsgContent( Term.createTerm("clean(TABLE,STATE)"), Term.createTerm("clean(TABLE,STATE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												when(payloadArg(0).toInt()) {
+												val TableSelectedToClean = payloadArg(0).toInt()
+												
+												when(payloadArg(1).toInt()) {
 													1 -> {
-														println("WAITERENGINE | tableCleared")
-														delay(TableClearTime)
+								delay(TableClearTime)
+								println("WAITERENGINE | tableCleared")
+								forward("setTableState", "setTableState($TableSelectedToClean,tableCleared)" ,"tearoomstatemanager" ) 
+								
 													}
 													
 													2 -> {
-														println("WAITERENGINE | tableCleaned")
-														delay(TableCleanTime)
+								delay(TableCleanTime)
+								println("WAITERENGINE | tableCleaned")
+								forward("setTableState", "setTableState($TableSelectedToClean,tableCleaned)" ,"tearoomstatemanager" ) 
+								
 													}
 													
 													3 -> {
-														println("WAITERENGINE | tableSanitized")
-														delay(TableSanitizedTime)
+								delay(TableSanitizedTime)
+								println("WAITERENGINE | tableSanitized")
+								forward("setTableState", "setTableState($TableSelectedToClean,tableSanitized)" ,"tearoomstatemanager" ) 
+								
 													}
 												}
 						}
@@ -159,8 +165,8 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				}	 
 				state("endDestination") { //this:State
 					action { //it:State
-						println("WAITERENGINE | End Destination")
-						println("WAITERENGINE | Done moveTo($XPoint,$YPoint)")
+						println("WAITERENGINE | endDestination")
+						println("WAITERENGINE | Done moveTo ($XPoint, $YPoint)")
 						itunibo.planner.plannerUtil.showCurrentRobotState(  )
 						answer("moveTo", "done", "done($XPoint,$YPoint)"   )  
 					}

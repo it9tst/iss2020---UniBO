@@ -3,33 +3,34 @@ System -msglog tearoom
 // MESSAGES SMARTBELL
 // Message between smartbell - client
 Request  enterRequestClient					: enterRequestClient (TEMP)
-Reply    enterReplyFromSmartbell			: enterReplyFromSmartbell (ID, TABLE)
-Reply    enterReplyFromSmartbellNeg			: enterReplyFromSmartbellNeg (PAYLOAD)
+Reply    enterReplyFromSmartbell			: enterReplyFromSmartbell (ID)
+Reply    enterReplyFromSmartbellNeg			: enterReplyFromSmartbellNeg (ID)
 Reply 	 enterReplyFromSmartbellWithTime 	: enterReplyFromSmartbellWithTime (ID, MAXSTAYTIME)
 Dispatch goToWaitRing 						: goToWaitRing (PAYLOAD)
 
 // Message between smartbell - waiter
 Request smartbellEnterRequest	: smartbellEnterRequest (ID)		
-Reply   clientAccept			: clientAccept (TABLE)
-Reply	clientAcceptWithTime 	: clientAcceptWithTime (MAXSTAYTIME)
+Reply   clientAccept			: clientAccept (ID)
+Reply	clientAcceptWithTime 	: clientAcceptWithTime (ID, MAXSTAYTIME)
 
 // MESSAGES BARMAN
 // Message between barman - waiter
-Dispatch sendOrder 				: sendOrder (ID, ORD)
-Dispatch barmanCompleteOrder 	: barmanCompleteOrder (ID, ORD)
+Dispatch sendOrder 				: sendOrder (ID, ORDER)
+Dispatch barmanCompleteOrder 	: barmanCompleteOrder (ID, ORDER)
 
 // MESSAGES WAITER
 // Message between waiter - client
 Dispatch informMaxWaitingTime	: informMaxWaitingTime (PAYLOAD)
 Dispatch convoyToTable			: convoyToTable (TABLE)
-Dispatch clientReadyToOrder 	: clientReadyToOrder (ID, ORD)
+Dispatch clientReadyToOrder 	: clientReadyToOrder (ID)
+Dispatch clientOrder			: clientOrder (ID, ORDER)
 Dispatch clientPayment 			: clientPayment (ID)
 
 // Message between waiterengine - waitermind
 Dispatch engineReady	: engineReady (PAYLOAD)
 Request	 moveTo			: moveTo (X, Y)
 Reply	 done			: done (X, Y)
-Request	 clean			: clean (STATE)
+Request	 clean			: clean (TABLE, STATE)
 Reply	 cleanDone		: cleanDone (PAYLOAD)
 
 // Message between waiterengine - basicrobot
@@ -39,8 +40,8 @@ Reply    stepfail   : stepfail (DURATION, CAUSE)
 Dispatch cmd 		: cmd (CMD)
 
 Dispatch goToClearing 	: goToClearing (PAYLOAD)
-Dispatch goToSanitizing : goToSanitizing (PAYLOAD)
 Dispatch goToCleaning 	: goToCleaning (PAYLOAD)
+Dispatch goToSanitizing : goToSanitizing (PAYLOAD)
 
 // MESSAGES MAXSTAYTIME
 Dispatch startTimer				: startTimer (TABLE)
@@ -52,8 +53,23 @@ Request maxStayTimerLeftRequest			: maxStayTimerLeftRequest (TABLE)
 Reply maxStayTimerLeftReply				: maxStayTimerLeftReply (TIMERLEFT)
 Request maxStayTimerLeftRequestToTable	: maxStayTimerLeftRequestToTable (PAYLOAD)
 Reply maxStayTimerLeftReplyFromTable	: maxStayTimerLeftReplyFromTable (TIMERLEFT)
-Request maxStayTimerLeftCompareRequest	: maxStayTimerLeftCompareRequest (TABLE)
-Reply maxStayTimerLeftCompareReply		: maxStayTimerLeftCompareReply (TIMERLEFT)
+
+// MESSAGES TEAROOMSTATEMANAGER
+Dispatch setWaiterState		: setWaiterState (STATE)
+Dispatch setBarmanState		: setBarmanState (STATE)
+Dispatch setTableState		: setTableState (TABLE, STATE)
+Dispatch occupyTable		: occupyTable (TABLE, ID)
+Dispatch addOrderReady		: addOrderReady (ID)
+Dispatch removeOrderReady	: removeOrderReady (ID)
+
+Request	getTableFreeCleanRequest	: getTableFreeCleanRequest (PAYLOAD)
+Reply getTableFreeCleanReply		: getTableFreeCleanReply (TABLE)
+Request	getTableToCleanRequest		: getTableToCleanRequest (PAYLOAD)
+Reply getTableToCleanReply			: getTableToCleanReply (TABLE, STATE)
+Request getTimerForInformRequest	: getTimerForInformRequest (PAYLOAD)
+Reply getTimerForInformReply		: getTimerForInformReply (TIMERLEFT)
+Request getTableFromIdRequest		: getTableFromIdRequest (ID)
+Reply getTableFromIdReply			: getTableFromIdReply (TABLE)
 
 Dispatch end : end (PAYLOAD)
 
@@ -67,549 +83,474 @@ ExternalQActor basicrobot context ctxbasicrobot
 QActor waitermind context ctxtearoom {
 
 	[#
-		// Init variable
-		var Table1_states = arrayOf(1, 1, 1, 1, -1) // 0. Table_isFree, 1. Table_isCleared, 2. Table_isCleaned, 3. Table_isSanitized, 4. ID_client
-		var Table2_states = arrayOf(1, 1, 1, 1, -1) // 0. Table_isFree, 1. Table_isCleared, 2. Table_isCleaned, 3. Table_isSanitized, 4. ID_client
-		var ID_client = 0
-		var Table1_ID = 1
-		var Table2_ID = 2
-		var ORD_client: String = ""
+		var OrderClient: String = ""
+		
+		var IdClientToConvoy = 0
 		var TableSelectedToConvoy = 0
+		
+		var IdClientForOrder = 0
+		var TableSelectedForOrder = 0
+		
+		var IdClientForCollect = 0
+		var TableSelectedForCollect = 0
+		
+		var TableStateToClean = ""
 		var TableSelectedToClean = 0
 		
+		val DelayHome = 2000L
 		val DelayTakeClient = 2000L
-		val DelayTakeOrder = 5000L
-		val DelayTakeDrink = 2000L
+		val DelayTakeOrder = 4000L
+		val DelayServeOrder = 2000L
 		val DelayCollectTime = 4000L
 		
-		// Table state delay
-		var MaxWaitingTime = 0L
-		var MaxWaitingTime1 = 0L
-		var MaxWaitingTime2 = 0L
-		var TableDelayCleaning = arrayOf(0, 6000, 6000, 5000)
-		
-		// Home Position
-		val X_home = "0"
-		val Y_home = "0"
-		
-		// Barman Position
-		val X_barman = "6"
-		val Y_barman = "0"
-	
-		// Entrance Position
-		val X_entrance = "0"
-		val Y_entrance = "4"
-		
-		// Exit Position
-		val X_exit = "6"
-		val Y_exit = "4"
-		
-		// Table1 Position
-		val X_table1 = "2"
-		val Y_table1 = "2"
-		
-		// Table2 Position
-		val X_table2 = "4"
-		val Y_table2 = "2"
+		var MoveX = 0
+		var MoveY = 0
 
 	#]
 	
 	State s0 initial {
-		// Initial state
 		println("WAITERMIND | Start")
+		
+		solve(consult("storage.pl"))
 	}
 	Transition t0	whenMsg engineReady -> rest
 	
 	State rest {
-		// Waiter is at home
-		println("WAITERMIND | Rest")
+		println("WAITERMIND | rest")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (home)
 	}
 	Goto checkQueue
 
-	State checkQueue{
-		// Waiter check queue
+	State checkQueue {
 		println("WAITERMIND | checkQueue")
 	}
 	Transition t1	whenTime 100 -> checkTableToClean
-					whenRequest smartbellEnterRequest -> accept
-					whenMsg clientReadyToOrder -> takeOrder
+					whenRequest smartbellEnterRequest -> checkAcceptOrInform
+					whenMsg clientReadyToOrder -> checkTableForOrderIn
 					whenMsg barmanCompleteOrder -> reachBarman
-					whenMsg clientPayment -> collectPayment
-					whenMsg maxStayTimerExpired -> collectPayment
+					whenMsg clientPayment -> checkTableToCollect
+					whenMsg maxStayTimerExpired -> reachTableToKick
 					whenMsg end -> endWork
-	
-	State checkTableToClean{
-		// Waiter check table to clean
+
+	State checkTableToClean {
 		println("WAITERMIND | checkTableToClean")
 		
-		if [# Table1_states.get(0) == 1 && Table1_states.get(1) == 0 #]{
-				[#
-					TableSelectedToClean = 1
-				#]
-			} else {
-				if [# Table2_states.get(0) == 1 && Table2_states.get(1) == 0 #]{
-					[#
-						TableSelectedToClean = 2
-					#]
-				}
-			}		
+		request tearoomstatemanager -m getTableToCleanRequest : getTableToCleanRequest (PAYLOAD)		
+	}
+	Transition t2	whenReply getTableToCleanReply -> replyCheckTableToClean
+	
+	State replyCheckTableToClean {
+		println("WAITERMIND | replyCheckTableToClean")
+		onMsg (getTableToCleanReply : getTableToCleanReply (TABLE, STATE)) {
+			[# 
+				TableSelectedToClean = payloadArg(0).toInt()
+				TableStateToClean = payloadArg(1)
+			#]
+		}
 	}
 	Goto reachHome if [# TableSelectedToClean == 0 #] else reachTableClean
 
-	State reachHome{
-		// Waiter reach home
-		println("WAITERMIND | Reach Home")
+	State reachHome {
+		println("WAITERMIND | reachHome")
 		
-		delay 3000
-		request waiterengine -m moveTo : moveTo ($X_home, $Y_home)
+		delayVar DelayHome
 		
-	}
-	Transition t2	whenReply done -> rest
-	
-	State accept {
-		// Waiter accept the client
-		println("WAITERMIND | accept")
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (reachHome)
 		
-		if [# Table1_states.get(3) == 1 #]{
-			// Table1 is free and clean
-			onMsg(smartbellEnterRequest : smartbellEnterRequest (ID)){
-				println("WAITERMIND | Accept the client with ID: ${payloadArg(0)}")
-			}
-			replyTo smartbellEnterRequest with clientAccept : clientAccept (1)
-			[#
-				Table1_states.set(4, payloadArg(0).toInt())
-			#]
-			forward waitermind -m convoyToTable : convoyToTable (1)
-			
-		} else {
-			if [# Table2_states.get(3) == 1 #]{
-				// Table2 is free and clean
-				onMsg(smartbellEnterRequest : smartbellEnterRequest (ID)){
-					println("WAITERMIND | Accept the client with ID: ${payloadArg(0)}")
-				}
-			  	replyTo smartbellEnterRequest with clientAccept : clientAccept (2)
-			  	[#
-					Table2_states.set(4, payloadArg(0).toInt())
-				#]
-			  	forward waitermind -m convoyToTable : convoyToTable (2)
-			  	
-			} else {
-				if [# Table1_states.get(0) == 0 && Table2_states.get(0) == 0 #]{
-					request maxstaytime -m maxStayTimerLeftCompareRequest : maxStayTimerLeftCompareRequest (1)
-					
-				} else {
-					if [# Table1_states.get(0) == 0 #]{
-					// Table1 is busy
-					request maxstaytime -m maxStayTimerLeftRequest : maxStayTimerLeftRequest (1)
-					
-					} else {
-						if [# Table2_states.get(0) == 0 #]{
-							// Table2 is busy
-							request maxstaytime -m maxStayTimerLeftRequest : maxStayTimerLeftRequest (2)
-							
-						} else {
-							// Table1 and Table2 are not busy but are dirty
-							forward waitermind -m informMaxWaitingTime : informMaxWaitingTime (PAYLOAD)
-						}
-					}
-				}
-			}
+		solve(pos(home, X, Y))
+		ifSolved {
+			[# 
+				MoveX = getCurSol("X").toString().toInt()
+            	MoveY = getCurSol("Y").toString().toInt()
+            #]
+        	request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
 		}
 	}
-	Transition t3	whenMsg convoyToTable -> reachDoor
-					whenMsg informMaxWaitingTime -> inform
-					whenReply maxStayTimerLeftReply -> maxStayTimeLeft
-					whenReply maxStayTimerLeftCompareReply -> maxStayTimeLeftTable2
+	Transition t3	whenReply done -> rest
 	
-	State maxStayTimeLeftTable2{
-		onMsg(maxStayTimerLeftCompareReply : maxStayTimerLeftCompareReply (TIMERLEFT)){
-			println("WAITERMIND | Maximum waiting time from the busy table is: ${payloadArg(0)} milliseconds")
-			[#
-				MaxWaitingTime1 = payloadArg(0).toLong()
-			#]
-		}
-		request maxstaytime -m maxStayTimerLeftCompareRequest : maxStayTimerLeftCompareRequest (2)
-	}
-	Transition t15	whenReply maxStayTimerLeftCompareReply -> maxStayTimeLeftCompare
-	
-	State maxStayTimeLeftCompare{
-		onMsg(maxStayTimerLeftCompareReply : maxStayTimerLeftCompareReply (TIMERLEFT)){
-			println("WAITERMIND | Maximum waiting time from the busy table is: ${payloadArg(0)} milliseconds")
-			[#
-				MaxWaitingTime2 = payloadArg(0).toLong()
-			#]
-		}
-		
-		if[# MaxWaitingTime1 < MaxWaitingTime2 #] {
-			[#
-				MaxWaitingTime += MaxWaitingTime1
-				
-				for (i in 1..3){
-					if (Table1_states.get(i) == 0) {
-						MaxWaitingTime += TableDelayCleaning.get(i)
-					}
-				}
-			#]
-		} else {
-			[#
-				MaxWaitingTime += MaxWaitingTime2
-				
-				for (i in 1..3){
-					if (Table2_states.get(i) == 0) {
-						MaxWaitingTime += TableDelayCleaning.get(i)
-					}
-				}
-			#] 
-		}
-		
-		println("WAITERMIND | The total maximum waiting time is $MaxWaitingTime milliseconds")
-		
-		replyTo smartbellEnterRequest with clientAcceptWithTime : clientAcceptWithTime ($MaxWaitingTime)
-		
-		// TEST01
-		updateResource [# "$MaxWaitingTime" #]
-		[# readLine() #]
-		// TEST01
-		
-		[#
-			MaxWaitingTime = 0L 
-		#]
-	}
-	Goto rest
-	
-	State maxStayTimeLeft {
-		// Get max stay time from the busy table to calculate the maximum waiting time and inform the client
-		onMsg(maxStayTimerLeftReply : maxStayTimerLeftReply (TIMERLEFT)){
-			println("WAITERMIND | Maximum waiting time from the busy table is: ${payloadArg(0)} milliseconds")
-			[#
-				MaxWaitingTime = payloadArg(0).toLong()
-			#]
-		}
-	}
-	Goto inform
-	
-	State inform {
-		// Waiter inform the client about the maximum waiting time if there is no tableclean
-		println("WAITERMIND | Inform the client about the total maximum waiting time")
-		
-		if [# Table1_states.get(0) == 0 #]{
-			[#
-				for (i in 1..3){
-					if (Table1_states.get(i) == 0) {
-						MaxWaitingTime += TableDelayCleaning.get(i)
-					}
-				}
-			#]
-		} else {
-			if [# Table2_states.get(0) == 0 #]{
-				[#
-					for (i in 1..3){
-						if (Table2_states.get(i) == 0) {
-							MaxWaitingTime += TableDelayCleaning.get(i)
-						}
-					}
-				#]
-			}
-		}
-		println("WAITERMIND | The total maximum waiting time is $MaxWaitingTime milliseconds")
-		
-		replyTo smartbellEnterRequest with clientAcceptWithTime : clientAcceptWithTime ($MaxWaitingTime)
-		
-		[#
-			MaxWaitingTime = 0L 
-		#]
-	}
-	Goto rest
-	
-	State reachDoor{
-		// Waiter reach door
-		println("WAITERMIND | Reach Door")
-		
-		onMsg(convoyToTable : convoyToTable (TABLE)){
-			[#
-				TableSelectedToConvoy = payloadArg(0).toInt()
-			#]
-		}
-		request waiterengine -m moveTo : moveTo($X_entrance, $Y_entrance)
-	}
-	Transition t4	whenReply done -> convoyTable
-	
-	State convoyTable {
-		// Waiter convoy the client to table
-		delayVar DelayTakeClient
-		println("WAITERMIND | Convoy the client to table")
-		
-		if [# TableSelectedToConvoy == 1 #]{
-			[#
-				Table1_states.set(0, 0)
-				Table1_states.set(1, 0)
-				Table1_states.set(2, 0)
-				Table1_states.set(3, 0)
-			#]
-
-			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-			forward maxstaytime -m startTimer : startTimer(1)
-		} else {
-			[#
-				Table2_states.set(0, 0)
-				Table2_states.set(1, 0)
-				Table2_states.set(2, 0)
-				Table2_states.set(3, 0)
-			#]
-
-			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-			forward maxstaytime -m startTimer : startTimer(2)
-		}
-	}
-	Transition t5	whenReply done -> reachHome
-
-	State takeOrder{
-		// Waiter take the order
-		println("WAITERMIND | takeOrder")
-		
-		onMsg(clientReadyToOrder : clientReadyToOrder (ID, ORD)){
-			println("WAITERMIND | go to table for take the order from client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-			
-			if [# Table1_states.get(4) == payloadArg(0).toInt() #]{
-				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-				forward maxstaytime -m stopTimer : stopTimer(1)
-			} else {
-				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-				forward maxstaytime -m stopTimer : stopTimer(2)
-			}
-						
-			[#  
-				ID_client = payloadArg(0).toInt()
-				ORD_client = payloadArg(1).toString()
-			#]
-		}
-	}
-	Transition t6	whenReply done -> sendOrderToBarman
-	
-	State sendOrderToBarman{
-		// Waiter send the order to Barman
-		delayVar DelayTakeOrder
-		println("WAITERMIND | sendOrderToBarman")
-
-		println("WAITERMIND | go to barman for send the order from client with ID: $ID_client and ORD: $ORD_client")
-
-		request waiterengine -m moveTo : moveTo ($X_barman, $Y_barman)
-
-		forward barman -m sendOrder : sendOrder ($ID_client, $ORD_client)
-	}
-	Transition t7	whenReply done -> reachHome
-	
-	State reachBarman{
-		// Waiter reach Barman
-		println("WAITERMIND | Reach Barman")
-		
-		onMsg(barmanCompleteOrder : barmanCompleteOrder (ID, ORD)){
-			println("WAITERMIND | go to barman for the order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-			
-			[#  
-				ID_client = payloadArg(0).toInt()
-				ORD_client = payloadArg(1).toString()
-			#]
-		}
-		
-		request waiterengine -m moveTo : moveTo ($X_barman, $Y_barman)
-	}
-	Transition t8	whenReply done -> serve
-	
-	State serve{
-		// Barman complete the order and send it to Waiter that serve to the Client
-		delayVar DelayTakeDrink
-		println("WAITERMIND | serve")
-		
-		if [# Table1_states.get(4) == ID_client #]{
-			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-			forward maxstaytime -m resumeTimer : resumeTimer(1)
-		} else {
-			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-			forward maxstaytime -m resumeTimer : resumeTimer(2)
-		}
-	}
-	Transition t9	whenReply done -> reachHome
-	
-	State collectPayment {
-		// Waiter collect the payment
-		println("WAITERMIND | collectPayment")
-		
-		onMsg(clientPayment : clientPayment (ID)){
-			println("WAITERMIND | go to client with ID: ${payloadArg(0)} for collect the payment")
-			
-			if [# Table1_states.get(4) == payloadArg(0).toInt() #]{
-				[#
-					TableSelectedToClean = 1
-				#]
-				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-				forward maxstaytime -m stopTimer : stopTimer(1)
-			} else {
-				[#
-					TableSelectedToClean = 2
-				#]
-				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-				forward maxstaytime -m stopTimer : stopTimer(2)
-			}
-		}
-		
-		onMsg(maxStayTimerExpired : maxStayTimerExpired (TABLE)){
-			println("WAITERMIND | go to client of the table ${payloadArg(0)} for collect the payment, because the time has expired")
-			
-			if [# payloadArg(0).toInt() == 1 #]{
-				[#
-					TableSelectedToClean = 1
-				#]
-				request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-			} else {
-				[#
-					TableSelectedToClean = 2
-				#]
-				request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-			}
-		}
-	}
-	Transition t10	whenReply done -> convoyExit
-	
-	State convoyExit {
-		// Waiter convoy the Client to the exitdoor
-		delayVar DelayCollectTime
-		println("WAITERMIND | Convoy the Client to the exitdoor")
-
-		request waiterengine -m moveTo : moveTo ($X_exit, $Y_exit)
-		[#
-			when(TableSelectedToClean) {
-				1 -> {
-					Table1_states.set(0, 1)
-				}
-				
-				2 -> {
-					Table2_states.set(0, 1)
-				}
-			}
-			
-		#]
-	}
-	Transition t11	whenReply done -> checkQueue
-	
-	State reachTableClean{
-		// Waiter reach table to clean
+	State reachTableClean {
 		println("WAITERMIND | reachTableClean")
 		
-		delay 1000
-
-		if [# TableSelectedToClean == 1 #]{
-			request waiterengine -m moveTo : moveTo ($X_table1, $Y_table1)
-		}
-		if [# TableSelectedToClean == 2 #]{
-			request waiterengine -m moveTo : moveTo ($X_table2, $Y_table2)
-		}
-			
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (reachTableClean)
+		
+		solve(pos("table$TableSelectedToClean", X, Y))
+		ifSolved {
+			[#
+				MoveX = getCurSol("X").toString().toInt()
+               	MoveY = getCurSol("Y").toString().toInt()
+            #]
+            request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
+        }
 	}
-	Transition t12 	whenReply done -> whichCleanState
+	Transition t4 	whenReply done -> whichCleanState
 	
-	State whichCleanState{
-		// Waiter sees what state of cleanliness of the table to do
+	State whichCleanState {
 		println("WAITERMIND | whichCleanState")
 		
-		if [# TableSelectedToClean == 1 #]{
-			if [# Table1_states.get(1) == 0 #] {
-				forward waitermind -m goToClearing : goToClearing(PAYLOAD)
-			} else {
-				if [# Table1_states.get(2) == 0 #] {
-					forward waitermind -m goToCleaning : goToCleaning(PAYLOAD)
-				} else {
-					if [# Table1_states.get(3) == 0 #] {
-						forward waitermind -m goToSanitizing : goToSanitizing(PAYLOAD)
-					}
-				}
-			}
+		if [# TableStateToClean == "tableDirty" #] {
+			forward waitermind -m goToClearing : goToClearing (PAYLOAD)
 		}
 		
-		if [# TableSelectedToClean == 2 #]{
-			if [# Table2_states.get(1) == 0 #] {
-				forward waitermind -m goToClearing : goToClearing(PAYLOAD)
-			} else {
-				if [# Table2_states.get(2) == 0 #] {
-					forward waitermind -m goToCleaning : goToCleaning(PAYLOAD)
-				} else {
-					if [# Table2_states.get(3) == 0 #] {
-						forward waitermind -m goToSanitizing : goToSanitizing(PAYLOAD)
-					}
-				}
-			}
+		if [# TableStateToClean == "tableCleared" #] {
+			forward waitermind -m goToCleaning : goToCleaning (PAYLOAD)
+		}
+		
+		if [# TableStateToClean == "tableCleaned" #] {
+			forward waitermind -m goToSanitizing : goToSanitizing (PAYLOAD)
 		}
 	}
-	Transition t13	whenMsg goToClearing 	-> tableCleared
+	Transition t5	whenMsg goToClearing 	-> tableCleared
 					whenMsg goToCleaning 	-> tableCleaned
 					whenMsg goToSanitizing 	-> tableSanitized
 	
 	State tableCleared {
-		// Waiter tableCleared
 		println("WAITERMIND | tableCleared")
 		
-		request waiterengine -m clean : clean (1)
-		[#
-			when(TableSelectedToClean) {
-				1 -> {
-					Table1_states.set(1, 1)
-				}
-					
-				2 -> {
-					Table2_states.set(1, 1)
-				}				
-			}
-		#]
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (tableCleared)
+		
+		request waiterengine -m clean : clean ($TableSelectedToClean, 1)
 	}
-	Transition t14 	whenReply cleanDone -> checkQueue
+	Transition t6 	whenReply cleanDone -> checkQueue
 	
 	State tableCleaned {
-		// Waiter tableCleaned
 		println("WAITERMIND | tableCleaned")
 		
-		request waiterengine -m clean : clean (2)
-		[#
-			when(TableSelectedToClean) {
-				1 -> {
-					Table1_states.set(2, 1)
-				}
-					
-				2 -> {
-					Table2_states.set(2, 1)
-				}				
-			}	
-		#]
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (tableCleaned)
+		
+		request waiterengine -m clean : clean ($TableSelectedToClean, 2)
 	}
-	Transition t15 	whenReply cleanDone -> checkQueue
+	Transition t7 	whenReply cleanDone -> checkQueue
 	
 	State tableSanitized {
-		// Waiter tableSanitized
 		println("WAITERMIND | tableSanitized")
 		
-		request waiterengine -m clean : clean (3)
-		[#
-			when(TableSelectedToClean) {
-				1 -> {
-					Table1_states.set(3, 1)
-				}
-					
-				2 -> {
-					Table2_states.set(3, 1)
-				}				
-			}
-			TableSelectedToClean = 0
-		#]
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (tableSanitized)
+		
+		request waiterengine -m clean : clean ($TableSelectedToClean, 3)
 	}
-	Transition t16 	whenReply cleanDone -> checkQueue
+	Transition t8 	whenReply cleanDone -> checkQueue
 	
+	State checkAcceptOrInform {
+		println("WAITERMIND | checkAcceptOrInform")
+		
+		request tearoomstatemanager -m getTableFreeCleanRequest : getTableFreeCleanRequest (PAYLOAD)
+		
+		onMsg(smartbellEnterRequest : smartbellEnterRequest (ID)) {
+			println("WAITERMIND | Request from the client with ID: ${payloadArg(0)}")
+			[#
+				IdClientToConvoy = payloadArg(0).toInt()
+			#]
+		}
+	}
+	Transition t9 	whenReply getTableFreeCleanReply -> replyCheckAcceptOrInform
+	
+	State replyCheckAcceptOrInform {
+		println("WAITERMIND | replyCheckAcceptOrInform")
+		
+		onMsg (getTableFreeCleanReply : getTableFreeCleanReply (TABLE)) {
+			[#
+				TableSelectedToConvoy = payloadArg(0).toInt() 	
+			#]
+		}
+	}
+	Goto checkInform if [# TableSelectedToConvoy == 0 #] else accept
+	
+	State checkInform {
+		println("WAITERMIND | checkInform")
+		
+		[#
+			IdClientToConvoy = 0
+		#]
+		request tearoomstatemanager -m getTimerForInformRequest : getTimerForInformRequest (PAYLOAD)
+	}
+	Transition t10	whenReply getTimerForInformReply -> replyInform
+	
+	State replyInform {
+		println("WAITERMIND | replyInform")
+		
+		onMsg (getTimerForInformReply : getTimerForInformReply (TIMERLEFT)) {
+			replyTo smartbellEnterRequest with clientAcceptWithTime : clientAcceptWithTime ($IdClientToConvoy, $payloadArg(0))
+		}
+	}
+	Goto checkQueue
+	
+	State accept {
+		println("WAITERMIND | accept")
+		
+		println("WAITERMIND | Accept the client with ID: $IdClientToConvoy")
+		replyTo smartbellEnterRequest with clientAccept : clientAccept ($IdClientToConvoy)		
+	}
+	Goto reachDoor
+	
+	State reachDoor {
+		println("WAITERMIND | reachDoor")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (reachDoor)
+		
+		solve(pos(entrance, X, Y))
+		ifSolved {
+			[#
+				MoveX = getCurSol("X").toString().toInt()
+            	MoveY = getCurSol("Y").toString().toInt()
+            #]
+         	request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)	
+         }
+	}
+	Transition t11	whenReply done -> convoyTable
+	
+	State convoyTable {
+		println("WAITERMIND | convoyTable")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (convoyTable)
+		
+		delayVar DelayTakeClient
+		
+		forward tearoomstatemanager -m occupyTable : occupyTable ($TableSelectedToConvoy, $IdClientToConvoy)
+		
+		solve(pos("table$TableSelectedToConvoy", X, Y))		
+		ifSolved {
+			[#
+				MoveX = getCurSol("X").toString().toInt()
+            	MoveY = getCurSol("Y").toString().toInt()
+            #]
+         	request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
+         	forward maxstaytime -m startTimer : startTimer ($TableSelectedToConvoy)	
+         }
+	}
+	Transition t12	whenReply done -> reachHome
+
+	State checkTableForOrderIn {
+		println("WAITERMIND | checkTableForOrderIn")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (reachTableOrder)
+		
+		onMsg(clientReadyToOrder : clientReadyToOrder (ID)) {
+			println("WAITERMIND | go to table for take the order from client with ID: ${payloadArg(0)}")
+
+			[#  
+				IdClientForOrder = payloadArg(0).toInt()
+			#]
+			
+			request tearoomstatemanager -m getTableFromIdRequest : getTableFromIdRequest ($IdClientForOrder)
+		}
+	}
+	Transition t13	whenReply getTableFromIdReply -> replyCheckTableForOrderIn
+	
+	State replyCheckTableForOrderIn {
+		println("WAITERMIND | replyCheckReachTableForOrder")
+		
+		onMsg(getTableFromIdReply : getTableFromIdReply (TABLE)) {
+			[#
+				TableSelectedForOrder = payloadArg(0).toInt()
+			#]
+			
+			solve(pos("table$TableSelectedForOrder", X, Y))
+			ifSolved {
+				[#
+					MoveX = getCurSol("X").toString().toInt()
+                	MoveY = getCurSol("Y").toString().toInt()
+                #]
+            }
+            
+            request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
+		}
+	}
+	Transition t14	whenReply done -> takeOrder
+	
+	State takeOrder {
+		println("WAITERMIND | takeOrder")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (takeOrder)
+	}
+	Transition t15	whenMsg clientOrder -> sendOrderToBarman
+	
+	State sendOrderToBarman {
+		println("WAITERMIND | sendOrderToBarman")
+		
+		onMsg(clientOrder : clientOrder (ID, ORDER)) {
+			[#  
+				IdClientForOrder = payloadArg(0).toInt()
+				OrderClient = payloadArg(1).toString()
+			#]
+			println("WAITERMIND | send to barman the order from client with ID: $IdClientForOrder and ORDER: $OrderClient")
+			
+			forward tearoomstatemanager -m setWaiterState : setWaiterState (sendOrderToBarman)
+			
+			forward maxstaytime -m stopTimer : stopTimer ($TableSelectedForOrder)
+			forward barman -m sendOrder : sendOrder ($IdClientForOrder, $OrderClient)
+			[#
+				IdClientForOrder = 0
+				OrderClient = ""
+			#]
+		}
+	}
+	Goto reachHome
+	
+	State reachBarman {
+		println("WAITERMIND | reachBarman")
+		
+		onMsg(barmanCompleteOrder : barmanCompleteOrder (ID, ORDER)) {
+			println("WAITERMIND | go to barman for the order for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
+			[#  
+				IdClientForOrder = payloadArg(0).toInt()
+				OrderClient = payloadArg(1).toString()
+			#]
+			
+			forward tearoomstatemanager -m setWaiterState : setWaiterState (reachBarman)
+			
+			solve(pos(bar, X, Y))
+			ifSolved {
+				[#
+					MoveX = getCurSol("X").toString().toInt()
+                	MoveY = getCurSol("Y").toString().toInt()
+                #]
+            }
+            
+            request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)	
+		}
+	}
+	Transition t16	whenReply done -> checkTableForOrderOut
+	
+	State checkTableForOrderOut {
+		println("WAITERMIND | checkTableForOrderOut")
+		
+		delayVar DelayTakeOrder
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (getOrderFromBarman)
+		forward tearoomstatemanager -m removeOrderReady : removeOrderReady ($IdClientForOrder)
+		request tearoomstatemanager -m getTableFromIdRequest : getTableFromIdRequest ($IdClientForOrder)
+	}
+	Transition t17	whenReply getTableFromIdReply -> replyCheckTableForOrderOut
+	
+	State replyCheckTableForOrderOut {
+		println("WAITERMIND | replyCheckTableForOrderOut")
+		
+		onMsg (getTableFromIdReply : getTableFromIdReply (TABLE)) {
+			[#
+				TableSelectedForOrder = payloadArg(0).toInt()
+			#]
+			
+			solve(pos("table$TableSelectedForOrder", X, Y))
+			ifSolved {
+				[#
+					MoveX = getCurSol("X").toString().toInt()
+                	MoveY = getCurSol("Y").toString().toInt()
+                #]
+            }
+			
+			request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
+		}
+	}
+	Transition t18	whenReply done -> serve
+	
+	State serve {
+		println("WAITERMIND | serve")
+		
+		delayVar DelayServeOrder
+		
+		forward maxstaytime -m resumeTimer : resumeTimer ($TableSelectedForOrder)
+	}
+	Goto reachHome
+	
+	State reachTableToKick {
+		println("WAITERMIND | reachTableToKick")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (reachTableCollect)
+		
+		onMsg(maxStayTimerExpired : maxStayTimerExpired (TABLE)) {
+			println("WAITERMIND | go to client of the table ${payloadArg(0)} for collect the payment, because the time has expired")
+			
+			[#
+				TableSelectedForCollect = payloadArg(0).toInt()
+			#]
+			
+			solve(pos("table$TableSelectedForCollect", X, Y))
+			ifSolved {
+				[#
+					MoveX = getCurSol("X").toString().toInt()
+                	MoveY = getCurSol("Y").toString().toInt()
+                #]
+            }
+            
+            request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
+		}
+		
+	}
+	Transition t19	whenReply done -> collectPayment
+	
+	State checkTableToCollect {
+		println("WAITERMIND | checkTableToCollect")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState (reachTableCollect)
+		
+		onMsg(clientPayment : clientPayment (ID)) {
+			println("WAITERMIND | go to client with ID: ${payloadArg(0)} for collect the payment")
+			[#
+				IdClientForCollect = payloadArg(0).toInt()
+			#]
+			
+			request tearoomstatemanager -m getTableFromIdRequest : getTableFromIdRequest ($IdClientForCollect)
+		}
+	}
+	Transition t20	whenReply getTableFromIdReply -> replyCheckTableToCollect
+	
+	State replyCheckTableToCollect {
+		println("WAITERMIND | replyCheckTableToCollect")
+		
+		onMsg (getTableFromIdReply : getTableFromIdReply (TABLE)) {
+			[#
+				TableSelectedForCollect = payloadArg(0).toInt()
+			#]
+			
+			solve(pos("table$TableSelectedForCollect", X, Y))
+			ifSolved {
+				[#
+					MoveX = getCurSol("X").toString().toInt()
+                	MoveY = getCurSol("Y").toString().toInt()
+                #]
+            }
+			
+			request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
+			forward maxstaytime -m stopTimer : stopTimer ($TableSelectedForCollect)
+		}
+	}
+	Transition t21	whenReply done -> collectPayment
+	
+	State collectPayment {
+		println("WAITERMIND | collectPayment")
+		
+		delayVar DelayCollectTime
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState(collectPayment)
+	}
+	Goto convoyExit
+	
+	State convoyExit {
+		println("WAITERMIND | convoyExit")
+		
+		forward tearoomstatemanager -m setWaiterState : setWaiterState(convoyExit)
+		
+		forward tearoomstatemanager -m setTableState : setTableState ($TableSelectedForCollect, tableDirty)
+		
+		solve(pos(exit, X, Y))
+			ifSolved {
+				[#
+					MoveX = getCurSol("X").toString().toInt()
+                	MoveY = getCurSol("Y").toString().toInt()
+                #]
+             request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)	
+		}
+	}
+	Transition t22	whenReply done -> checkQueue
+
 	State endWork {
-		// Waiter end work
 		println("WAITERMIND | End work")
 		terminate 0
 	}
 }
 
-QActor waiterengine context ctxtearoom{
+QActor waiterengine context ctxtearoom {
 	[#
 		// Robot
 		var StepTime = 260L
@@ -628,31 +569,29 @@ QActor waiterengine context ctxtearoom{
 		var CmdToMove = ""
 	#]
 		
-	State s0 initial{
-		// Initial state
+	State s0 initial {
 		println("WAITERENGINE | Start")
 		
 		run itunibo.planner.plannerUtil.initAI()
 		run itunibo.planner.plannerUtil.loadRoomMap(mapRoom)
 		run itunibo.planner.plannerUtil.showCurrentRobotState()
 		
-		forward waitermind -m engineReady : engineReady(PAYLOAD)
+		forward waitermind -m engineReady : engineReady (PAYLOAD)
 	}
 	Goto waitCmd
 	
-	State waitCmd{
-		// Wait Cmd
-		println("WAITERENGINE | Wait Cmd")
+	State waitCmd {
+		println("WAITERENGINE | waitCmd")
 	}
 	Transition t0	whenRequest moveTo -> planDestination
 				 	whenRequest clean -> cleanTable
 				 	whenMsg end -> endWork
 	
-	State planDestination{
+	State planDestination {
 		// Plan Destination
-		println("WAITERENGINE | Plan Destination")
+		println("WAITERENGINE | planDestination")
 		
-		onMsg(moveTo : moveTo(X, Y)){
+		onMsg(moveTo : moveTo(X, Y)) {
 			[# 
 				XPoint = payloadArg(0)
 			    YPoint = payloadArg(1)			  
@@ -663,9 +602,8 @@ QActor waiterengine context ctxtearoom{
 	}
 	Goto readStep
 	
-	State readStep{
-		// Read Step
-		println("WAITERENGINE | Read Step")
+	State readStep {
+		println("WAITERENGINE | readStep")
 		
 		[# 
 			CmdToMove = itunibo.planner.plannerUtil.getNextPlannedMove()
@@ -673,27 +611,24 @@ QActor waiterengine context ctxtearoom{
 	}
 	Goto execStep if [# CmdToMove == "w" #] else execMove
 
-	State execStep{
-		// Exec Step
-		println("WAITERENGINE | Exec Step")
+	State execStep {
+		println("WAITERENGINE | execStep")
 		
-		request basicrobot -m step : step($StepTime)
+		request basicrobot -m step : step ($StepTime)
 	}
 	Transition t1	whenReply stepdone -> updateMap
 					whenReply stepfail -> errorHandler
 
-	State execMove{
-		// Exec Move
+	State execMove {
 		println("WAITERENGINE | Exec Move")
 		
-		forward basicrobot -m cmd : cmd($CmdToMove)
+		forward basicrobot -m cmd : cmd ($CmdToMove)
 		delay 200
 	}
 	Goto updateMap
 	
-	State updateMap{
-		// Update Map
-		println("WAITERENGINE | Update Map")
+	State updateMap {
+		println("WAITERENGINE | updateMap")
 		
 		updateResource [# itunibo.planner.plannerUtil.getMapOneLine() #]
 		run itunibo.planner.plannerUtil.updateMap("$CmdToMove")	
@@ -701,49 +636,60 @@ QActor waiterengine context ctxtearoom{
 	}
 	Goto readStep if [# CmdToMove.length > 0 #] else endDestination
 	
-	State errorHandler{
-		// Error Handler
-		println("WAITERENGINE | Error Handler")
+	State errorHandler {
+		println("WAITERENGINE | errorHandler")
 		
-		onMsg(stepfail : stepfail(DURATION, CAUSE) ){
+		onMsg(stepfail : stepfail(DURATION, CAUSE) ) {
 			[#
 				val D = payloadArg(0).toLong()
 				val Dt = Math.abs(StepTime - D)
 				val BackT = D/2
-			#] 
+			#]
+			
 			println("WAITERENGINE | Robotmapper stepFail - D = $D, BackTime = ${BackTime}, BackT = $BackT")
+ 			
  			if [# D > BackTime #] {    
 				forward basicrobot -m cmd : cmd(s)
 				delayVar BackT
 				forward basicrobot -m cmd : cmd(h)
 			}
+			
 	 		run itunibo.planner.plannerUtil.showCurrentRobotState()
-			updateResource [# "stepFail" #]
 			delay 500
 		}	    
 	}
 	Goto readStep if [# CmdToMove.length > 0 #] else endDestination
 	
-	State cleanTable{
-		// Clean Table
-		println("WAITERENGINE | Clean Table")
+	State cleanTable {
+		println("WAITERENGINE | cleanTable")
 		
-		onMsg(clean : clean(STATE)){
+		onMsg(clean : clean (TABLE, STATE)) {
 			[#
-				when(payloadArg(0).toInt()) {
+				val TableSelectedToClean = payloadArg(0).toInt()
+				
+				when(payloadArg(1).toInt()) {
 					1 -> {
-						println("WAITERENGINE | tableCleared")
-						delay(TableClearTime)
+						#]
+							delayVar TableClearTime
+							println("WAITERENGINE | tableCleared")
+							forward tearoomstatemanager -m setTableState : setTableState ($TableSelectedToClean, tableCleared)
+						[#
 					}
 					
 					2 -> {
-						println("WAITERENGINE | tableCleaned")
-						delay(TableCleanTime)
+						#]
+							delayVar TableCleanTime
+							println("WAITERENGINE | tableCleaned")
+							forward tearoomstatemanager -m setTableState : setTableState ($TableSelectedToClean, tableCleaned)
+						[#
 					}
 					
 					3 -> {
-						println("WAITERENGINE | tableSanitized")
-						delay(TableSanitizedTime)
+						#]
+							delayVar TableSanitizedTime
+							println("WAITERENGINE | tableSanitized")
+							forward tearoomstatemanager -m setTableState : setTableState ($TableSelectedToClean, tableSanitized)
+						[#
 					}
 				}
 			#]
@@ -752,18 +698,16 @@ QActor waiterengine context ctxtearoom{
 	}
 	Goto waitCmd
 	
-	State endDestination{
-		// End Destination
-		println("WAITERENGINE | End Destination")
+	State endDestination {
+		println("WAITERENGINE | endDestination")
 		
-		println("WAITERENGINE | Done moveTo($XPoint,$YPoint)")
+		println("WAITERENGINE | Done moveTo ($XPoint, $YPoint)")
 		run itunibo.planner.plannerUtil.showCurrentRobotState()
 		replyTo moveTo with done : done ($XPoint, $YPoint)
 	}
 	Goto waitCmd
 	
 	State endWork {
-		// WaiterEngine end work
 		println("WAITERENGINE | End work")
 		terminate 0
 	}
@@ -777,64 +721,70 @@ QActor smartbell context ctxtearoom {
 	#]
 	
 	State s0 initial {
-		// Smartbell initial state
 		println("SMARTBELL | Start")
 	}
 	Goto waitRing
 	
 	State waitRing {
-		// Smartbell wait ring
-		println("SMARTBELL | Wait ring")
+		println("SMARTBELL | waitRing")
 	}
 	Transition t0 	whenRequest enterRequestClient -> checkTempClient
 					whenMsg end -> endWork
 						
 	State checkTempClient {
-		// Smartbell check temp client
-		println("SMARTBELL | Check temp client")
+		println("SMARTBELL | checkTempClient")
 
 		onMsg(enterRequestClient : enterRequestClient (TEMP)){
 			println("SMARTBELL | Entry request from CLIENT with ID: $ID_client and TEMP: ${payloadArg(0)}")
-			[# ClientTemp = payloadArg(0).toDouble() #]
+			[#
+				ClientTemp = payloadArg(0).toDouble()
+			#]
 		}
 		
 		if [# ClientTemp < TempMax #] {
-			println("SMARTBELL | The client can enter - Temp Ok")
+			println("SMARTBELL | The client can enter - Temperature OK")
 			request waitermind -m smartbellEnterRequest : smartbellEnterRequest ($ID_client)
 		} else {
-			println("SMARTBELL | The client can't enter - Temp Ko")
+			println("SMARTBELL | The client can't enter - Temperature KO")
 			replyTo enterRequestClient with enterReplyFromSmartbellNeg : enterReplyFromSmartbellNeg ($ID_client)
 			forward smartbell -m goToWaitRing : goToWaitRing (PAYLOAD)
+			[#
+				ID_client++
+			#]
 		}
 	}
 	Transition t1	whenReply clientAccept -> clientEnter
 					whenReply clientAcceptWithTime -> clientEnterWithTime
 					whenMsg goToWaitRing -> waitRing
 	
-	State clientEnter{
-		// Smartbell reply to client
-		println("SMARTBELL | The client can enter")
+	State clientEnter {
+		println("SMARTBELL | clientEnter")
 		
-		onMsg(clientAccept : clientAccept (TABLE)){
-			replyTo enterRequestClient with enterReplyFromSmartbell : enterReplyFromSmartbell ($ID_client, $payloadArg(0))
+		onMsg(clientAccept : clientAccept (ID)){
+			replyTo enterRequestClient with enterReplyFromSmartbell : enterReplyFromSmartbell ($payloadArg(0))
 		}
-		[# ID_client++ #]
+		
+		[#
+			ID_client++
+		#]
 	}
 	Goto waitRing
 	
 	State clientEnterWithTime{
-		// Smartbell reply to client the max wait time
-		println("SMARTBELL | The client must wait time")
+		println("SMARTBELL | clientEnterWithTime")
 		
 		onMsg(clientAcceptWithTime : clientAcceptWithTime (MAXWAITINGTIME)){
+			println("SMARTBELL | Inform the client about the total maximum waiting time: ${payloadArg(0)} milliseconds")
 			replyTo enterRequestClient with enterReplyFromSmartbellWithTime : enterReplyFromSmartbellWithTime ($ID_client, $payloadArg(0))
 		}
-		[# ID_client++ #]
+		
+		[#
+			ID_client++
+		#]
 	}
 	Goto waitRing
 
 	State endWork {
-		// Smartbell end work
 		println("SMARTBELL | End work")
 		terminate 0
 	}
@@ -847,33 +797,35 @@ QActor barman context ctxtearoom {
 	#]
 	
 	State s0 initial {
-		// Barman initial state
 		println("BARMAN | Start")
 	}
 	Goto waitOrder
 	
 	State waitOrder {
-		// Barman wait order
-		println("BARMAN | Wait order")
+		println("BARMAN | waitOrder")
+		
+		forward tearoomstatemanager -m setBarmanState : setBarmanState (waitOrder)
 	}
 	Transition t0	whenMsg sendOrder -> prepareOrder
 					whenMsg end -> endWork
 
 	State prepareOrder {
-		// Barman prepare order
 		println("BARMAN | prepareOrder")
 		
-		onMsg(sendOrder : sendOrder (ID, ORD)){
-			println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
+		onMsg(sendOrder : sendOrder (ID, ORDER)){
+			println("BARMAN | Prepare order for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
+			forward tearoomstatemanager -m setBarmanState : setBarmanState (prepareOrder($payloadArg(0), $payloadArg(1)))
+			
 			delayVar TimePrepareOrder
-			println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORD: ${payloadArg(1)}")
-			forward waitermind -m barmanCompleteOrder : barmanCompleteOrder($payloadArg(0), $payloadArg(1))
+			
+			println("BARMAN | Order ready for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
+			forward tearoomstatemanager -m addOrderReady : addOrderReady ($payloadArg(0))
+			forward waitermind -m barmanCompleteOrder : barmanCompleteOrder ($payloadArg(0), $payloadArg(1))
 		}
 	}
 	Goto waitOrder
 	
 	State endWork {
-		// Barman end work
 		println("BARMAN | End work")
 		terminate 0
 	}
@@ -886,121 +838,98 @@ QActor maxstaytime context ctxtearoom {
 	#]
 	
 	State s0 initial {
-		// Maxstaytime initial state
 		println("MAXSTAYTIME | Start")
 	}
 	Goto wait
 	
 	State wait {
-		// Maxstaytime wait
-		println("MAXSTAYTIME | Wait")
+		println("MAXSTAYTIME | wait")
 	}
 	Transition t0	whenMsg	startTimer -> newTimer
 					whenMsg resumeTimer -> resume
 					whenMsg stopTimer -> stop
 					whenMsg maxStayTimerExpired -> timerExpired
 					whenRequest maxStayTimerLeftRequest -> timerLeft
-					whenRequest maxStayTimerLeftCompareRequest -> timerLeftCompare
 					whenMsg end -> endWork
 	
 	State newTimer {
-		// Maxstaytime start new timer
 		println("MAXSTAYTIME | newTimer")
 		
-		onMsg(startTimer : startTimer(TABLE)){
+		onMsg(startTimer : startTimer(TABLE)) {
 			if [# payloadArg(0).toInt() == 1 #] {
-				forward maxstaytimetable1 -m startTimer : startTimer(1)
+				forward maxstaytimetable1 -m startTimer : startTimer (1)
 			}
 			if [# payloadArg(0).toInt() == 2 #] {
-				forward maxstaytimetable2 -m startTimer : startTimer(2)
+				forward maxstaytimetable2 -m startTimer : startTimer (2)
 			}
 		}
 	}
 	Goto wait
 	
-	State resume{
-		// Maxstaytime resume timer
+	State resume {
 		println("MAXSTAYTIME | resume")
 		
-		onMsg(resumeTimer : resumeTimer(TABLE)){
+		onMsg(resumeTimer : resumeTimer(TABLE)) {
 			if [# payloadArg(0).toInt() == 1 #] {
-				forward maxstaytimetable1 -m resumeTimer : resumeTimer(1)
+				forward maxstaytimetable1 -m resumeTimer : resumeTimer (1)
 			}
 			if [# payloadArg(0).toInt() == 2 #] {
-				forward maxstaytimetable2 -m resumeTimer : resumeTimer(2)
+				forward maxstaytimetable2 -m resumeTimer : resumeTimer (2)
 			}
 		}	
 	}
 	Goto wait
 	
-	State stop{
-		// Maxstaytime stop timer
+	State stop {
 		println("MAXSTAYTIME | stop")
 		
-		onMsg(stopTimer : stopTimer(TABLE)){
+		onMsg(stopTimer : stopTimer(TABLE)) {
 			if [# payloadArg(0).toInt() == 1 #] {
-				forward maxstaytimetable1 -m stopTimer : stopTimer(1)
+				forward maxstaytimetable1 -m stopTimer : stopTimer (1)
 			}
 			if [# payloadArg(0).toInt() == 2 #] {
-				forward maxstaytimetable2 -m stopTimer : stopTimer(2)
+				forward maxstaytimetable2 -m stopTimer : stopTimer (2)
 			}
 		}
 	}
 	Goto wait
 	
-	State timerExpired{
-		// Maxstaytime timer expired
+	State timerExpired {
 		println("MAXSTAYTIME | timerExpired")
 
-		onMsg(maxStayTimerExpired : maxStayTimerExpired(TABLE)){
+		onMsg(maxStayTimerExpired : maxStayTimerExpired(TABLE)) {
 			[#
 				Table = payloadArg(0).toInt()
 			#]
-			forward waitermind -m maxStayTimerExpired : maxStayTimerExpired($Table)
+			forward waitermind -m maxStayTimerExpired : maxStayTimerExpired ($Table)
 		}
 	}
 	Goto wait
 	
-	State timerLeftCompare{
-		onMsg (maxStayTimerLeftCompareRequest : maxStayTimerLeftCompareRequest(TABLE)){
+	State timerLeft {
+		println("MAXSTAYTIME | timerLeft")
+		
+		onMsg (maxStayTimerLeftRequest : maxStayTimerLeftRequest (TABLE)){
 			if [# payloadArg(0).toInt() == 1 #] {
-				request maxstaytimetable1 -m maxStayTimerLeftRequestToTable : maxStayTimerLeftRequestToTable(1)
+				request maxstaytimetable1 -m maxStayTimerLeftRequestToTable : maxStayTimerLeftRequestToTable (1)
 			}
 			if [# payloadArg(0).toInt() == 2 #] {
-				request maxstaytimetable2 -m maxStayTimerLeftRequestToTable : maxStayTimerLeftRequestToTable(2)
-			}
-		}
-	}
-	Transition t0 whenReply maxStayTimerLeftReplyFromTable -> forwardRemainingTimeCompare
-	
-	State forwardRemainingTimeCompare{
-		onMsg(maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable(TIMERLEFT)){
-			replyTo maxStayTimerLeftCompareRequest with maxStayTimerLeftCompareReply : maxStayTimerLeftCompareReply($payloadArg(0))
-		}
-	}
-	Goto wait
-	
-	State timerLeft{
-		onMsg (maxStayTimerLeftRequest : maxStayTimerLeftRequest(TABLE)){
-			if [# payloadArg(0).toInt() == 1 #] {
-				request maxstaytimetable1 -m maxStayTimerLeftRequestToTable : maxStayTimerLeftRequestToTable(1)
-			}
-			if [# payloadArg(0).toInt() == 2 #] {
-				request maxstaytimetable2 -m maxStayTimerLeftRequestToTable : maxStayTimerLeftRequestToTable(2)
+				request maxstaytimetable2 -m maxStayTimerLeftRequestToTable : maxStayTimerLeftRequestToTable (2)
 			}
 		}
 	}
 	Transition t1 whenReply maxStayTimerLeftReplyFromTable -> forwardRemainingTime
 	
-	State forwardRemainingTime{
-		onMsg(maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable(TIMERLEFT)){
-			replyTo maxStayTimerLeftRequest with maxStayTimerLeftReply : maxStayTimerLeftReply($payloadArg(0))
+	State forwardRemainingTime {
+		println("MAXSTAYTIME | forwardRemainingTime")
+		
+		onMsg(maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable(TIMERLEFT)) {
+			replyTo maxStayTimerLeftRequest with maxStayTimerLeftReply : maxStayTimerLeftReply ($payloadArg(0))
 		}
 	}
 	Goto wait
 	
 	State endWork {
-		// Maxstaytime end work
 		println("MAXSTAYTIME | End work")
 		terminate 0
 	}
@@ -1018,20 +947,17 @@ QActor maxstaytimetable1 context ctxtearoom {
 	#]
 	
 	State s0 initial {
-		// Maxstaytimetable1 initial state
 		println("MAXSTAYTIMETABLE1 | Start")
 	}
 	Goto wait
 	
-	State wait{
-		// Maxstaytimetable1 wait
-		println("MAXSTAYTIMETABLE1 | Wait")
+	State wait {
+		println("MAXSTAYTIMETABLE1 | wait")
 	}
 	Transition t0 	whenMsg startTimer -> newTimer
 					whenMsg end -> endWork
 	
-	State newTimer{
-		// Maxstaytimetable1 newTimer
+	State newTimer {
 		println("MAXSTAYTIMETABLE1 | newTimer")
 		
 		memoCurrentTime StartTime
@@ -1043,8 +969,7 @@ QActor maxstaytimetable1 context ctxtearoom {
 					whenMsg stopTimer -> stop
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDone
 	
-	State stop{
-		// Maxstaytimetable1 stop
+	State stop {
 		println("MAXSTAYTIMETABLE1 | stop")
 		
 		setDuration TimerDone from StartTime
@@ -1056,8 +981,7 @@ QActor maxstaytimetable1 context ctxtearoom {
 					whenMsg startTimer -> newTimer
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDoneStop
 	
-	State resume{
-		// Maxstaytimetable1 resume
+	State resume {
 		println("MAXSTAYTIMETABLE1 | resume")
 		
 		[#
@@ -1069,16 +993,14 @@ QActor maxstaytimetable1 context ctxtearoom {
 					whenMsg	stopTimer -> stop
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDone
 	
-	State timerExpired{
-		// Maxstaytimetable1 timerExpired
+	State timerExpired {
 		println("MAXSTAYTIMETABLE1 | timerExpired")
 		
-		forward maxstaytime -m maxStayTimerExpired : maxStayTimerExpired(1)
+		forward maxstaytime -m maxStayTimerExpired : maxStayTimerExpired (1)
 	}
 	Goto wait
 	
-	State returnTimerDone{
-		// Maxstaytimetable1 returnTimerDone
+	State returnTimerDone {
 		println("MAXSTAYTIMETABLE1 | returnTimerDone")
 		
 		setDuration TimerDone from StartTime
@@ -1086,25 +1008,23 @@ QActor maxstaytimetable1 context ctxtearoom {
 			TimerGlobalDone += TimerDone
 			TimerToReturn = MaxStayTime - TimerGlobalDone
 		#]
-		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable($TimerToReturn)
+		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable ($TimerToReturn)
 	}
 	Goto resume
 	
-	State returnTimerDoneStop{
-		// Maxstaytimetable1 returnTimerDoneStop
+	State returnTimerDoneStop {
 		println("MAXSTAYTIMETABLE1 | returnTimerDoneStop")
 		
 		[# 
 			TimerToReturn = MaxStayTime - TimerGlobalDone
 		#]
-		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable($TimerToReturn)
+		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable ($TimerToReturn)
 	}
-	Transition t4	whenMsg		resumeTimer -> resume
-					whenMsg 	startTimer	-> newTimer
+	Transition t4	whenMsg	resumeTimer -> resume
+					whenMsg startTimer	-> newTimer
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDoneStop
 	
 	State endWork {
-		// Maxstaytimetable1 end work
 		println("MAXSTAYTIMETABLE1 | End work")
 		terminate 0
 	}
@@ -1122,14 +1042,12 @@ QActor maxstaytimetable2 context ctxtearoom {
 	#]
 	
 	State s0 initial {
-		// Maxstaytimetable2 initial state
 		println("MAXSTAYTIMETABLE2 | Start")
 	}
 	Goto wait
 	
-	State wait{
-		// Maxstaytimetable2 wait
-		println("MAXSTAYTIMETABLE2 | Wait")
+	State wait {
+		println("MAXSTAYTIMETABLE2 | wait")
 	}
 	Transition t0 	whenMsg startTimer -> newTimer
 					whenMsg stopTimer -> wait
@@ -1137,8 +1055,7 @@ QActor maxstaytimetable2 context ctxtearoom {
 					whenMsg end -> endWork
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDone
 	
-	State newTimer{
-		// Maxstaytimetable2 newTimer
+	State newTimer {
 		println("MAXSTAYTIMETABLE2 | newTimer")
 		
 		memoCurrentTime StartTime
@@ -1151,8 +1068,7 @@ QActor maxstaytimetable2 context ctxtearoom {
 					whenMsg startTimer -> newTimer
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDone
 	
-	State stop{
-		// Maxstaytimetable2 stop
+	State stop {
 		println("MAXSTAYTIMETABLE2 | stop")
 		
 		setDuration TimerDone from StartTime
@@ -1164,8 +1080,7 @@ QActor maxstaytimetable2 context ctxtearoom {
 					whenMsg startTimer	-> newTimer
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDoneStop
 	
-	State resume{
-		// Maxstaytimetable2 resume
+	State resume {
 		println("MAXSTAYTIMETABLE2 | resume")
 		
 		[#
@@ -1178,16 +1093,14 @@ QActor maxstaytimetable2 context ctxtearoom {
 					whenMsg startTimer	-> newTimer
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDone
 	
-	State timerExpired{
-		// Maxstaytimetable2 timerExpired
+	State timerExpired {
 		println("MAXSTAYTIMETABLE2 | timerExpired")
 		
-		forward maxstaytime -m maxStayTimerExpired : maxStayTimerExpired(2)
+		forward maxstaytime -m maxStayTimerExpired : maxStayTimerExpired (2)
 	}
 	Goto wait
 	
-	State returnTimerDone{
-		// Maxstaytimetable2 returnTimerDone
+	State returnTimerDone {
 		println("MAXSTAYTIMETABLE2 | returnTimerDone")
 		
 		setDuration TimerDone from StartTime
@@ -1195,26 +1108,370 @@ QActor maxstaytimetable2 context ctxtearoom {
 			TimerGlobalDone += TimerDone
 			TimerToReturn = MaxStayTime - TimerGlobalDone
 		#]
-		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable($TimerToReturn)
+		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable ($TimerToReturn)
 	}
 	Goto resume
 	
-	State returnTimerDoneStop{
-		// Maxstaytimetable2 returnTimerDoneStop
+	State returnTimerDoneStop {
 		println("MAXSTAYTIMETABLE2 | returnTimerDoneStop")
 		
 		[# 
 			TimerToReturn = MaxStayTime - TimerGlobalDone
 		#]
-		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable($TimerToReturn)
+		replyTo maxStayTimerLeftRequestToTable with maxStayTimerLeftReplyFromTable : maxStayTimerLeftReplyFromTable ($TimerToReturn)
 	}
-	Transition t4	whenMsg		resumeTimer -> resume
-					whenMsg 	startTimer	-> newTimer
+	Transition t4	whenMsg	resumeTimer -> resume
+					whenMsg startTimer	-> newTimer
 					whenRequest maxStayTimerLeftRequestToTable -> returnTimerDoneStop
 	
 	State endWork {
-		// Maxstaytimetable2 end work
 		println("MAXSTAYTIMETABLE2 | End work")
+		terminate 0
+	}
+}
+
+QActor tearoomstatemanager context ctxtearoom {
+	
+	[#
+		var MaxWaitingTime = 0L
+		var MaxWaitingTime1 = 0L
+		var MaxWaitingTime2 = 0L
+	#]
+	
+	State s0 initial {
+		println("TEAROOMSTATEMANAGER | Start")
+		
+		solve(consult("storage.pl"))
+	}
+	Goto wait
+	
+	State wait {
+		println("TEAROOMSTATEMANAGER | wait")
+		
+		[#
+			var StateRoom = ""
+		#]
+		
+		solve (statetearoom(stateWaiter(SW), stateBarman(SB), stateTable(1, ST1), stateTable(2, ST2)))
+		ifSolved {
+			[#
+				StateRoom = 
+				"{\"Waiter\":"		+"\""+   	getCurSol("SW").toString()   +"\"," +
+				"\"Barman\":"		+"\""+    	getCurSol("SB").toString()   +"\","  +
+				"\"TABLE1\":"		+"\""+    	getCurSol("ST1").toString()   +"\","+
+				"\"TABLE2\":" 		+"\""+		getCurSol("ST2").toString()   +"\""  +"}"
+			#]
+		}
+		println("##############################") 
+		println(StateRoom)
+		println("##############################")
+	}
+	Transition t0 	whenMsg	setWaiterState -> waiterState
+					whenMsg setBarmanState -> barmanState
+					whenMsg setTableState -> tableState
+					whenMsg occupyTable -> occupyTableState
+					whenMsg addOrderReady -> orderReady
+					whenMsg removeOrderReady -> orderTaken
+					whenMsg end -> endWork
+					whenRequest	getTableFreeCleanRequest -> returnFreeCleanTable
+					whenRequest	getTableToCleanRequest -> returnTableToClean
+					whenRequest getTimerForInformRequest -> returnTimerInform
+					whenRequest getTableFromIdRequest -> returnTableFromId
+	
+	State waiterState {
+		println("TEAROOMSTATEMANAGER | waiterState")
+		
+		onMsg (setWaiterState : setWaiterState (STATE)) {
+			solve(setWaiterState($payloadArg(0)))
+		}
+	}
+	Goto wait
+	
+	State barmanState {
+		println("TEAROOMSTATEMANAGER | barmanState")
+		
+		onMsg (setBarmanState : setBarmanState (STATE)) {
+			solve(setBarmanState($payloadArg(0)))
+		}
+	}
+	Goto wait
+	
+	State tableState {
+		println("TEAROOMSTATEMANAGER | stateTable")
+		
+		onMsg (setTableState : setTableState (TABLE, STATE)) {
+			solve(setTableState($payloadArg(0), $payloadArg(1)))
+		}
+	}
+	Goto wait
+	
+	State occupyTableState {
+		println("TEAROOMSTATEMANAGER | occupyTableState")
+		
+		onMsg (occupyTable : occupyTable (TABLE, ID)) {
+			solve(occupyTable($payloadArg(0), $payloadArg(1)))
+		}
+	}
+	Goto wait
+	
+	State orderReady {
+		println("TEAROOMSTATEMANAGER | orderReady")
+		
+		onMsg (addOrderReady : addOrderReady (ID)) {
+			solve(addOrderReady($payloadArg(0)))
+		}
+	}
+	Goto wait
+	
+	State orderTaken {
+		println("TEAROOMSTATEMANAGER | orderTaken")
+		
+		onMsg (removeOrderReady : removeOrderReady (ID)) {
+			solve(removeOrderReady($payloadArg(0)))
+		}
+	}
+	Goto wait
+			
+	State returnFreeCleanTable {
+		println("TEAROOMSTATEMANAGER | returnFreeCleanTable")
+		
+		onMsg (getTableFreeCleanRequest : getTableFreeCleanRequest (PAYLOAD)) {
+			
+			[#
+				var TableSelected = 0	
+			#]
+			
+			solve(stateTable(2, tableSanitized))
+			ifSolved {
+				[#
+					TableSelected = 2	
+				#]
+			}
+			
+			solve(stateTable(1, tableSanitized))
+			ifSolved {
+				[#
+					TableSelected = 1	
+				#]
+			}
+			
+			replyTo getTableFreeCleanRequest with getTableFreeCleanReply : getTableFreeCleanReply ($TableSelected)
+		}
+	}
+	Goto wait
+	
+	State returnTableToClean {
+		println("TEAROOMSTATEMANAGER | returnTableToClean")
+		
+		[#
+			var TableSelectedToClean = 0
+			var TableState1 = 0
+			var TableState2 = 0
+			var TableStateString1 = ""
+			var TableStateString2 = ""
+		#]
+		
+		solve(stateTable(1, STATE))
+		ifSolved {
+			[#
+				TableStateString1 = getCurSol("STATE").toString()
+				
+				if (TableStateString1 == "tableDirty") {
+					TableState1 = 1
+				} else if (TableStateString1 == "tableCleared") {
+					TableState1 = 2
+				} else if (TableStateString1 == "tableCleaned") {
+					TableState1 = 3
+				}
+			#]
+		}
+		
+		solve(stateTable(2, STATE))
+		ifSolved {
+			[#
+				TableStateString2 = getCurSol("STATE").toString()
+				
+				if (TableStateString2 == "tableDirty") {
+					TableState2 = 1
+				} else if (TableStateString2 == "tableCleared") {
+					TableState2 = 2
+				} else if (TableStateString2 == "tableCleaned") {
+					TableState2 = 3
+				}
+			#]
+		}
+		
+		[#
+			if (TableState1 + TableState2 == 0) {
+				TableSelectedToClean = 0
+			} else if (TableState1 > TableState2) {
+				TableSelectedToClean = 1
+			} else {
+				TableSelectedToClean = 2
+			}
+		#]
+		
+		if [# TableSelectedToClean == 0 #] {
+			replyTo getTableToCleanRequest with getTableToCleanReply : getTableToCleanReply (0, 0)
+		}
+		
+		if [# TableSelectedToClean == 1 #] {
+			replyTo getTableToCleanRequest with getTableToCleanReply : getTableToCleanReply (1, $TableStateString1)
+		}
+		
+		if [# TableSelectedToClean == 2 #] {
+			replyTo getTableToCleanRequest with getTableToCleanReply : getTableToCleanReply (2, $TableStateString2)
+		}
+	}
+	Goto wait
+	
+	State returnTimerInform {
+		println("TEAROOMSTATEMANAGER | returnTimerInform")
+		
+		solve (stateTable(1, STATE))
+		ifSolved {
+			[#
+				var Stato = getCurSol("STATE").toString()
+				
+				if (Stato == "tableDirty") {
+					MaxWaitingTime1 = 6000L + 6000L + 5000L
+				} else if (Stato == "tableCleared") {
+					MaxWaitingTime1 = 6000L + 5000L
+				} else if (Stato == "tableCleaned") {
+					MaxWaitingTime1 = 5000L
+				}
+			#]
+		}
+		
+		solve (stateTable(2, STATE))
+		ifSolved {
+			[#
+				var Stato = getCurSol("STATE").toString()
+				
+				if (Stato == "tableDirty") {
+					MaxWaitingTime2 = 6000L + 6000L + 5000L
+				} else if (Stato == "tableCleared") {
+					MaxWaitingTime2 = 6000L + 5000L
+				} else if (Stato == "tableCleaned") {
+					MaxWaitingTime2 = 5000L
+				}
+			#]
+		}
+		
+		if [# MaxWaitingTime1 == 0L && MaxWaitingTime2 == 0L #]{
+			// Table1 and Table2 are busy
+			[#
+				MaxWaitingTime = 6000L + 6000L + 5000L
+			#]
+		} else {
+			if [# MaxWaitingTime1 != 0L && MaxWaitingTime2 != 0L #] {
+				// Table1 and Table2 are not busy but are dirty
+				if [# MaxWaitingTime1 < MaxWaitingTime2 #] {
+					replyTo getTimerForInformRequest with getTimerForInformReply : getTimerForInformReply ($MaxWaitingTime1)
+					[#
+						MaxWaitingTime1 = 0L
+						MaxWaitingTime2 = 0L
+					#]
+				} else {
+					replyTo getTimerForInformRequest with getTimerForInformReply : getTimerForInformReply ($MaxWaitingTime2)
+					[#
+						MaxWaitingTime1 = 0L
+						MaxWaitingTime2 = 0L
+					#]
+				}
+			} else {
+				if [# MaxWaitingTime1 != 0L || MaxWaitingTime2 != 0L #] {
+					// Table1 or Table2 are not busy but are dirty
+					if [# MaxWaitingTime1 > 0 #] {
+						replyTo getTimerForInformRequest with getTimerForInformReply : getTimerForInformReply ($MaxWaitingTime1)
+						[#
+							MaxWaitingTime1 = 0L
+							MaxWaitingTime2 = 0L
+						#]
+					} else {
+						replyTo getTimerForInformRequest with getTimerForInformReply : getTimerForInformReply ($MaxWaitingTime2)
+						[#
+							MaxWaitingTime1 = 0L
+							MaxWaitingTime2 = 0L
+						#]
+					}
+				}
+			}
+		}
+	}
+	Goto maxStayTimeLeftTable1 if [# MaxWaitingTime != 0L #] else wait
+	
+	State maxStayTimeLeftTable1 {
+		println("TEAROOMSTATEMANAGER | maxStayTimeLeftTable1")
+		
+		request maxstaytime -m maxStayTimerLeftRequest : maxStayTimerLeftRequest (1)
+	}
+	Transition t0	whenReply maxStayTimerLeftReply -> maxStayTimeLeftTable2
+	 
+	State maxStayTimeLeftTable2 {
+		println("TEAROOMSTATEMANAGER | maxStayTimeLeftTable2")
+		
+		onMsg(maxStayTimerLeftReply : maxStayTimerLeftReply (TIMERLEFT)) {
+			println("TEAROOMSTATEMANAGER | Maximum waiting time from the busy table1 is: ${payloadArg(0)} milliseconds")
+			[#
+				MaxWaitingTime1 = payloadArg(0).toLong()
+			#]
+		}
+		request maxstaytime -m maxStayTimerLeftRequest : maxStayTimerLeftRequest (2)
+	}
+	Transition t1	whenReply maxStayTimerLeftReply -> maxStayTimeLeftCompare
+	
+	State maxStayTimeLeftCompare{
+		println("TEAROOMSTATEMANAGER | maxStayTimeLeftCompare")
+		
+		onMsg(maxStayTimerLeftReply : maxStayTimerLeftReply (TIMERLEFT)) {
+			println("TEAROOMSTATEMANAGER | Maximum waiting time from the busy table2 is: ${payloadArg(0)} milliseconds")
+			[#
+				MaxWaitingTime2 = payloadArg(0).toLong()
+			#]
+		}
+		
+		if [# MaxWaitingTime1 < MaxWaitingTime2 #] {
+			[#
+				MaxWaitingTime += MaxWaitingTime1
+			#]
+		} else {
+			[#
+				MaxWaitingTime += MaxWaitingTime2
+			#] 
+		}
+		
+		replyTo getTimerForInformRequest with getTimerForInformReply : getTimerForInformReply ($MaxWaitingTime)
+		
+		[#
+			MaxWaitingTime = 0L
+			MaxWaitingTime1 = 0L
+			MaxWaitingTime2 = 0L
+		#]
+	}
+	Goto wait
+	
+	State returnTableFromId {
+		println("TEAROOMSTATEMANAGER | returnTableFromId")
+		
+		onMsg (getTableFromIdRequest : getTableFromIdRequest (ID)) {
+			[#
+				var Table = "0"
+			#]
+			
+			solve(stateTable(TABLE, tableOccupied($payloadArg(0))))
+			ifSolved {
+				[#
+					Table = getCurSol("TABLE").toString()
+				#]
+			}
+			replyTo getTableFromIdRequest with getTableFromIdReply : getTableFromIdReply ($Table)
+		}
+	}
+	Goto wait
+	
+	State endWork {
+		println("TEAROOMSTATEMANAGER | End work")
 		terminate 0
 	}
 }

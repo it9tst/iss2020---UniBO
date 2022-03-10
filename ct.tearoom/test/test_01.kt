@@ -114,29 +114,61 @@ class Test01 {
 				maxstaytimetable2 = it.unibo.kactor.sysUtil.getActor("maxstaytimetable2")
  			}
 			
-			// Il primo cliente chiede di entrare
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
-			// Il secondo cliente chiede di entrare
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
-			delay(40000)
+			// Cliente 0 con temperatura di 38 gradi chiede di entrare
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(38.0)","smartbell"),smartbell!!)
 			
-			// Ci sono due tavoli occupati e un terzo cliente chiede di entrare
+			// Cliente 1 con temperatura di 36.5 gradi chiede di entrare
 			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
-			delay(5000)
-			
-			println("TEST | start check MaxWaitingTime value")
-			println("TEST | MaxWaitingTime value: " + waitermind!!.geResourceRep())
-			println("TEST | MaxWaitingTime value checked")
+			delay(15000)
+			println("TEST | start check 0,4")
+			checkPosition("0", "4")
+			println("TEST | position entrance checked")
+			println("TEST | click enter to continue")
+						
+			// Cliente 1 chiede di ordinare
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waitermind","clientReadyToOrder","clientReadyToOrder(1)","waitermind"),waitermind!!)
+			delay(25000)
+			println("TEST | start check 2,2")
+			checkPosition("2", "2")
+			println("TEST | position table checked")
 			println("TEST | click enter to continue")
 			
-			delay(15000)
-			// Ci sono due tavoli occupati e un quarto cliente chiede di entrare
-			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
-			delay(5000)
+			// Cliente 1 ordina una cioccolata
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waitermind","clientReadyToOrder","clientReadyToOrder(1, cioccolata)","waitermind"),waitermind!!)
 			
-			println("TEST | start check MaxWaitingTime value")
-			println("TEST | MaxWaitingTime value: " + waitermind!!.geResourceRep())
-			println("TEST | MaxWaitingTime value checked")
+			delay(30000)
+			println("TEST | start check 6,0")
+			checkPosition("6", "0")
+			println("TEST | position barman checked")
+			println("TEST | click enter to continue")
+			delay(20000)
+			
+			// Cliente 2 con temperatura di 36.5 gradi chiede di entrare
+			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
+			delay(15000)
+			println("TEST | start check 0,4")
+			checkPosition("0", "4")
+			println("TEST | position entrance checked")
+			println("TEST | click enter to continue")
+			
+			// Cliente 1 chiede di pagare
+			MsgUtil.sendMsg(MsgUtil.buildDispatch("waitermind","clientPayment","clientPayment(1)","waitermind"),waitermind!!)
+			delay(10000)
+			println("TEST | start check 2,2")
+			checkPosition("2", "2")
+			println("TEST | position table checked")
+			println("TEST | click enter to continue")
+			
+			
+			delay(15000)
+			checkPosition("6", "4")
+			println("TEST | position exit checked")
+			println("TEST | click enter to continue")
+			
+			
+			delay(20000)
+			checkPosition("2", "2")
+			println("TEST | position table checked")
 			println("TEST | click enter to continue")
 
 			delay(20000)
@@ -146,6 +178,7 @@ class Test01 {
 			MsgUtil.sendMsg("end","end","end",smartbell!!)
 			MsgUtil.sendMsg("end","end","end",barman!!)
 			MsgUtil.sendMsg("end","end","end",waitermind!!)
+			MsgUtil.sendMsg("end","end","end",tearoomstatemanager!!)
 			delay(5000)
 			MsgUtil.sendMsg("end","end","end",waiterengine!!)
 			if(waiterengine != null) waiterengine!!.waitTermination()

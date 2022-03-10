@@ -32,7 +32,7 @@ class Maxstaytimetable2 ( name: String, scope: CoroutineScope  ) : ActorBasicFsm
 				}	 
 				state("wait") { //this:State
 					action { //it:State
-						println("MAXSTAYTIMETABLE2 | Wait")
+						println("MAXSTAYTIMETABLE2 | wait")
 					}
 					 transition(edgeName="t064",targetState="newTimer",cond=whenDispatch("startTimer"))
 					transition(edgeName="t065",targetState="wait",cond=whenDispatch("stopTimer"))

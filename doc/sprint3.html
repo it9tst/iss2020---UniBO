@@ -207,7 +207,7 @@
                             <td>Request</td>
                             <td>Il WaiterMind chiede al MaxStayTime il tempo residuo del tavolo corrispondente, per poi comparare i due MaxStayTime dei tavoli occupati.</td>
                             <td>maxstaytime - maxstaytimetable1<br>maxstaytime - maxstaytimetable2</td>
-                            <td>-</td>
+                            <td>TABLE</td>
                         </tr>
                         <tr>
                             <th scope="row">maxStayTimerLeftCompareReply</th>
@@ -243,6 +243,202 @@
 				<p>Testiamo il task inform: se i tavoli sono sporchi e occupati, il waiter comunica al cliente il corretto tempo di attesa prima di poter entrare.</p>
 			</div>
 			<hr>
+			<br>
+			<div class="row text-center">
+				<div class="col-lg-6 offset-lg-3"><u><h2>Analisi dei problemi</h2></u></div>
+                <hr class="my-4">
+			</div>
+            <div>
+			  <p>Una delle problematiche con cui ci scontriamo a questo punto del progetto è la responsabilità delle varie entità, ovvero il carico e la gestione delle informazioni che esse collezionano al loro interno. L'esempio principale è il waitermind che al suo interno ha un quantitativo ingente di stati da gestire che fa emergere problematiche di progettazione.</p>
+				<p>A tale scopo introduciamo una nuova entità:</p>
+			  <table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Entità</th>
+							<th scope="col">Modello</th>
+                            <th scope="col">Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+						<tr>
+                            <th scope="row">tearoomstatemanager</th>
+							<td>Attore</td>
+                            <td>Il suo scopo è quello di collezionare tutto lo stato della tearoom, il quale interagisce tra le varie entità del sistema e la base di conoscenza.</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Il tearoomstatemanager memorizza la base di conoscenza dell'intera tearoom, in particolare le posizioni delle varie entità e l'evoluzione dei cambiamenti futuri di stato. Il tutto in un file Prolog data la predisposizione del metamodello dei QAK che permette una facile interazione con file di questo tipo.</p>
+				<p>A questo punto il waiter delega il tearoomstatemanager nel prendere le decisioni riguaro le azioni che dovrà eseguire interrogandolo riguardo lo stato della tearoom.</p>
+				<p>Ad esempio, all'ingresso di un nuovo cliente, il waiter chiede direttamente al tearoomstatemanager a quale tavolo farlo accomodare, invece di chiedergli lo stato della tearoom, verificare la condizione dei tavoli e infine scegliere quello libero.</p>
+				<p>Aggiungiamo i messaggi che servono per consentire la gestione del nuovo attore e modifichiamo alcuni dei precedenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+							<th scope="col">Tipologia</th>
+                            <th scope="col">Descrizione</th>
+                            <th scope="col">Entità</th>
+                            <th scope="col">Parametri</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">clientReadyToOrder</th>
+							<td>Dispatch</td>
+                            <td>Usato per far partire un timer di maxstaytime.</td>
+                            <td>client - waitermind</td>
+                            <td>ID</td>
+                        </tr>
+						<tr>
+                            <th scope="row">clientOrder</th>
+							<td>Dispatch</td>
+                            <td>Usato per far partire un timer di maxstaytime.</td>
+                            <td>client - waitermind</td>
+                            <td>ID, ORDER</td>
+                        </tr>
+						<tr>
+                            <th scope="row">setWaiterState</th>
+							<td>Dispatch</td>
+                            <td>Usato per comunicare lo stato corrente del waitermind.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>STATE</td>
+                        </tr>
+						<tr>
+                            <th scope="row">setBarmanState</th>
+							<td>Dispatch</td>
+                            <td>Usato per comunicare lo stato corrente del barman.</td>
+                            <td>barman - tearoomstatemanager</td>
+                            <td>STATE</td>
+                        </tr>
+						<tr>
+                            <th scope="row">setTableState</th>
+							<td>Dispatch</td>
+                            <td>Usato per comunicare lo stato corrente dei tavoli.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>TABLE, TABLE</td>
+                        </tr>
+						<tr>
+                            <th scope="row">occupyTable</th>
+							<td>Dispatch</td>
+                            <td>Usato per comunicare che un tavolo è stato occupato da un cliente.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>TABLE, ID</td>
+                        </tr>
+						<tr>
+                            <th scope="row">addOrderReady</th>
+							<td>Dispatch</td>
+                            <td>Usato per comunicare che l'ordine di un cliente è pronto per essere portato al tavolo.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>ID</td>
+                        </tr>
+						<tr>
+                            <th scope="row">removeOrderReady</th>
+							<td>Dispatch</td>
+                            <td>Usato per comunicare che l'ordine di un cliente è stato prelevato dal barman.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>ID</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTableFreeCleanRequest</th>
+							<td>Request</td>
+                            <td>Usato per chiedere un tavolo pulito che possa essere occupato da un cliente.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>PAYLOAD</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTableFreeCleanReply</th>
+							<td>Reply</td>
+                            <td>E' la risposta di getTableFreeCleanRequest.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>TABLE</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTableToCleanRequest</th>
+							<td>Request</td>
+                            <td>Usato per chiedere quale tavolo ha bisogno di essere pulito.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>PAYLOAD</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTableToCleanReply</th>
+							<td>Reply</td>
+                            <td>E' la risposta di getTableToCleanRequest.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>TABLE, STATE</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTimerForInformRequest</th>
+							<td>Request</td>
+                            <td>Usato per richiedere il massimo tempo di attesa.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>PAYLOAD</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTimerForInformReply</th>
+							<td>Reply</td>
+                            <td>E' la risposta di getTimerForInformRequest.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>TIMERLEFT</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTableFromIdRequest</th>
+							<td>Request</td>
+                            <td>Usato per richiedere il tavolo dove è seduto un cliente specifico.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>ID</td>
+                        </tr>
+						<tr>
+                            <th scope="row">getTableFromIdReply</th>
+							<td>Reply</td>
+                            <td>E' la risposta di getTableFromIdRequest.</td>
+                            <td>waitermind - tearoomstatemanager</td>
+                            <td>TABLE</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
+				<center><img src="assets/logico.png" alt="logico.png" width="70%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono il waitermind.</p>
+				<center><img src="assets/statiWaitermind2.png" alt="statiWaitermind.png" width="100%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono il waiterengine.</p>
+				<center><img src="assets/statiWaiterengine.png" alt="statiWaiterengine.png" width="70%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono lo smartbell.</p>
+				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="50%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono il barman.</p>
+				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="50%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono il maxstaytime.</p>
+				<center><img src="assets/statiMaxstaytime2.png" alt="statiMaxstaytime.png" width="60%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono i maxstaytimetable1 e maxstaytimetable2.</p>
+				<center><img src="assets/statiMaxstaytimetable2.png" alt="statiMaxstaytimetable.png" width="100%"/></center>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono il tearoomstatemanager.</p>
+				<center><img src="assets/statiTearoomstatemanager.png" alt="statiTearoomstatemanager.png" width="80%"/></center>
+            </div>
+			<br>
+			<hr>
+			<br>
+			<div class="row text-center">
+				<div class="col-lg-6 offset-lg-3"><u><h2>Test plan</h2></u></div>
+				<hr class="my-4">
+			</div>
+            <div>
+				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_probl/ct.tearoom/test/test_01.kt">TEST_01</a></p>
+				<p>Con il seguente test andremo a verificare che le entità della tearoom comunicano al tearoomstatemanager informazioni riguardo gli stati interni ed esso li memorizza correttamente nel file Prolog effettuando successivamente una lettura dal file di uno dei campi salvati e stampandone il valore a video.</p>
+            </div>
+			<br>
 			<br>
 		</div>
         <div class="container-fluid" style="background-color: #e9ecef; padding: 15px 0px">
