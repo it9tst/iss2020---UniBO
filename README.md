@@ -26,8 +26,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 6. Select Configure Kotlin -> Add Kotlin nature
 7. In ``tearoom.qak``, based on the test to be performed, uncomment the corresponding ``[# readLine() #]``
 8. For ``it.unibo.qak20.basicrobot`` run ``MainCtxbasicrobot.kt``
-9. Run ``MainCtxtearoom.kt``
-10. Run ``test_01.kt``
+9. Run ``test_01.kt``
 
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
