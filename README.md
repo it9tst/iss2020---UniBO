@@ -25,8 +25,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 5. Open terminal in workspace folder and run command ``gradle -b build_ctxtearoom.gradle eclipse``
 6. Select Configure Kotlin -> Add Kotlin nature
 7. In ``tearoom.qak``, based on the test to be performed, comment the corresponding ``[# readLine() #]``
-8. Run ``MainCtxtearoom.kt``
-9. Run ``test_01.kt`` or ``test_02.kt``
+8. Run ``test_01.kt`` or ``test_02.kt``
 
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
