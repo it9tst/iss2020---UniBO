@@ -316,7 +316,7 @@ QActor waitermind context ctxtearoom {
             #]
          	request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
          	forward maxstaytime -m startTimer : startTimer ($TableSelectedToConvoy)	
-         }
+        }
 	}
 	Transition t12	whenReply done -> reachHome
 
@@ -407,7 +407,7 @@ QActor waitermind context ctxtearoom {
                 #]
             }
             
-            request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)	
+            request waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
 		}
 	}
 	Transition t16	whenReply done -> checkTableForOrderOut
