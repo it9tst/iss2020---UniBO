@@ -1,0 +1,123 @@
+System -msglog tearoom
+
+// MESSAGES WAITER
+// Message between waiter - client
+Dispatch inform_maxwaittime		: inform_maxwaittime (PAYLOAD)
+Dispatch convoy_to_table		: convoy_to_table (PAYLOAD)
+Dispatch client_ready_to_order 	: client_ready_to_order (PAYLOAD)
+Dispatch client_payment 		: client_payment (PAYLOAD)
+Dispatch start_sanification		: start_sanification (PAYLOAD)
+
+// Message between smartbell - waiter
+Request smartbell_enter_request	: smartbell_enter_request (PAYLOAD)		
+Reply   client_accept			: client_accept (PAYLOAD)
+
+Dispatch end : end (PAYLOAD)
+
+
+Context ctxtearoom ip [host="localhost" port=50810]
+
+
+QActor waiter context ctxtearoom {
+
+	State s0 initial {
+		// Initial state
+		println("WAITER | Start")
+	}
+	Goto rest
+	
+	State rest {
+		// Waiter is at home
+		println("WAITER | Rest")
+	}
+	Transition t0 	whenRequest smartbell_enter_request -> accept
+					whenMsg client_ready_to_order -> takeOrder
+					whenMsg barman_complete_order -> serve
+					whenMsg client_payment -> collectPayment
+					whenMsg start_sanification -> tableCleared
+					whenMsg end -> endWork
+
+	State accept {
+		// Waiter accept the client
+
+		println("WAITER | The waiter verifies that the tables are free and dirty")
+
+		replyTo smartbell_enter_request with client_accept : client_accept (PAYLOAD)
+		forward waiter -m convoy_to_table : convoy_to_table (PAYLOAD)
+	}
+	Transition t1	whenMsg convoy_to_table -> convoyTable
+	
+	State convoyTable {
+		// Waiter convoy the client to table
+
+		println("WAITER | Convoy the client to table")
+	}
+	Goto rest
+
+	State takeOrder{
+		// Waiter take the order
+
+		onMsg(client_ready_to_order : client_ready_to_order (PAYLOAD)){
+			println("WAITER | take the order from client")
+		}
+	}
+	Goto sendOrderToBarman
+	
+	State sendOrderToBarman{
+		// Waiter send the order to Barman
+
+		println("WAITER | send the order to Barman from client")
+		forward barman -m send_order : send_order (PAYLOAD)
+	}
+	Goto rest
+	
+	State serve{
+		// Barman complete the order and send it to Waiter that serve to the Client
+
+		onMsg(barman_complete_order : barman_complete_order (PAYLOAD)){
+			println("WAITER | serve the order to client")
+		}
+	}
+	Goto rest
+	
+	State collectPayment {
+		// Waiter collect the payment
+
+		onMsg(client_payment : client_payment (PAYLOAD)){
+			println("WAITER | Collect the payment from client")
+		}
+		
+	}
+	Goto convoyExit
+	
+	State convoyExit {
+		// Waiter convoy the Client to the exitdoor
+		println("WAITER | Convoy the Client to the exitdoor")
+
+	}
+	Goto tableCleared
+	
+	State tableCleared {
+		// Waiter tableCleared
+		println("WAITER | tableCleared")
+	}
+	Goto tableCleaned
+	
+	State tableCleaned {
+		// Waiter tableCleaned
+		println("WAITER | tableCleaned")
+	}
+	Goto tableSanitized
+	
+	State tableSanitized {
+		// Waiter tableSanitized
+		println("WAITER | tableSanitized")
+	}
+	Goto rest
+	
+	State endWork {
+		// Waiter end work
+		println("WAITER | End work")
+		terminate 0
+	}
+}

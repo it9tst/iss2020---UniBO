@@ -1,0 +1,44 @@
+System -msglog client
+
+// MESSAGES CLIENT
+// Message between client - smartbell
+Request enter_request_client	: enter_request_client (PAYLOAD)
+Reply   enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
+
+// CONTEXT
+Context ctxclient ip [host="127.0.0.1" port=50820]
+Context ctxtearoom ip [host="localhost" port=50810]
+
+ExternalQActor smartbell context ctxtearoom
+
+
+QActor client context ctxclient {
+	
+	State s0 initial {
+		// Client initial state
+		println("CLIENT | Start")
+	}
+	Goto ringBell
+	
+	State ringBell {
+		// Client rings the doorbell
+		println("CLIENT | Rings the doorbell")
+		
+		request smartbell -m enter_request_client : enter_request_client (PAYLOAD)
+	}
+	Transition t0 	whenReply enter_reply_from_smartbell_n -> goAway
+	
+	State goAway {
+		// Client go away because temp is KO
+		onMsg(enter_reply_from_smartbell_n : enter_reply_from_smartbell_n(PAYLOAD)) {
+			println("CLIENT | Go away because temp is KO")
+		}
+	}
+	Goto endWork
+	
+	State endWork {
+		// Client end work
+		println("CLIENT | End work")
+		terminate 0
+	}
+}

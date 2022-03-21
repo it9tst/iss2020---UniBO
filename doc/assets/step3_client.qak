@@ -1,0 +1,73 @@
+System -msglog client
+
+// MESSAGES CLIENT
+// Message between client - smartbell
+Request enter_request_client			: enter_request_client (PAYLOAD)
+Reply   enter_reply_from_smartbell		: enter_reply_from_smartbell (PAYLOAD)
+
+
+// Message between client - waiter
+Dispatch client_ready_to_order : client_ready_to_order (PAYLOAD)
+Dispatch client_payment : client_payment (PAYLOAD)
+
+// CONTEXT
+Context ctxclient ip [host="127.0.0.1" port=50820]
+Context ctxtearoom ip [host="localhost" port=50810]
+
+ExternalQActor smartbell context ctxtearoom
+
+
+QActor client context ctxclient {
+	
+	State s0 initial {
+		// Client initial state
+		println("CLIENT | Start")
+	}
+	Goto ringBell
+	
+	State ringBell {
+		// Client rings the doorbell
+		println("CLIENT | Rings the doorbell")
+		
+		request smartbell -m enter_request_client : enter_request_client (PAYLOAD)
+	}
+	Transition t0 	whenReply enter_reply_from_smartbell -> enter
+	
+	State enter {
+		// Client enter
+
+		onMsg(enter_reply_from_smartbell : enter_reply_from_smartbell(PAYLOAD)){
+			println("CLIENT | Enter")
+		}
+	}
+	Goto order
+	
+	State order {
+		// Client would like to order
+		println("CLIENT | Would like to order")
+
+		forward waiter -m client_ready_to_order : client_ready_to_order(PAYLOAD)
+		println("CLIENT | Premi invio per continuare e farlo pagare")
+	}
+	Goto pay
+	
+	State pay {
+		// Client would like to pay
+		println("CLIENT | Would like to pay")
+
+		forward waiter -m client_payment : client_payment(PAYLOAD)
+	}
+	Goto exit
+	
+	State exit {
+		// Client exit
+		println("CLIENT | Exit")
+	}
+	Goto endWork
+	
+	State endWork {
+		// Client end work
+		println("CLIENT | End work")
+		terminate 0
+	}
+}

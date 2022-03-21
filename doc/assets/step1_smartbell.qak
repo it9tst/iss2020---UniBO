@@ -1,0 +1,49 @@
+System -msglog tearoom
+
+// MESSAGES SMARTBELL
+// Message between smartbell - client
+Request  enter_request_client	: enter_request_client (PAYLOAD)
+Reply    enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
+Dispatch go_to_wait_ring 						: go_to_wait_ring (PAYLOAD)
+
+Dispatch end : end (PAYLOAD)
+
+
+Context ctxtearoom ip [host="localhost" port=50810]
+
+
+QActor smartbell context ctxtearoom {
+	
+	State s0 initial {
+		// Smartbell initial state
+		println("SMARTBELL | Start")
+	}
+	Goto waitRing
+	
+	State waitRing {
+		// Smartbell wait ring
+		println("SMARTBELL | Wait ring")
+	}
+	Transition t0 	whenRequest enter_request_client -> checkTempClient
+					whenMsg end -> endWork
+	
+	State checkTempClient {
+		// Smartbell check temp client
+		println("SMARTBELL | Check temp client")
+
+		println("SMARTBELL | The smartbell detects the client's body temperature and checks if it is suitable")
+
+		println("SMARTBELL | The smartbell verifies that the temperature is not suitable")
+
+		println("SMARTBELL | The client can't enter - Temp Ko")
+		replyTo enter_request_client with enter_reply_from_smartbell_n : enter_reply_from_smartbell_n (PAYLOAD)
+		forward smartbell -m go_to_wait_ring : go_to_wait_ring (PAYLOAD)
+	}
+	Transition t1	whenMsg go_to_wait_ring -> waitRing
+
+	State endWork {
+		// Smartbell end work
+		println("SMARTBELL | End work")
+		terminate 0
+	}
+}

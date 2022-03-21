@@ -1,0 +1,48 @@
+System -msglog tearoom
+
+// MESSAGES BARMAN
+// Message between barman - waiter
+Dispatch send_order 			: send_order (PAYLOAD)
+Dispatch barman_complete_order 	: barman_complete_order (PAYLOAD)
+
+Dispatch end : end (PAYLOAD)
+
+
+Context ctxtearoom ip [host="localhost" port=50810]
+
+
+QActor barman context ctxtearoom {
+	
+	State s0 initial {
+		// Barman initial state
+		println("BARMAN | Start")
+	}
+	Goto waitOrder
+	
+	State waitOrder {
+		// Barman wait order
+		println("BARMAN | Wait order")
+	}
+	Transition t0	whenMsg send_order -> prepareOrder
+					whenMsg end -> endWork
+	
+	State prepareOrder {
+		// Barman prepare order
+
+		onMsg(send_order : send_order (PAYLOAD)){
+			println("BARMAN | Prepare order for client")
+
+			delay 10000
+
+			println("BARMAN | Order ready for client")
+			forward waiter -m barman_complete_order : barman_complete_order(PAYLOAD)
+		}
+	}
+	Goto waitOrder
+	
+	State endWork {
+		// Barman end work
+		println("BARMAN | End work")
+		terminate 0
+	}
+}

@@ -15,6 +15,9 @@
                 border-color: #e9ecef;
                 color: #28a745;
             }
+			a{
+				color: #28a745;
+			}
         </style>
     </head>
     <body>
@@ -131,20 +134,22 @@
                             <td>0</td>
                         </tr>
 						<tr>
-                            <th scope="row">Step 1</th>
-                            <td>Il cliente numero 1 arriva alla tearoom con temperatura non idonea, quindi lo smartbell, dopo aver misurato la temperatura, nega l'accesso alla tearoom.</td>
+                            <th scope="row"><a href="#step1">Step 1</a></th>
+                            <td>Un cliente arriva alla tearoom con temperatura corporea non idonea, quindi lo smartbell, dopo aver misurato la temperatura, nega l'accesso alla tearoom.</td>
                         </tr>
 						<tr>
-                            <th scope="row">Step 2</th>
-                            <td>Il cliente numero 2 arriva alla tearoom con temperatura idonea, il waiter controlla che ci siano tavoli <br>liberi e sanificati, non essendocene comunica al cliente un tempo di attesa di MAXSTAYTIME. </td>
+                            <th scope="row"><a href="#step2">Step 2</a></th>
+                            <td>Un cliente arriva alla tearoom con temperatura corporea idonea, quindi lo smartbell, dopo aver misurato la temperatura, chiede al waiter se il cliente può accedere alla tearoom. Il waiter, verificando che i tavoli sono tutti occupati, comunica allo smartbell il tempo massimo che il cliente dovrà attendere prima di entrare (MAXWAITINGTIME). Quindi lo smartbell avvisa il cliente del tempo massimo di attesa.</td>
                         </tr>
 						<tr>
-                            <th scope="row">Step 3</th>
-                            <td>Il waiter va al primo tavolo libero non sanificato, lo sparecchia, lo pulisce e lo apparecchia in sequenza. <br>Successivamente fa accomodare il cliente al tavolo libero e sanificato, prende l'ordinazione, <br>la comunica al barman, che la prepara, e una volta pronta l'ordinazione, la serve al cliente. <br>Al termine fa pagare il cliente e lo accompagna all'uscita.</td>
+                            <th scope="row"><a href="#step3">Step 3</a></th>
+                            <td>Un cliente arriva alla tearoom con temperatura corporea idonea, quindi lo smartbell, dopo aver misurato la temperatura, chiede al waiter se il cliente può accedere alla tearoom. Il waiter, verificando che i tavoli sono tutti liberi, comunica allo smartbell che il cliente può entrare. Successivamente fa accomodare il cliente al primo tavolo. Il cliente chiede di ordinare, il waiter prende l'ordinazione, la comunica al barman che la prepara, e una volta pronta, lo comunica al waiter che, dopo averla recuperata dalla postazione barman, la serve al cliente. Alla richiesta da parte del cliente, il waiter lo fa pagare e lo accompagna all'uscita.</td>
                         </tr>
                     </tbody>
                 </table>
-				<p>In questo sprint aggiungiamo una nuova entità: il Barman.</p>
+				<br>
+				<h4 id="step1">Step 1</h4>
+				<p>Dai requisiti emersi dall'analisi, le entità prese in esame sono le seguenti:</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -155,21 +160,154 @@
                     </thead>
                     <tbody>
 						<tr>
-                            <th scope="row">Waiter</th>
+                            <th scope="row">Client</th>
 							<td>Attore</td>
-                            <td>Risulta essere il cameriere della tearoom. Il suo scopo è quello di accogliere i clienti, prendere gli ordini, comunicarli al barman, servire i clienti, accompagnarli all'uscita e pulire i tavoli sporchi. Interagisce con tutte le altre entità.</td>
+                            <td>È un cliente virtuale che chiede di accedere alla tearoom  e a tale scopo interagisce con lo smartbell.</td>
                         </tr>
                         <tr>
                             <th scope="row">Smartbell</th>
 							<td>Attore</td>
-                            <td>Ha lo scopo di segnalare la presenza di un client che vuole entrare nella tearoom. Interagisce con il cliente e il waiter.</td>
+                            <td>Ha lo scopo di controllare la temperatura corporea del cliente e in caso negativo negarne l'accesso.</td>
                         </tr>
+                    </tbody>
+                </table>
+				<p>Dai requisiti emersi dall'analisi, i messaggi scambiati, tra le entità prese attualmente in esame, sono i seguenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+							<th scope="col">Tipologia</th>
+                            <th scope="col">Descrizione</th>
+                            <th scope="col">Entità</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">enter_request_client</th>
+							<td>Request</td>
+                            <td>Il client chiede di entrare nella tearoom</td>
+                            <td>smartbell - client</td>
+                        </tr>
+						<tr>
+                            <th scope="row">enter_reply_from_smartbell_n</th>
+							<td>Reply</td>
+                            <td>E' la risposta negativa di enter_request_client</td>
+                            <td>smartbell - client</td>
+                        </tr>
+						<tr>
+                            <th scope="row">go_to_wait_ring</th>
+							<td>Dispatch</td>
+                            <td>Lo smartbell torna in attesa che un cliente suoni al campanello</td>
+                            <td>smartbell</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Il modello del client virtuale derivato dallo step 1 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step1_client.qak" width="100%" height="500px">
+				<p>Il modello dello smartbell derivato dallo step 1 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step1_smartbell.qak" width="100%" height="500px">
+				<br>
+				<br>
+				<h4 id="step2">Step 2</h4>
+				<p>Dai requisiti emersi dall'analisi, le entità prese in esame sono le seguenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Entità</th>
+							<th scope="col">Modello</th>
+                            <th scope="col">Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 						<tr>
                             <th scope="row">Client</th>
 							<td>Attore</td>
-                            <td>E' un cliente virtuale che accede alla tearoom. Il suo comportamento tipico prevede di entrare, ordinare, consumare ed uscire dalla tearoom. Interagisce con il waiter e lo smartbell.</td>
+                            <td>È un cliente virtuale che chiede di accedere alla tearoom  e a tale scopo interagisce con lo smartbell.</td>
                         </tr>
                         <tr>
+                            <th scope="row">Smartbell</th>
+							<td>Attore</td>
+                            <td>Ha lo scopo di controllare la temperatura corporea del cliente. In caso negativo gli nega l'accesso, in caso positivo chiede al waiter se il cliente può entrare. Successivamente, in caso di risposta negativa, comunica al cliente il MAXWAITINGTIME.</td>
+                        </tr>
+						<tr>
+                            <th scope="row">Waiter</th>
+							<td>Attore</td>
+                            <td>Risulta essere il cameriere della tearoom. Il suo scopo è quello di controllare lo stato dei tavoli, verificare che siano occupati e comunicare allo smartbell il massimo tempo di attesa.</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Dai requisiti emersi dall'analisi, i messaggi scambiati, tra le entità prese attualmente in esame, sono i seguenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+							<th scope="col">Tipologia</th>
+                            <th scope="col">Descrizione</th>
+                            <th scope="col">Entità</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">enter_request_client</th>
+							<td>Request</td>
+                            <td>Il client chiede di entrare nella tearoom</td>
+                            <td>smartbell - client</td>
+                        </tr>
+						<tr>
+                            <th scope="row">enter_reply_from_smartbell_with_time</th>
+							<td>Reply</td>
+                            <td>E' la risposta negativa con tempo di attesa di enter_request_client</td>
+                            <td>smartbell - client</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">smartbell_enter_request</th>
+							<td>Request</td>
+                            <td>Lo smartbell chiede se il client può entrare nella tearoom</td>
+                            <td>smartbell - waiter</td>
+                        </tr>
+						<tr>
+                            <th scope="row">client_accept_with_time</th>
+							<td>Reply</td>
+                            <td>E' la risposta negativa con tempo di attesa di smartbell_enter_request</td>
+                            <td>smartbell - waiter</td>
+                        </tr>
+                    </tbody>
+                </table>
+				<p>Il modello del client virtuale derivato dallo step 2 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step2_client.qak" width="100%" height="500px">
+				<p>Il modello dello smartbell derivato dallo step 2 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step2_smartbell.qak" width="100%" height="500px">
+				<p>Il modello del waiter derivato dallo step 2 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step2_waiter.qak" width="100%" height="500px">
+				<br>
+				<br>
+				<h4 id="step3">Step 3</h4>
+				<p>Dai requisiti emersi dall'analisi, le entità prese in esame sono le seguenti:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Entità</th>
+							<th scope="col">Modello</th>
+                            <th scope="col">Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+						<tr>
+                            <th scope="row">Client</th>
+							<td>Attore</td>
+                            <td>È un cliente virtuale che chiede di accedere alla tearoom e a tale scopo interagisce con lo smartbell. Dopo essere entrato nella tearoom, interagisce con il waiter.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Smartbell</th>
+							<td>Attore</td>
+                            <td>Ha lo scopo di controllare la temperatura corporea del cliente. In caso negativo gli nega l'accesso, in caso positivo chiede al waiter se il cliente può entrare. In caso di risposta positiva, comunica al cliente che può entrare.</td>
+                        </tr>
+						<tr>
+                            <th scope="row">Waiter</th>
+							<td>Attore</td>
+                            <td>Risulta essere il cameriere della tearoom. Il suo scopo è quello di controllare lo stato dei tavoli, verificare che non siano occupati e comunicare allo smartbell che il cliente può entrare. Successivamente interagisce con il cliente e il barman.</td>
+                        </tr>
+						<tr>
                             <th scope="row">Barman</th>
 							<td>Attore</td>
                             <td>Risulta essere colui che prepara le ordinazioni e avvisa il waiter quando sono pronte. Interagisce solo con il waiter.</td>
@@ -184,7 +322,6 @@
 							<th scope="col">Tipologia</th>
                             <th scope="col">Descrizione</th>
                             <th scope="col">Entità</th>
-                            <th scope="col">Parametri</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -193,129 +330,71 @@
 							<td>Request</td>
                             <td>Il client chiede di entrare nella tearoom</td>
                             <td>smartbell - client</td>
-                            <td>Temperatura</td>
                         </tr>
                         <tr>
                             <th scope="row">enter_reply_from_smartbell</th>
 							<td>Reply</td>
                             <td>E' la risposta positiva di enter_request_client</td>
                             <td>smartbell - client</td>
-                            <td>ID Cliente, ID Tavolo</td>
-                        </tr>
-						<tr>
-                            <th scope="row">enter_reply_from_smartbell_n</th>
-							<td>Reply</td>
-                            <td>E' la risposta negativa di enter_request_client</td>
-                            <td>smartbell - client</td>
-                            <td>-</td>
-                        </tr>
-						<tr>
-                            <th scope="row">enter_reply_from_smartbell_with_time</th>
-							<td>Reply</td>
-                            <td>E' la risposta negativa con tempo di attesa di enter_request_client</td>
-                            <td>smartbell - client</td>
-                            <td>ID Cliente, MaxStayTime</td>
-                        </tr>
-						<tr>
-                            <th scope="row">go_to_wait_ring</th>
-							<td>Dispatch</td>
-                            <td>Lo smartbell torna in attesa che un cliente suoni al campanello</td>
-                            <td>smartbell</td>
-                            <td>-</td>
                         </tr>
                         <tr>
                             <th scope="row">smartbell_enter_request</th>
 							<td>Request</td>
                             <td>Lo smartbell chiede se il client può entrare nella tearoom</td>
                             <td>smartbell - waiter</td>
-                            <td>ID Cliente</td>
                         </tr>
                         <tr>
                             <th scope="row">client_accept</th>
 							<td>Reply</td>
                             <td>E' la risposta positiva smartbell_enter_request</td>
                             <td>smartbell - waiter</td>
-                            <td>ID Tavolo</td>
-                        </tr>
-						<tr>
-                            <th scope="row">client_accept_with_time</th>
-							<td>Reply</td>
-                            <td>E' la risposta negativa con tempo di attesa di smartbell_enter_request</td>
-                            <td>smartbell - waiter</td>
-                            <td>MaxStayTime</td>
                         </tr>
 						<tr>
                             <th scope="row">send_order</th>
 							<td>Dispatch</td>
                             <td>Il waiter invia al barman l'ordine</td>
                             <td>barman - waiter</td>
-                            <td>ID Cliente, Ordine</td>
                         </tr>
 						<tr>
                             <th scope="row">barman_complete_order</th>
 							<td>Dispatch</td>
                             <td>Il barman ha completato la preparazione dell'ordine</td>
                             <td>barman - waiter</td>
-                            <td>ID Cliente, Ordine</td>
-                        </tr>
-						<tr>
-                            <th scope="row">inform_maxwaittime</th>
-							<td>Dispatch</td>
-                            <td>Il waiter informa il cliente sul tempo di attesa</td>
-                            <td>waiter</td>
-                            <td>-</td>
                         </tr>
 						<tr>
                             <th scope="row">convoy_to_table</th>
 							<td>Dispatch</td>
                             <td>Il waiter accompagna il cliente al tavolo</td>
                             <td>waiter</td>
-                            <td>ID Tavolo</td>
                         </tr>
                         <tr>
                             <th scope="row">client_ready_to_order</th>
 							<td>Dispatch</td>
                             <td>Il client vuole ordinare</td>
                             <td>waiter - client</td>
-                            <td>ID Cliente, Ordine</td>
                         </tr>
                         <tr>
                             <th scope="row">client_payment</th>
 							<td>Dispatch</td>
                             <td>Il client vuole pagare</td>
                             <td>waiter - client</td>
-                            <td>ID Cliente</td>
                         </tr>
 						<tr>
                             <th scope="row">start_sanification</th>
 							<td>Dispatch</td>
                             <td>Il waiter pulisce il tavolo</td>
                             <td>waiter</td>
-                            <td>-</td>
                         </tr>
                     </tbody>
                 </table>
-				<p>La gestione dello stato dei singoli tavoli è stata definita nel seguente modo:</p>
-				<ul>
-					<li>0. Table_isFree (Il tavolo è libero)</li>
-					<li>1. Table_isCleared (Il tavolo è sparecchiato)</li>
-					<li>2. Table_isCleaned (Il tavolo è pulito)</li>
-					<li>3. Table_isSanitized (Il tavolo è sanificato)</li>
-				</ul>
-				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico.png" alt="logico.png" width="65%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
-				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="65%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
-				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="50%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono il Barman.</p>
-				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="50%"/></center>
+				<p>Il modello del client virtuale derivato dallo step 3 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step3_client.qak" width="100%" height="500px">
+				<p>Il modello dello smartbell derivato dallo step 3 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step3_smartbell.qak" width="100%" height="500px">
+				<p>Il modello del waiter derivato dallo step 3 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step3_waiter.qak" width="100%" height="500px">
+				<p>Il modello del barman derivato dallo step 3 è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/step3_barman.qak" width="100%" height="500px">
             </div>
 			<br>
 			<hr>
@@ -325,14 +404,9 @@
 				<hr class="my-4">
 			</div>
             <div>
-				<p>Si assume che i clienti siano virtuali.</p>
-				<p>Il test 1 è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/ct.tearoom/test/test_01.kt">TEST_01</a></p>
-				<p><b>1.</b> Il cliente arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
-				<p>Il test 2 è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/ct.tearoom/test/test_02.kt">TEST_02</a></p>
-				<p><b>2.</b> Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio).</p>
+				<p>Le interazioni modellate durante l'analisi dei requisiti si suppongono già testate in quanto semplici interazioni (dispatch, request-response definite <a href="http://htmlpreview.github.io/?https://github.com/anatali/iss2020LabBo/blob/master/it.unibo.qakactor/userDocs/LabQakIntro2020.html">qui</a>) implementate nel framework di riferimento QAK presentato nello <a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/doc/sprint0.html">sprint iniziale</a>.</p>
             </div>
 			<br>
-			<hr>
 			<br>
 		</div>
         <div class="container-fluid" style="background-color: #e9ecef; padding: 15px 0px">
