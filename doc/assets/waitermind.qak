@@ -1,0 +1,203 @@
+// MESSAGES SMARTBELL
+// Message between smartbell - client
+Request  enter_request_client	: enter_request_client (PAYLOAD)
+Reply    enter_reply_from_smartbell	: enter_reply_from_smartbell (PAYLOAD)
+Reply    enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
+Reply 	 enter_reply_from_smartbell_with_time 	: enter_reply_from_smartbell_with_time (PAYLOAD)
+Dispatch go_to_wait_ring 	: go_to_wait_ring (PAYLOAD)
+
+// Message between smartbell - waiter
+Request smartbell_enter_request	: smartbell_enter_request (PAYLOAD)		
+Reply   client_accept	: client_accept (PAYLOAD)
+Reply	client_accept_with_time : client_accept_with_time (MAXSTAYTIME)
+
+// MESSAGES BARMAN
+// Message between barman - waiter
+Dispatch send_order : send_order (PAYLOAD)
+Dispatch barman_complete_order 	: barman_complete_order (PAYLOAD)
+
+// MESSAGES WAITER
+// Message between waiter - client
+Dispatch inform_maxwaittime		: inform_maxwaittime (PAYLOAD)
+Dispatch convoy_to_table		: convoy_to_table (PAYLOAD)
+Dispatch client_ready_to_order 	: client_ready_to_order (PAYLOAD)
+Dispatch client_payment 		: client_payment (PAYLOAD)
+Dispatch start_sanification		: start_sanification (PAYLOAD)
+
+// Message between waiterengine - waitermind
+Dispatch engineReady	: engineReady (PAYLOAD)
+Request	 moveTo			: moveTo(X, Y)
+Reply	 done			: done(X, Y)
+
+// Message between waiterengine - basicrobot
+Request  step 		: step (STEPTIME)
+Reply    stepdone 	: stepdone (V)
+Reply    stepfail   : stepfail(DURATION, CAUSE)
+Dispatch cmd 		: cmd (CMD)
+
+Dispatch end : end (PAYLOAD)
+
+
+Context ctxtearoom ip [host="localhost" port=50810]
+Context ctxbasicrobot ip [host="192.168.10.100" port=50800]
+
+ExternalQActor basicrobot context ctxbasicrobot
+
+QActor waitermind context ctxtearoom {
+	
+	State s0 initial {
+		// Initial state
+		println("WAITERMIND | Start")
+	}
+	Transition t0	whenMsg engineReady -> rest
+	
+	State rest {
+		// Waiter is at home
+		println("WAITERMIND | Rest")
+	}
+	Transition t1 	whenRequest smartbell_enter_request -> accept
+					whenMsg client_ready_to_order -> takeOrder
+					whenMsg barman_complete_order -> reachBarman
+					whenMsg client_payment -> collectPayment
+					whenMsg start_sanification -> tableCleared
+					whenMsg end -> endWork
+
+	State reachHome{
+		// Waiter reach home
+		println("WAITERMIND | Reach Home")
+		delay 3000
+		request waiterengine -m moveTo : moveTo (X, Y)
+	}
+	Transition t2	whenReply done -> rest
+	
+	State accept {
+		// Waiter accept the client
+
+		println("WAITER | The waiter verifies that the tables are free and dirty")
+
+		replyTo smartbell_enter_request with client_accept : client_accept (PAYLOAD)
+		forward waiter -m convoy_to_table : convoy_to_table (PAYLOAD)
+	}
+	Transition t3	whenMsg inform_maxwaittime -> inform
+					whenMsg convoy_to_table -> reachDoor
+	
+	State inform {
+		// Waiter inform the client about the maximum waiting time if there is no tableclean
+		println("WAITERMIND | Inform the client about the maximum waiting time: MAXWAITINGTIME")
+		onMsg(inform_maxwaittime : inform_maxwaittime (PAYLOAD)){
+			replyTo smartbell_enter_request with client_accept_with_time : client_accept_with_time (MAXWAITINGTIME)
+		}
+	}
+	Goto rest
+	
+	State reachDoor{
+		// Waiter reach door
+		println("WAITERMIND | Reach Door")
+		onMsg(convoy_to_table : convoy_to_table (TABLE)){
+			println("WAITERMIND | Convoy to TABLE")
+		}
+		request waiterengine -m moveTo : moveTo(X, Y)
+	}
+	Transition t4	whenReply done -> convoyTable
+	
+	State convoyTable {
+		// Waiter convoy the client to table
+		println("WAITERMIND | Convoy the client to table")
+
+		delayVar DelayTakeClient
+		request waiterengine -m moveTo : moveTo (X, Y)
+	}
+	Transition t5	whenReply done -> reachHome
+
+	State takeOrder{
+		// Waiter take the order
+		onMsg(client_ready_to_order : client_ready_to_order (ID, ORD)){
+			println("WAITERMIND | go to table for take the order from client")
+			
+			request waiterengine -m moveTo : moveTo (X, Y)
+		}
+	}
+	Transition t6	whenReply done -> sendOrderToBarman
+	
+	State sendOrderToBarman{
+		// Waiter send the order to Barman
+		println("WAITERMIND | go to barman for send the order from client")
+		
+		delayVar DelayTakeDrink
+		request waiterengine -m moveTo : moveTo (X, Y)
+
+		forward barman -m send_order : send_order (PAYLOAD)
+	}
+	Transition t7	whenReply done -> reachHome
+	
+	State reachBarman{
+		// Waiter reach Barman
+		println("WAITERMIND | Reach Barman")
+		onMsg(barman_complete_order : barman_complete_order (ID, ORD)){
+			println("WAITERMIND | go to barman for the order for client")
+		}
+		
+		request waiterengine -m moveTo : moveTo (X, Y)
+	}
+	Transition t8	whenReply done -> serve
+	
+	State serve{
+		// Barman complete the order and send it to Waiter that serve to the Client
+		
+		delayVar DelayServeDrink
+		
+		request waiterengine -m moveTo : moveTo (X, Y)
+	}
+	Transition t9	whenReply done -> reachHome
+	
+	State collectPayment {
+		// Waiter collect the payment
+		onMsg(client_payment : client_payment (ID)){
+			println("WAITERMIND | go to client with ID: ${payloadArg(0)} for collect the payment")
+			
+			request waiterengine -m moveTo : moveTo (X, Y)
+		}	
+	}
+	Transition t10	whenReply done -> convoyExit
+	
+	State convoyExit {
+		// Waiter convoy the Client to the exitdoor
+		println("WAITERMIND | Convoy the Client to the exitdoor")
+		
+		delayVar CollectTime
+		request waiterengine -m moveTo : moveTo (X, Y)
+	}
+	Transition t11	whenReply done -> tableCleared
+	
+	State tableCleared {
+		// Waiter tableCleared
+		println("WAITERMIND | tableCleared")
+		
+		delay 4000
+		
+		request waiterengine -m moveTo : moveTo (X, Y)
+	}
+	Transition t12	whenReply done -> tableCleaned
+	
+	State tableCleaned {
+		// Waiter tableCleaned
+		println("WAITERMIND | tableCleaned")
+		
+		delay 4000
+	}
+	Goto tableSanitized
+	
+	State tableSanitized {
+		// Waiter tableSanitized
+		println("WAITERMIND | tableSanitized")
+		
+		delay 4000
+	}
+	Goto reachHome
+	
+	State endWork {
+		// Waiter end work
+		println("WAITERMIND | End work")
+		terminate 0
+	}
+}

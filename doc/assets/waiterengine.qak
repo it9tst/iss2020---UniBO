@@ -1,0 +1,94 @@
+// Message between waiterengine - waitermind
+Dispatch engineReady	: engineReady (PAYLOAD)
+Request	 moveTo			: moveTo(X, Y)
+Reply	 done			: done(X, Y)
+
+// Message between waiterengine - basicrobot
+Request  step 		: step (STEPTIME)
+Reply    stepdone 	: stepdone (V)
+Reply    stepfail   : stepfail(DURATION, CAUSE)
+Dispatch cmd 		: cmd (CMD)
+
+Dispatch end : end (PAYLOAD)
+
+
+Context ctxtearoom ip [host="localhost" port=50810]
+Context ctxbasicrobot ip [host="192.168.10.100" port=50800]
+
+ExternalQActor basicrobot context ctxbasicrobot
+
+QActor waiterengine context ctxtearoom{
+		
+	State s0 initial{
+		// Initial state
+		println("WAITERENGINE | Start")
+		
+		forward waitermind -m engineReady : engineReady(PAYLOAD)
+	}
+	Goto waitCmd
+	
+	State waitCmd{
+		// Wait Cmd
+		println("WAITERENGINE | Wait Cmd")
+	}
+	Transition t0	whenRequest moveTo -> planDestination
+					whenMsg end -> endWork
+	
+	State planDestination{
+		// Plan Destination
+		println("WAITERENGINE | Plan Destination")
+		println("WAITERENGINE | Start moveTo (X, Y)")
+	}
+	Goto readStep
+	
+	State readStep{
+		// Read Step
+		println("WAITERENGINE | Read Step")
+	}
+	Goto execStep if [# "W_COMMAND" #] else execMove
+
+	State execStep{
+		// Exec Step
+		println("WAITERENGINE | Exec Step")
+
+		request basicrobot -m step : step(PAYLOAD)
+	}
+	Transition t1	whenReply stepdone -> updateMap
+					whenReply stepfail -> errorHandler
+
+	State execMove{
+		// Exec Move
+		println("WAITERENGINE | Exec Move")
+
+		forward basicrobot -m cmd : cmd(CMD)
+		delay 200
+	}
+	Goto updateMap
+	
+	State updateMap{
+		// Update Map
+		println("WAITERENGINE | Update Map")		
+	}
+	Goto readStep if [# "OTHER_COMMAND" #] else endDestination
+	
+	State errorHandler{
+		// Error Handler
+		println("WAITERENGINE | Error Handler")
+		    
+	}
+	Goto readStep if [# "OTHER_COMMAND" #] else endDestination
+	
+	State endDestination{
+		// End Destination
+		println("WAITERENGINE | End Destination")
+		println("WAITERENGINE | Done moveTo(X,Y)")
+		replyTo moveTo with done : done (X, Y)
+	}
+	Goto waitCmd
+	
+	State endWork {
+		// WaiterEngine end work
+		println("WAITERENGINE | End work")
+		terminate 0
+	}
+}

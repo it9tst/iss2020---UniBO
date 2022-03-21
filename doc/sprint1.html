@@ -8,7 +8,7 @@
         <!-- Bootstrap -->
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" crossorigin="anonymous">
         <style type="text/css">
-            em{
+            em {
                 font-size: 80%;
                 font-weight: bold;
                 border-style:solid;
@@ -101,50 +101,22 @@
                 <hr class="my-4">
 			</div>
 			<div>
-				<p>Consideriamo uno scenario semplificato, che non richieda interruzioni e cominciamo a modellarlo.</p>
-				<table class="table table-striped table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">Caso d'uso</th>
-                            <th scope="col">Descrizione</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-						<tr>
-                            <th scope="row">Cliente</th>
-                            <td>Virtuale</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Clienti idonei</th>
-                            <td>1</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Clienti non idonei</th>
-                            <td>1</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Tavoli liberi</th>
-                            <td>2</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Tavoli sanificati</th>
-                            <td>0</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Step 1</th>
-                            <td>Il cliente numero 1 arriva alla tearoom con temperatura non idonea, quindi lo smartbell, dopo aver misurato la temperatura, nega l'accesso alla tearoom.</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Step 2</th>
-                            <td>Il cliente numero 2 arriva alla tearoom con temperatura idonea, il waiter controlla che ci siano tavoli <br>liberi e sanificati, non essendocene comunica al cliente un tempo di attesa di MAXSTAYTIME. </td>
-                        </tr>
-						<tr>
-                            <th scope="row">Step 3</th>
-                            <td>Il waiter va al primo tavolo libero non sanificato, lo sparecchia, lo pulisce e lo apparecchia in sequenza. <br>Successivamente fa accomodare il cliente al tavolo libero e sanificato, prende l'ordinazione, <br>la comunica al barman, che la prepara, e una volta pronta l'ordinazione, la serve al cliente. <br>Al termine fa pagare il cliente e lo accompagna all'uscita.</td>
-                        </tr>
-                    </tbody>
-                </table>
-				<p>In questo sprint aggiungiamo una nuova entità: il Barman.</p>
+				<a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html">Link al documento dell'analisi dei requisiti</a>
+            </div>
+			<br>
+			<hr>
+			<br>
+			<div class="row text-center">
+				<div class="col-lg-6 offset-lg-3"><u><h2>Analisi dei problemi</h2></u></div>
+                <hr class="my-4">
+			</div>
+            <div>
+                <p>Dall'analisi dei requisiti si evince che il waiter presenti le seguenti capacità:</p>
+				<ul>
+					<li>1) capacità di intraprendere le varie azioni di propria iniziativa</li>
+					<li>2) reagire agli stimoli esterni</li>
+				</ul>
+				<p>Visto e considerato che l'esecuzione di una qualsiasi azione del Waiter è una combinazione di azioni appartenenti a 3 categorie: invio di un messaggio, movimento nella tearoom, interazione con oggetti della tearoom e che il Waiter deve essere in grado di eseguire un task e ascoltare nuovi messaggi contemporaneamente, allora siamo spinti a suddividerlo in parti:</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -155,28 +127,95 @@
                     </thead>
                     <tbody>
 						<tr>
-                            <th scope="row">Waiter</th>
+                            <th scope="row">WaiterMind</th>
 							<td>Attore</td>
-                            <td>Risulta essere il cameriere della tearoom. Il suo scopo è quello di accogliere i clienti, prendere gli ordini, comunicarli al barman, servire i clienti, accompagnarli all'uscita e pulire i tavoli sporchi. Interagisce con tutte le altre entità.</td>
+                            <td>Comunica con le altre entità e gestisce il WaiterEngine (movimento).</td>
                         </tr>
                         <tr>
-                            <th scope="row">Smartbell</th>
+                            <th scope="row">WaiterEngine</th>
 							<td>Attore</td>
-                            <td>Ha lo scopo di segnalare la presenza di un client che vuole entrare nella tearoom. Interagisce con il cliente e il waiter.</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Client</th>
-							<td>Attore</td>
-                            <td>E' un cliente virtuale che accede alla tearoom. Il suo comportamento tipico prevede di entrare, ordinare, consumare ed uscire dalla tearoom. Interagisce con il waiter e lo smartbell.</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Barman</th>
-							<td>Attore</td>
-                            <td>Risulta essere colui che prepara le ordinazioni e avvisa il waiter quando sono pronte. Interagisce solo con il waiter.</td>
+                            <td>Gestisca il movimento del robot e la pulizia dei table.</td>
                         </tr>
                     </tbody>
                 </table>
-				<p>Dai requisiti emersi dall'analisi, i messaggi scambiati, tra le entità prese attualmente in esame, sono i seguenti:</p>
+				<p>Queste due parti sostituiranno il Waiter dell'analisi dei requisiti, in due nuove attori, dove il primo mantiene la logica di esecuzione del Waiter e il secondo si occuperà di gestire le azioni che interessano la tearoom.</p>
+				<p>Per ciò che riguarda l'interazione tra le due parti sfrutteremo dei messaggi appositi modellati come Dispatch in vista delle successive implementazioni che richiederanno l'introduzione di interrupt.</p>
+				<p>Per far muovere il Waiter all'interno della tearoom abbiamo bisogno di conoscere la posizione degli oggetti e delle varie entità e per fare ciò utilizzeremo un tool sviluppato direttamente dalla nostra software house: <a href="https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.planner20/userDocs/LabPlanner.html">it.unibo.planner20</a>.</p>
+				<p>Questo comporta l'introduzione di una mappa che dovrà essere gestita da un componente. La mappa viene divisa in celle e chiamiamo con il termine step l'unità dello spostamento del Waiter da una cella ad un'altra adiacente corrispondente alla lunghezza del robot. I veri spostamenti vengono effettuati dal basicrobot: il WaiterMind chiede uno spostamento al WaiterEngine che a sua volta inoltra la richiesta al <a href="https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.qak20.basicrobot/userDocs/Qak20Basicrobot.html">basicrobot</a>.</p>
+				<p>Definiamo i messaggi che servono per consentire lo spostamento:</p>
+				<table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Messaggio</th>
+							<th scope="col">Tipologia</th>
+                            <th scope="col">Descrizione</th>
+                            <th scope="col">Entità</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">engineReady</th>
+							<td>Dispatch</td>
+                            <td>Il WaiterEngine è pronto per ricevere comandi.</td>
+                            <td>waiterengine - waitermind</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">moveTo</th>
+							<td>Request</td>
+                            <td>Il WaiterMind richiede un movimento al WaiterEngine</td>
+                            <td>waiterengine - waitermind</td>
+                        </tr>
+						<tr>
+                            <th scope="row">done</th>
+							<td>Reply</td>
+                            <td>E' la risposta positiva di moveTo</td>
+                            <td>waiterengine - waitermind</td>
+                        </tr>
+						<tr>
+                            <th scope="row">step</th>
+							<td>Request</td>
+                            <td>Il WaiterEngine comunica con il BasicRobot</td>
+                            <td>waiterengine - basicrobot</td>
+                        </tr>
+						<tr>
+                            <th scope="row">stepdone</th>
+							<td>Reply</td>
+                            <td>E' la risposta positiva di step</td>
+                            <td>waiterengine - basicrobot</td>
+                        </tr>
+						<tr>
+                            <th scope="row">stepfail</th>
+							<td>Reply</td>
+                            <td>E' la risposta negativa di step</td>
+                            <td>waiterengine - basicrobot</td>
+                        </tr>
+						<tr>
+                            <th scope="row">cmd</th>
+							<td>Dispatch</td>
+                            <td>Il WaiterEngine comunica con il BasicRobot</td>
+                            <td>waiterengine - basicrobot</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Il modello del waitermind è il seguente:</p>
+                <embed style="background-color: #E9ECEF" src="assets/waitermind.qak" width="100%" height="500px">
+				<p>Il modello del waiterengine è il seguente:</p>
+				<embed style="background-color: #E9ECEF" src="assets/waiterengine.qak" width="100%" height="500px">
+            </div>
+			<br>
+			<hr>
+			<br>
+			<div class="row text-center">
+				<div class="col-lg-6 offset-lg-3"><u><h2>Project</h2></u></div>
+				<hr class="my-4">
+			</div>
+            <div>
+				<p>Per una definizione formale di tutta la struttura, l'interazione ed il comportamento si rimanda alla definizione dei QActor:</p>
+				<ul>
+					<li><a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/ct.tearoom/src/tearoom.qak">tearoom.qak</a></li>
+					<li><a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/ct.tearoom/src/client.qak">client.qak</a></li>
+				</ul>
+				<p>In definitiva, riassumiamo i messaggi, con i rispettivi parametri, aggiunti rispetto agli sprint precedenti:</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -188,7 +227,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+						<tr>
                             <th scope="row">enter_request_client</th>
 							<td>Request</td>
                             <td>Il client chiede di entrare nella tearoom</td>
@@ -212,7 +251,7 @@
 						<tr>
                             <th scope="row">enter_reply_from_smartbell_with_time</th>
 							<td>Reply</td>
-                            <td>E' la risposta di negativa con tempo di attesa di enter_request_client</td>
+                            <td>E' la risposta negativa con tempo di attesa di enter_request_client</td>
                             <td>smartbell - client</td>
                             <td>ID Cliente, MaxStayTime</td>
                         </tr>
@@ -293,78 +332,6 @@
                             <td>waiter</td>
                             <td>-</td>
                         </tr>
-                    </tbody>
-                </table>
-				<p>La gestione dello stato dei singoli tavoli è stata definita nel seguente modo:</p>
-				<ul>
-					<li>0. Table_isFree (Il tavolo è libero)</li>
-					<li>1. Table_isCleared (Il tavolo è sparecchiato)</li>
-					<li>2. Table_isCleaned (Il tavolo è pulito)</li>
-					<li>3. Table_isSanitized (Il tavolo è sanificato)</li>
-				</ul>
-				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico.png" alt="logico.png" width="65%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono il Waiter.</p>
-				<center><img src="assets/statiWaiter.png" alt="statiWaiter.png" width="65%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
-				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="50%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono il Barman.</p>
-				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="50%"/></center>
-            </div>
-			<br>
-			<hr>
-			<br>
-			<div class="row text-center">
-				<div class="col-lg-6 offset-lg-3"><u><h2>Test plan</h2></u></div>
-				<hr class="my-4">
-			</div>
-            <div>
-				<p>Si assume che i clienti siano virtuali.</p>
-				<p>Il test 1 è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/ct.tearoom/test/test_01.kt">TEST_01</a></p>
-				<p><b>1.</b> Il cliente arriva alla tearoom con temperatura maggiore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene rifiutato (stampa del messaggio).</p>
-				<p>Il test 2 è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/ct.tearoom/test/test_02.kt">TEST_02</a></p>
-				<p><b>2.</b> Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello (stampa del messaggio). Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter (stampa del messaggio). Il waiter dopo aver verificato che non vi sono tavoli liberi e puliti (stampa dello stato), comunica al cliente un tempo di attesa MAXSTAYTIME (stampa del messaggio).</p>
-            </div>
-			<br>
-			<hr>
-			<br>
-			<div class="row text-center">
-				<div class="col-lg-6 offset-lg-3"><u><h2>Analisi dei problemi</h2></u></div>
-                <hr class="my-4">
-			</div>
-            <div>
-                <p>Dall'analisi dei requisiti si evince che il waiter presenti le seguenti capacità:</p>
-				<ul>
-					<li>1) capacità di intraprendere le varie azioni di propria iniziativa</li>
-					<li>2) reagire agli stimoli esterni</li>
-				</ul>
-				<p>Visto e considerato che l'esecuzione di una qualsiasi azione del Waiter è una combinazione di azioni appartenenti a 3 categorie: invio di un messaggio, movimento nella tearoom, interazione con oggetti della tearoom e che il Waiter deve essere in grado di eseguire un task e ascoltare nuovi messaggi contemporaneamente, allora siamo spinti a suddividerlo in parti:</p>
-				<ul>
-					<li>1) WaiterMind: che comunica con le altre entità e gestisce il WaiterEngine (movimento)</li>
-					<li>2) WaiterEngine: che gestisca il movimento del robot e la pulizia dei table</li>
-				</ul>
-				<p>Queste due parti sostituiranno il Waiter dell'analisi dei requisiti, in due nuove attori, dove il primo mantiene la logica di esecuzione del Waiter e il secondo si occuperà di gestire le azioni che interessano la tearoom.</p>
-				<p>Per ciò che riguarda l'interazione tra le due parti sfrutteremo dei messaggi appositi modellati come Dispatch in vista delle successive implementazioni che richiederanno l'introduzione di interrupt.</p>
-				<p>Per far muovere il Waiter all'interno della tearoom abbiamo bisogno di conoscere la posizione degli oggetti e delle varie entità e per fare ciò utilizzeremo un tool sviluppato direttamente dalla nostra software house: <a href="https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.planner20/userDocs/LabPlanner.html">it.unibo.planner20</a>.</p>
-				<p>Questo comporta l'introduzione di una mappa che dovrà essere gestita da un componente. La mappa viene divisa in celle e chiamiamo con il termine step l'unità dello spostamento del Waiter da una cella ad un'altra adiacente corrispondente alla lunghezza del robot. I veri spostamenti vengono effettuati dal basicrobot: il WaiterMind chiede uno spostamento al WaiterEngine che a sua volta inoltra la richiesta al <a href="https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.qak20.basicrobot/userDocs/Qak20Basicrobot.html">basicrobot</a>.</p>
-				<p>Aggiungiamo i messaggi che servono per consentire lo spostamento:</p>
-				<table class="table table-striped table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">Messaggio</th>
-							<th scope="col">Tipologia</th>
-                            <th scope="col">Descrizione</th>
-                            <th scope="col">Entità</th>
-                            <th scope="col">Parametri</th>
-                        </tr>
-                    </thead>
-                    <tbody>
                         <tr>
                             <th scope="row">engineReady</th>
 							<td>Dispatch</td>
@@ -417,15 +384,33 @@
                     </tbody>
                 </table>
 				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico2.png" alt="logico.png" width="65%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="assets/logico.png" alt="logico.png" style="width: 50%;"></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il WaiterMind.</p>
-				<center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" width="80%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" style="width: 50%;"></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il WaiterEngine.</p>
-				<center><img src="assets/statiWaiterEngine.png" alt="statiWaiterEngine.png" width="65%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="assets/statiWaiterEngine.png" alt="statiWaiterEngine.png" style="width: 45%;"></center>
+                </a>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono lo Smartbell.</p>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" style="width: 40%;"></center>
+                </a>
+				<br>
+				<br>
+				<p>Ecco il grafo degli stati che compongono il Barman.</p>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="assets/statiBarman.png" alt="statiBarman.png" style="width: 40%;"></center>
+                </a>
             </div>
 			<br>
 			<hr>
@@ -436,11 +421,8 @@
 			</div>
             <div>
 				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/ct.tearoom/test/test_01.kt">TEST_01</a></p>
-				<p>Si verifica il movimento nella tearoom, sfruttando un <a href="https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.mvirtual2020/userDocs/LabUsingVirtualRobot.html">virtualrobot</a> e verificando le effettive posizioni del Waiter tra i vari step.</p>
 				<p>Si assume che il cliente sia virtuale.</p>
-				<ul>
-					<li>Il cliente arriva alla tearoom con temperatura minore di 37.5 gradi e suona il campanello. Dopo che lo smartbell gli ha misurato la temperatura, viene accettato e comunicato al waiter. Dopo aver controllato che vi è almeno un tavolo pulito e libero, fa accomodare il cliente. Il cliente ordina, il waiter comunica al barman l'ordinazione, il barman la prepara e comunica al waiter quando è pronta, il waiter la prende per servirla al cliente che una volta finito di consumare paga il waiter ed esce dalla tearoom. A questo punto il waiter pulisce in fasi il tavolo sporco attraversando tutti e tre gli stati.</li>
-				</ul>
+				<p>Si verifica il movimento nella tearoom, sfruttando un <a href="https://raw.githubusercontent.com/anatali/iss2020LabBo/master/it.unibo.mvirtual2020/userDocs/LabUsingVirtualRobot.html">virtualrobot</a> e verificando le effettive posizioni del Waiter prendendo come riferimento lo <a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html#step3">step3 del caso d'uso dell'analisi dei requisiti</a>.</p>
             </div>
 			<br>
 			<br>
@@ -465,5 +447,19 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">              
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <img src="" class="imagepreview" style="width: 100%;" >
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+        <script src="assets/js/modal.js"></script>
     </body>
 </html>
