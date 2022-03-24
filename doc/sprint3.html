@@ -101,147 +101,8 @@
                 <hr class="my-4">
 			</div>
 			<div>
-				<p>Per il seguente sprint, assumiamo che:</p>
-				<table class="table table-striped table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">Caso d'uso</th>
-                            <th scope="col">Descrizione</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-						<tr>
-                            <th scope="row">Cliente</th>
-                            <td>Virtuale</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Clienti idonei</th>
-                            <td>N</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Clienti non idonei</th>
-                            <td>NAN</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Tavoli liberi</th>
-                            <td>2</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Tavoli sanificati</th>
-                            <td>2</td>
-                        </tr>
-						<tr>
-                            <th scope="row">Step 1</th>
-                            <td>Il waiter fa accomodare un cliente al tavolo libero e sanificato, prende l'ordinazione,<br> la comunica al barman che la prepara, e una volta pronta la serve al cliente.<br> Nel frattempo arriva un altro cliente che segue esattamente lo stesso iter dell'altro.
-						  </td>
-                        </tr>
-						<tr>
-                            <th scope="row">Step 2</th>
-                            <td>Quando la tearoom è al completo arriva un terzo cliente che vuole accedere.<br> A questo punto viene informato dal waiter che c'è un certo tempo di attesa.
-							</td>
-                        </tr>
-                    </tbody>
-                </table>
-				<p>Quindi modelliamo, come da requisito, il task inform.</p>
-				<p>Il tempo di attesa comunicato dal waiter (MAXWAITINGTIME) sarà calcolato in base allo stato dei tavoli, ovvero nelle due casistiche:</p>
-				<table class="table table-striped table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">Situazione</th>
-							<th scope="col">MAXWAITINGTIME</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-						<tr>
-                            <th scope="row">Solo tavoli sporchi</th>
-							<td>Somma tempo residuo di pulizia</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Tavoli occupati</th>
-							<td>Somma tempo residuo di pulizia + il minor MaxStayTime tra i tavoli occupati</td>
-                        </tr>
-                    </tbody>
-                </table>
-				<p>A tale scopo, vengono rimodellati alcuni stati del WaiterMind e di MaxStayTime, in modo tale da permettere di recuperare il valore del tempo rimanente dei clienti seduti al tavolo. I nuovi messaggi introdotti sono i seguenti.</p>
-				<table class="table table-striped table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">Messaggio</th>
-							<th scope="col">Tipologia</th>
-                            <th scope="col">Descrizione</th>
-                            <th scope="col">Entità</th>
-                            <th scope="col">Parametri</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-						<tr>
-                            <th scope="row">maxStayTimerLeftRequest</th>
-							<td>Request</td>
-                            <td>Il WaiterMind chiede al MaxStayTime il tempo residuo del tavolo corrispondente.</td>
-                            <td>waitermind - maxstaytime</td>
-                            <td>TABLE</td>
-                        </tr>
-						<tr>
-                            <th scope="row">maxStayTimerLeftReply</th>
-							<td>Reply</td>
-                            <td>E' la risposta di maxStayTimerLeftRequest</td>
-                            <td>waitermind - maxstaytime</td>
-                            <td>TIMERLEFT</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">maxStayTimerLeftRequestToTable</th>
-							<td>Request</td>
-                            <td>Il MaxStayTime chiede al tavolo corrispondente il tempo residuo.</td>
-                            <td>maxstaytime - maxstaytimetable1<br>maxstaytime - maxstaytimetable2</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">maxStayTimerLeftReplyFromTable</th>
-							<td>Reply</td>
-                            <td>E' la risposta di maxStayTimerLeftRequestToTable</td>
-                            <td>maxstaytime - maxstaytimetable1<br>maxstaytime - maxstaytimetable2</td>
-                            <td>TIMERLEFT</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">maxStayTimerLeftCompareRequest</th>
-                            <td>Request</td>
-                            <td>Il WaiterMind chiede al MaxStayTime il tempo residuo del tavolo corrispondente, per poi comparare i due MaxStayTime dei tavoli occupati.</td>
-                            <td>maxstaytime - maxstaytimetable1<br>maxstaytime - maxstaytimetable2</td>
-                            <td>TABLE</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">maxStayTimerLeftCompareReply</th>
-                            <td>Reply</td>
-                            <td>E' la risposta di maxStayTimerLeftCompareRequest</td>
-                            <td>maxstaytime - maxstaytimetable1<br>maxstaytime - maxstaytimetable2</td>
-                            <td>TIMERLEFT</td>
-                        </tr>
-                    </tbody>
-                </table>
-				<p>Inoltre, con il committente, è stato chiarito anche il concetto di "current state" della tearoom. Essa identifica lo stato di tutte le entità e componenti all'interno del sistema, per esempio la posizione e l'attività attuale del waiter, lo stato dei tavoli o l'occupazione del barman.</p>
-				<p>Ecco il grafo aggiornato degli stati che compongono il WaiterMind.</p>
-				<center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" width="100%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo aggiornato degli stati che compongono il maxstaytime.</p>
-				<center><img src="assets/statiMaxstaytime.png" alt="statiMaxstaytime.png" width="60%"/></center>
-				<br>
-				<br>
-				<p>Ecco il grafo degli stati che compongono il maxstaytimetable1 e maxstaytimetable2.</p>
-				<center><img src="assets/statiMaxstaytimetable.png" alt="statiMaxstaytimetable.png" width="100%"/></center>
+                <a href="https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_req/doc/sprint3.html">Link al documento dell'analisi dei requisiti</a>
             </div>
-			<br>
-			<hr>
-			<br>
-			<div class="row text-center">
-				<div class="col-lg-6 offset-lg-3"><u><h2>Test plan</h2></u></div>
-				<hr class="my-4">
-			</div>
-            <div>
-				<p>Il test è visionabile a questo link: <a href="https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_req/ct.tearoom/test/test_01.kt">TEST_01</a></p>
-				<p>Si assume che i clienti siano virtuali.</p>
-				<p>Testiamo il task inform: se i tavoli sono sporchi e occupati, il waiter comunica al cliente il corretto tempo di attesa prima di poter entrare.</p>
-			</div>
 			<hr>
 			<br>
 			<div class="row text-center">
@@ -397,35 +258,51 @@
                     </tbody>
                 </table>
 				<p>Ecco come si presenta il sistema, da un punto di vista logico, nel suo complesso.</p>
-				<center><img src="assets/logico.png" alt="logico.png" width="70%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/logico.png" alt="logico.png" style="width: 40%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il waitermind.</p>
-				<center><img src="assets/statiWaiterMind2.png" alt="statiWaitermind.png" width="100%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiWaiterMind2.png" alt="statiWaitermind.png" style="width: 60%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il waiterengine.</p>
-				<center><img src="assets/statiWaiterengine.png" alt="statiWaiterengine.png" width="70%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiWaiterengine.png" alt="statiWaiterengine.png" style="width: 50%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono lo smartbell.</p>
-				<center><img src="assets/statiSmartbell.png" alt="statiSmartbell.png" width="50%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiSmartbell.png" alt="statiSmartbell.png" style="width: 40%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il barman.</p>
-				<center><img src="assets/statiBarman.png" alt="statiBarman.png" width="50%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiBarman.png" alt="statiBarman.png" style="width: 40%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il maxstaytime.</p>
-				<center><img src="assets/statiMaxstaytime2.png" alt="statiMaxstaytime.png" width="60%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiMaxstaytime2.png" alt="statiMaxstaytime.png" style="width: 40%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono i maxstaytimetable1 e maxstaytimetable2.</p>
-				<center><img src="assets/statiMaxstaytimetable2.png" alt="statiMaxstaytimetable.png" width="100%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiMaxstaytimetable2.png" alt="statiMaxstaytimetable.png" style="width: 60%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo degli stati che compongono il tearoomstatemanager.</p>
-				<center><img src="assets/statiTearoomstatemanager.png" alt="statiTearoomstatemanager.png" width="80%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/statiTearoomstatemanager.png" alt="statiTearoomstatemanager.png" style="width: 50%;"/></center>
+                </a>
             </div>
 			<br>
 			<hr>
@@ -445,14 +322,14 @@
             <div class="container">
                 <div class="card-group" style="margin: 0 auto; width: 600px;">
                     <div class="card">
-                        <img src="assets/vc.jpg" class="card-img-top">
+                        <img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/vc.jpg" class="card-img-top">
                         <div class="card-body">
                             <h5 class="card-title">Vittorio Corsale</h5>
                             <p class="card-text">vittorio.corsale@studio.unibo.it</p>
                         </div>
                     </div>
                     <div class="card">
-                        <img src="assets/gt.jpg" class="card-img-top">
+                        <img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint3_an_probl/doc/assets/gt.jpg" class="card-img-top">
                         <div class="card-body">
                             <h5 class="card-title">Gabriele Tornatore</h5>
                             <p class="card-text">gabriele.tornatore@studio.unibo.it</p>
@@ -461,5 +338,26 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <img src="" class="imagepreview" style="width: 100%;" >
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+        <script>
+            $(function() {
+                $('.pop').on('click', function() {
+                    $('.imagepreview').attr('src', $(this).find('img').attr('src'));
+                    $('#imagemodal').modal('show');   
+                });   
+            });
+        </script>
     </body>
 </html>
