@@ -4,7 +4,7 @@ System -msglog tearoom
 // Message between smartbell - client
 Request  enter_request_client	: enter_request_client (PAYLOAD)
 Reply    enter_reply_from_smartbell_n	: enter_reply_from_smartbell_n (PAYLOAD)
-Dispatch go_to_wait_ring 						: go_to_wait_ring (PAYLOAD)
+Dispatch go_to_wait_ring 	: go_to_wait_ring (PAYLOAD)
 
 Dispatch end : end (PAYLOAD)
 
