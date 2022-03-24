@@ -6,7 +6,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 ### Documentation
 
-[``Sprint 0``](https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/doc/sprint0.html)
+[``Sprint 0``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/doc/sprint0.html)
 
 ### Requirements
 
