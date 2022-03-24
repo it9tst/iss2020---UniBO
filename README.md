@@ -6,7 +6,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 ### Documentation
 
-[``Sprint 1 - Analisi dei Requisiti``](https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html)
+[``Sprint 1 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html)
 
 ### Requirements
 
