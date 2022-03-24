@@ -15,6 +15,10 @@
                 border-color: #e9ecef;
                 color: #28a745;
             }
+            .qak {
+                height:500px;
+                overflow-y: visible;
+            }
         </style>
     </head>
     <body>
@@ -47,7 +51,7 @@
 
             The <em>waiter</em> can freely move along the borders of the tearoom, since there are no obstacles there. 
 
-            <center><img src="assets/tearoom20.png" alt="tearoom20.png" width="65%"/></center>
+            <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint2_an_req/doc/assets/tearoom20.png" alt="tearoom20.png" width="65%"/></center>
 
 
             <h5>User stories</h5>
@@ -168,7 +172,7 @@
 					<br>
 					Al termine di un task, il waiter controllerà che non ci siano ulteriori richieste da parte dei clienti in attesa o che non siano presenti tavoli da pulire. In tal caso il waiter tornerà nella home.
 					<br>
-					A tale scopo, introduciamo 5 nuovi messaggi che distinguono e definiscono le varie fasi della pulizia dei tavoli già descritte nello <a href="https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html">sprint 1</a>.</p>
+					A tale scopo, introduciamo 5 nuovi messaggi che distinguono e definiscono le varie fasi della pulizia dei tavoli.</p>
 				<table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
@@ -219,11 +223,15 @@
                 </table>
 				<p>Inoltre, il committente ha chiarito come dovrebbe avvenire la gestione del "maxstaytime" del cliente, ovvero il tempo che il cliente ha a disposizione per effettuare la sua consumazione nella tearoom: la misurazione avviene solo quando è responsabilità del cliente "perdere" tempo. Dopo che il waiter ha accompagnato il cliente al tavolo, si fa partire il timer. Dopo aver effettuato l'ordine, il timer viene stoppato in quanto il tempo che passa non è più "colpa" del cliente ma del barman. Quindi il timer viene riavviato nel momento in cui il cliente consuma l'ordinazione.</p>
 				<p>Ecco il grafo aggiornato degli stati che compongono il WaiterMind.</p>
-				<center><img src="assets/statiWaiterMind.png" alt="statiWaiterMind.png" width="95%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint2_an_req/doc/assets/statiWaiterMind.png" alt="statiWaiterEngine.png" style="width: 40%;"/></center>
+                </a>
 				<br>
 				<br>
 				<p>Ecco il grafo aggiornato degli stati che compongono il WaiterEngine.</p>
-				<center><img src="assets/statiWaiterEngine.png" alt="statiWaiterEngine.png" width="65%"/></center>
+                <a href="javascript:void(0)" class="pop">
+                    <center><img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint2_an_req/doc/assets/statiWaiterEngine.png" alt="statiWaiterEngine.png" style="width: 40%;"/></center>
+                </a>
             </div>
 			<br>
 			<hr>
@@ -249,14 +257,14 @@
             <div class="container">
                 <div class="card-group" style="margin: 0 auto; width: 600px;">
                     <div class="card">
-                        <img src="assets/vc.jpg" class="card-img-top">
+                        <img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint2_an_req/doc/assets/vc.jpg" class="card-img-top">
                         <div class="card-body">
                             <h5 class="card-title">Vittorio Corsale</h5>
                             <p class="card-text">vittorio.corsale@studio.unibo.it</p>
                         </div>
                     </div>
                     <div class="card">
-                        <img src="assets/gt.jpg" class="card-img-top">
+                        <img src="https://raw.githubusercontent.com/it9tst/iss2020ProjectBO/feature/sprint2_an_req/doc/assets/gt.jpg" class="card-img-top">
                         <div class="card-body">
                             <h5 class="card-title">Gabriele Tornatore</h5>
                             <p class="card-text">gabriele.tornatore@studio.unibo.it</p>
@@ -265,5 +273,16 @@
                 </div>
             </div>
         </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+        <script>
+            $(function() {
+                $('.pop').on('click', function() {
+                    $('.imagepreview').attr('src', $(this).find('img').attr('src'));
+                    $('#imagemodal').modal('show');   
+                });   
+            });
+        </script>
     </body>
 </html>
