@@ -1,4 +1,4 @@
-# iss2020ProjectBO | SPRINT 3 - Analisi dei Problemi
+# iss2020ProjectBO | SPRINT 4 - Analisi dei Requisiti
 
 ### Final Project for exam of Software Systems Engineering M - Ing. Informatica Magistrale - UniBO 2020
 
@@ -6,7 +6,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 ### Documentation
 
-[``Sprint 3 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_probl/doc/sprint3.html)
+[``Sprint 3 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_req/doc/sprint3.html)
 
 ### Requirements
 
