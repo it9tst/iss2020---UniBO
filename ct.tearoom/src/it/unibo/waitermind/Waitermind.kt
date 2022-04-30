@@ -46,14 +46,19 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						println("WAITERMIND | Start")
 						solve("consult('storage.pl')","") //set resVar	
 					}
-					 transition(edgeName="t00",targetState="rest",cond=whenDispatch("engineReady"))
+					 transition(edgeName="t00",targetState="checkTableToClean",cond=whenDispatch("engineReady"))
 				}	 
 				state("rest") { //this:State
 					action { //it:State
 						println("WAITERMIND | rest")
 						forward("setWaiterState", "setWaiterState(home)" ,"tearoomstatemanager" ) 
 					}
-					 transition( edgeName="goto",targetState="checkQueue", cond=doswitch() )
+					 transition(edgeName="t11",targetState="checkAcceptOrInform",cond=whenRequest("smartbellEnterRequest"))
+					transition(edgeName="t12",targetState="checkTableForOrderIn",cond=whenDispatch("clientReadyToOrder"))
+					transition(edgeName="t13",targetState="reachBarman",cond=whenDispatch("barmanCompleteOrder"))
+					transition(edgeName="t14",targetState="checkTableToCollect",cond=whenDispatch("clientPayment"))
+					transition(edgeName="t15",targetState="reachTableToKick",cond=whenDispatch("maxStayTimerExpired"))
+					transition(edgeName="t16",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("checkQueue") { //this:State
 					action { //it:State
@@ -61,20 +66,19 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						stateTimer = TimerActor("timer_checkQueue", 
 							scope, context!!, "local_tout_waitermind_checkQueue", 100.toLong() )
 					}
-					 transition(edgeName="t11",targetState="checkTableToClean",cond=whenTimeout("local_tout_waitermind_checkQueue"))   
-					transition(edgeName="t12",targetState="checkAcceptOrInform",cond=whenRequest("smartbellEnterRequest"))
-					transition(edgeName="t13",targetState="checkTableForOrderIn",cond=whenDispatch("clientReadyToOrder"))
-					transition(edgeName="t14",targetState="reachBarman",cond=whenDispatch("barmanCompleteOrder"))
-					transition(edgeName="t15",targetState="checkTableToCollect",cond=whenDispatch("clientPayment"))
-					transition(edgeName="t16",targetState="reachTableToKick",cond=whenDispatch("maxStayTimerExpired"))
-					transition(edgeName="t17",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t27",targetState="checkTableToClean",cond=whenTimeout("local_tout_waitermind_checkQueue"))   
+					transition(edgeName="t28",targetState="checkAcceptOrInform",cond=whenRequest("smartbellEnterRequest"))
+					transition(edgeName="t29",targetState="checkTableForOrderIn",cond=whenDispatch("clientReadyToOrder"))
+					transition(edgeName="t210",targetState="reachBarman",cond=whenDispatch("barmanCompleteOrder"))
+					transition(edgeName="t211",targetState="checkTableToCollect",cond=whenDispatch("clientPayment"))
+					transition(edgeName="t212",targetState="reachTableToKick",cond=whenDispatch("maxStayTimerExpired"))
 				}	 
 				state("checkTableToClean") { //this:State
 					action { //it:State
 						println("WAITERMIND | checkTableToClean")
 						request("getTableToCleanRequest", "getTableToCleanRequest(PAYLOAD)" ,"tearoomstatemanager" )  
 					}
-					 transition(edgeName="t28",targetState="replyCheckTableToClean",cond=whenReply("getTableToCleanReply"))
+					 transition(edgeName="t313",targetState="replyCheckTableToClean",cond=whenReply("getTableToCleanReply"))
 				}	 
 				state("replyCheckTableToClean") { //this:State
 					action { //it:State
@@ -100,12 +104,17 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						if( currentSolution.isSuccess() ) { 
 										MoveX = getCurSol("X").toString().toInt()
 						            	MoveY = getCurSol("Y").toString().toInt()
-						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 						else
 						{}
 					}
-					 transition(edgeName="t39",targetState="rest",cond=whenReply("done"))
+					 transition(edgeName="t414",targetState="rest",cond=whenDispatch("done"))
+					transition(edgeName="t415",targetState="checkAcceptOrInform",cond=whenRequest("smartbellEnterRequest"))
+					transition(edgeName="t416",targetState="checkTableForOrderIn",cond=whenDispatch("clientReadyToOrder"))
+					transition(edgeName="t417",targetState="reachBarman",cond=whenDispatch("barmanCompleteOrder"))
+					transition(edgeName="t418",targetState="checkTableToCollect",cond=whenDispatch("clientPayment"))
+					transition(edgeName="t419",targetState="reachTableToKick",cond=whenDispatch("maxStayTimerExpired"))
 				}	 
 				state("reachTableClean") { //this:State
 					action { //it:State
@@ -115,12 +124,17 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						if( currentSolution.isSuccess() ) {
 										MoveX = getCurSol("X").toString().toInt()
 						               	MoveY = getCurSol("Y").toString().toInt()
-						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 						else
 						{}
 					}
-					 transition(edgeName="t410",targetState="whichCleanState",cond=whenReply("done"))
+					 transition(edgeName="t520",targetState="whichCleanState",cond=whenDispatch("done"))
+					transition(edgeName="t521",targetState="checkAcceptOrInform",cond=whenRequest("smartbellEnterRequest"))
+					transition(edgeName="t522",targetState="checkTableForOrderIn",cond=whenDispatch("clientReadyToOrder"))
+					transition(edgeName="t523",targetState="reachBarman",cond=whenDispatch("barmanCompleteOrder"))
+					transition(edgeName="t524",targetState="checkTableToCollect",cond=whenDispatch("clientPayment"))
+					transition(edgeName="t525",targetState="reachTableToKick",cond=whenDispatch("maxStayTimerExpired"))
 				}	 
 				state("whichCleanState") { //this:State
 					action { //it:State
@@ -135,37 +149,38 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						 ){forward("goToSanitizing", "goToSanitizing(PAYLOAD)" ,"waitermind" ) 
 						}
 					}
-					 transition(edgeName="t511",targetState="tableCleared",cond=whenDispatch("goToClearing"))
-					transition(edgeName="t512",targetState="tableCleaned",cond=whenDispatch("goToCleaning"))
-					transition(edgeName="t513",targetState="tableSanitized",cond=whenDispatch("goToSanitizing"))
+					 transition(edgeName="t626",targetState="tableCleared",cond=whenDispatch("goToClearing"))
+					transition(edgeName="t627",targetState="tableCleaned",cond=whenDispatch("goToCleaning"))
+					transition(edgeName="t628",targetState="tableSanitized",cond=whenDispatch("goToSanitizing"))
 				}	 
 				state("tableCleared") { //this:State
 					action { //it:State
 						println("WAITERMIND | tableCleared")
-						forward("setWaiterState", "setWaiterState(tableCleared)" ,"tearoomstatemanager" ) 
+						forward("setWaiterState", "setWaiterState(cleaning)" ,"tearoomstatemanager" ) 
 						request("clean", "clean($TableSelectedToClean,1)" ,"waiterengine" )  
 					}
-					 transition(edgeName="t614",targetState="checkQueue",cond=whenReply("cleanDone"))
+					 transition(edgeName="t729",targetState="checkQueue",cond=whenReply("cleanDone"))
 				}	 
 				state("tableCleaned") { //this:State
 					action { //it:State
 						println("WAITERMIND | tableCleaned")
-						forward("setWaiterState", "setWaiterState(tableCleaned)" ,"tearoomstatemanager" ) 
+						forward("setWaiterState", "setWaiterState(cleaning)" ,"tearoomstatemanager" ) 
 						request("clean", "clean($TableSelectedToClean,2)" ,"waiterengine" )  
 					}
-					 transition(edgeName="t715",targetState="checkQueue",cond=whenReply("cleanDone"))
+					 transition(edgeName="t830",targetState="checkQueue",cond=whenReply("cleanDone"))
 				}	 
 				state("tableSanitized") { //this:State
 					action { //it:State
 						println("WAITERMIND | tableSanitized")
-						forward("setWaiterState", "setWaiterState(tableSanitized)" ,"tearoomstatemanager" ) 
+						forward("setWaiterState", "setWaiterState(cleaning)" ,"tearoomstatemanager" ) 
 						request("clean", "clean($TableSelectedToClean,3)" ,"waiterengine" )  
 					}
-					 transition(edgeName="t816",targetState="checkQueue",cond=whenReply("cleanDone"))
+					 transition(edgeName="t931",targetState="checkQueue",cond=whenReply("cleanDone"))
 				}	 
 				state("checkAcceptOrInform") { //this:State
 					action { //it:State
 						println("WAITERMIND | checkAcceptOrInform")
+						forward("stopMove", "stopMove(PAYLOAD)" ,"waiterengine" ) 
 						request("getTableFreeCleanRequest", "getTableFreeCleanRequest(PAYLOAD)" ,"tearoomstatemanager" )  
 						if( checkMsgContent( Term.createTerm("smartbellEnterRequest(ID)"), Term.createTerm("smartbellEnterRequest(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -174,7 +189,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 												IdClientToConvoy = payloadArg(0).toInt()
 						}
 					}
-					 transition(edgeName="t917",targetState="replyCheckAcceptOrInform",cond=whenReply("getTableFreeCleanReply"))
+					 transition(edgeName="t1032",targetState="replyCheckAcceptOrInform",cond=whenReply("getTableFreeCleanReply"))
 				}	 
 				state("replyCheckAcceptOrInform") { //this:State
 					action { //it:State
@@ -197,7 +212,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 									IdClientToConvoy = 0
 						request("getTimerForInformRequest", "getTimerForInformRequest(PAYLOAD)" ,"tearoomstatemanager" )  
 					}
-					 transition(edgeName="t1018",targetState="replyInform",cond=whenReply("getTimerForInformReply"))
+					 transition(edgeName="t1133",targetState="replyInform",cond=whenReply("getTimerForInformReply"))
 				}	 
 				state("replyInform") { //this:State
 					action { //it:State
@@ -225,12 +240,12 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						if( currentSolution.isSuccess() ) {
 										MoveX = getCurSol("X").toString().toInt()
 						            	MoveY = getCurSol("Y").toString().toInt()
-						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 						else
 						{}
 					}
-					 transition(edgeName="t1119",targetState="convoyTable",cond=whenReply("done"))
+					 transition(edgeName="t1234",targetState="convoyTable",cond=whenDispatch("done"))
 				}	 
 				state("convoyTable") { //this:State
 					action { //it:State
@@ -242,17 +257,18 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						if( currentSolution.isSuccess() ) {
 										MoveX = getCurSol("X").toString().toInt()
 						            	MoveY = getCurSol("Y").toString().toInt()
-						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						forward("startTimer", "startTimer($TableSelectedToConvoy)" ,"maxstaytime" ) 
 						}
 						else
 						{}
 					}
-					 transition(edgeName="t1220",targetState="reachHome",cond=whenReply("done"))
+					 transition(edgeName="t1335",targetState="checkQueue",cond=whenDispatch("done"))
 				}	 
 				state("checkTableForOrderIn") { //this:State
 					action { //it:State
 						println("WAITERMIND | checkTableForOrderIn")
+						forward("stopMove", "stopMove(PAYLOAD)" ,"waiterengine" ) 
 						forward("setWaiterState", "setWaiterState(reachTableOrder)" ,"tearoomstatemanager" ) 
 						if( checkMsgContent( Term.createTerm("clientReadyToOrder(ID)"), Term.createTerm("clientReadyToOrder(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -262,7 +278,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								request("getTableFromIdRequest", "getTableFromIdRequest($IdClientForOrder)" ,"tearoomstatemanager" )  
 						}
 					}
-					 transition(edgeName="t1321",targetState="replyCheckTableForOrderIn",cond=whenReply("getTableFromIdReply"))
+					 transition(edgeName="t1436",targetState="replyCheckTableForOrderIn",cond=whenReply("getTableFromIdReply"))
 				}	 
 				state("replyCheckTableForOrderIn") { //this:State
 					action { //it:State
@@ -278,17 +294,17 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								}
 								else
 								{}
-								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+								forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 					}
-					 transition(edgeName="t1422",targetState="takeOrder",cond=whenReply("done"))
+					 transition(edgeName="t1537",targetState="takeOrder",cond=whenDispatch("done"))
 				}	 
 				state("takeOrder") { //this:State
 					action { //it:State
 						println("WAITERMIND | takeOrder")
 						forward("setWaiterState", "setWaiterState(takeOrder)" ,"tearoomstatemanager" ) 
 					}
-					 transition(edgeName="t1523",targetState="sendOrderToBarman",cond=whenDispatch("clientOrder"))
+					 transition(edgeName="t1638",targetState="sendOrderToBarman",cond=whenDispatch("clientOrder"))
 				}	 
 				state("sendOrderToBarman") { //this:State
 					action { //it:State
@@ -307,11 +323,12 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 												OrderClient = ""
 						}
 					}
-					 transition( edgeName="goto",targetState="reachHome", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkQueue", cond=doswitch() )
 				}	 
 				state("reachBarman") { //this:State
 					action { //it:State
 						println("WAITERMIND | reachBarman")
+						forward("stopMove", "stopMove(PAYLOAD)" ,"waiterengine" ) 
 						if( checkMsgContent( Term.createTerm("barmanCompleteOrder(ID,ORDER)"), Term.createTerm("barmanCompleteOrder(ID,ORDER)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								println("WAITERMIND | go to barman for the order for client with ID: ${payloadArg(0)} and ORDER: ${payloadArg(1)}")
@@ -326,20 +343,19 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								}
 								else
 								{}
-								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+								forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 					}
-					 transition(edgeName="t1624",targetState="checkTableForOrderOut",cond=whenReply("done"))
+					 transition(edgeName="t1739",targetState="checkTableForOrderOut",cond=whenDispatch("done"))
 				}	 
 				state("checkTableForOrderOut") { //this:State
 					action { //it:State
 						println("WAITERMIND | checkTableForOrderOut")
 						delay(DelayTakeOrder)
-						forward("setWaiterState", "setWaiterState(getOrderFromBarman)" ,"tearoomstatemanager" ) 
 						forward("removeOrderReady", "removeOrderReady($IdClientForOrder)" ,"tearoomstatemanager" ) 
 						request("getTableFromIdRequest", "getTableFromIdRequest($IdClientForOrder)" ,"tearoomstatemanager" )  
 					}
-					 transition(edgeName="t1725",targetState="replyCheckTableForOrderOut",cond=whenReply("getTableFromIdReply"))
+					 transition(edgeName="t1840",targetState="replyCheckTableForOrderOut",cond=whenReply("getTableFromIdReply"))
 				}	 
 				state("replyCheckTableForOrderOut") { //this:State
 					action { //it:State
@@ -355,22 +371,25 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								}
 								else
 								{}
-								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+								forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
+								forward("setWaiterState", "setWaiterState(reachTableServe)" ,"tearoomstatemanager" ) 
 						}
 					}
-					 transition(edgeName="t1826",targetState="serve",cond=whenReply("done"))
+					 transition(edgeName="t1941",targetState="serve",cond=whenDispatch("done"))
 				}	 
 				state("serve") { //this:State
 					action { //it:State
 						println("WAITERMIND | serve")
+						forward("setWaiterState", "setWaiterState(serve)" ,"tearoomstatemanager" ) 
 						delay(DelayServeOrder)
 						forward("resumeTimer", "resumeTimer($TableSelectedForOrder)" ,"maxstaytime" ) 
 					}
-					 transition( edgeName="goto",targetState="reachHome", cond=doswitch() )
+					 transition( edgeName="goto",targetState="checkQueue", cond=doswitch() )
 				}	 
 				state("reachTableToKick") { //this:State
 					action { //it:State
 						println("WAITERMIND | reachTableToKick")
+						forward("stopMove", "stopMove(PAYLOAD)" ,"waiterengine" ) 
 						forward("setWaiterState", "setWaiterState(reachTableCollect)" ,"tearoomstatemanager" ) 
 						if( checkMsgContent( Term.createTerm("maxStayTimerExpired(TABLE)"), Term.createTerm("maxStayTimerExpired(TABLE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -384,14 +403,15 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								}
 								else
 								{}
-								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+								forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 					}
-					 transition(edgeName="t1927",targetState="collectPayment",cond=whenReply("done"))
+					 transition(edgeName="t2042",targetState="collectPayment",cond=whenDispatch("done"))
 				}	 
 				state("checkTableToCollect") { //this:State
 					action { //it:State
 						println("WAITERMIND | checkTableToCollect")
+						forward("stopMove", "stopMove(PAYLOAD)" ,"waiterengine" ) 
 						forward("setWaiterState", "setWaiterState(reachTableCollect)" ,"tearoomstatemanager" ) 
 						if( checkMsgContent( Term.createTerm("clientPayment(ID)"), Term.createTerm("clientPayment(ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -401,7 +421,7 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								request("getTableFromIdRequest", "getTableFromIdRequest($IdClientForCollect)" ,"tearoomstatemanager" )  
 						}
 					}
-					 transition(edgeName="t2028",targetState="replyCheckTableToCollect",cond=whenReply("getTableFromIdReply"))
+					 transition(edgeName="t2143",targetState="replyCheckTableToCollect",cond=whenReply("getTableFromIdReply"))
 				}	 
 				state("replyCheckTableToCollect") { //this:State
 					action { //it:State
@@ -417,11 +437,11 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 								}
 								else
 								{}
-								request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+								forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 								forward("stopTimer", "stopTimer($TableSelectedForCollect)" ,"maxstaytime" ) 
 						}
 					}
-					 transition(edgeName="t2129",targetState="collectPayment",cond=whenReply("done"))
+					 transition(edgeName="t2244",targetState="collectPayment",cond=whenDispatch("done"))
 				}	 
 				state("collectPayment") { //this:State
 					action { //it:State
@@ -440,12 +460,12 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						if( currentSolution.isSuccess() ) {
 											MoveX = getCurSol("X").toString().toInt()
 						                	MoveY = getCurSol("Y").toString().toInt()
-						request("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" )  
+						forward("moveTo", "moveTo($MoveX,$MoveY)" ,"waiterengine" ) 
 						}
 						else
 						{}
 					}
-					 transition(edgeName="t2230",targetState="checkQueue",cond=whenReply("done"))
+					 transition(edgeName="t2345",targetState="checkQueue",cond=whenDispatch("done"))
 				}	 
 				state("endWork") { //this:State
 					action { //it:State

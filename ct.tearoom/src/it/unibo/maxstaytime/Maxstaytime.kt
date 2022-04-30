@@ -28,13 +28,15 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 				state("wait") { //this:State
 					action { //it:State
 						println("MAXSTAYTIME | wait")
+						updateResourceRep( "{\"TABLE\":" + "\"" + "WAIT" + "\"" + "}"  
+						)
 					}
-					 transition(edgeName="t043",targetState="newTimer",cond=whenDispatch("startTimer"))
-					transition(edgeName="t044",targetState="resume",cond=whenDispatch("resumeTimer"))
-					transition(edgeName="t045",targetState="stop",cond=whenDispatch("stopTimer"))
-					transition(edgeName="t046",targetState="timerExpired",cond=whenDispatch("maxStayTimerExpired"))
-					transition(edgeName="t047",targetState="timerLeft",cond=whenRequest("maxStayTimerLeftRequest"))
-					transition(edgeName="t048",targetState="endWork",cond=whenDispatch("end"))
+					 transition(edgeName="t061",targetState="newTimer",cond=whenDispatch("startTimer"))
+					transition(edgeName="t062",targetState="resume",cond=whenDispatch("resumeTimer"))
+					transition(edgeName="t063",targetState="stop",cond=whenDispatch("stopTimer"))
+					transition(edgeName="t064",targetState="timerExpired",cond=whenDispatch("maxStayTimerExpired"))
+					transition(edgeName="t065",targetState="timerLeft",cond=whenRequest("maxStayTimerLeftRequest"))
+					transition(edgeName="t066",targetState="endWork",cond=whenDispatch("end"))
 				}	 
 				state("newTimer") { //this:State
 					action { //it:State
@@ -89,6 +91,8 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 								
 												Table = payloadArg(0).toInt()
 								forward("maxStayTimerExpired", "maxStayTimerExpired($Table)" ,"waitermind" ) 
+								updateResourceRep( "{\"TABLE\":" + "\"" + Table.toString() + "\"" + "}"  
+								)
 						}
 					}
 					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
@@ -106,7 +110,7 @@ class Maxstaytime ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name
 								}
 						}
 					}
-					 transition(edgeName="t149",targetState="forwardRemainingTime",cond=whenReply("maxStayTimerLeftReplyFromTable"))
+					 transition(edgeName="t167",targetState="forwardRemainingTime",cond=whenReply("maxStayTimerLeftReplyFromTable"))
 				}	 
 				state("forwardRemainingTime") { //this:State
 					action { //it:State

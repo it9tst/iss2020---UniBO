@@ -43,21 +43,23 @@ class Tearoomstatemanager ( name: String, scope: CoroutineScope  ) : ActorBasicF
 						}
 						else
 						{}
+						updateResourceRep( "$StateRoom"  
+						)
 						println("##############################")
 						println(StateRoom)
 						println("##############################")
 					}
-					 transition(edgeName="t083",targetState="waiterState",cond=whenDispatch("setWaiterState"))
-					transition(edgeName="t084",targetState="barmanState",cond=whenDispatch("setBarmanState"))
-					transition(edgeName="t085",targetState="tableState",cond=whenDispatch("setTableState"))
-					transition(edgeName="t086",targetState="occupyTableState",cond=whenDispatch("occupyTable"))
-					transition(edgeName="t087",targetState="orderReady",cond=whenDispatch("addOrderReady"))
-					transition(edgeName="t088",targetState="orderTaken",cond=whenDispatch("removeOrderReady"))
-					transition(edgeName="t089",targetState="endWork",cond=whenDispatch("end"))
-					transition(edgeName="t090",targetState="returnFreeCleanTable",cond=whenRequest("getTableFreeCleanRequest"))
-					transition(edgeName="t091",targetState="returnTableToClean",cond=whenRequest("getTableToCleanRequest"))
-					transition(edgeName="t092",targetState="returnTimerInform",cond=whenRequest("getTimerForInformRequest"))
-					transition(edgeName="t093",targetState="returnTableFromId",cond=whenRequest("getTableFromIdRequest"))
+					 transition(edgeName="t0101",targetState="waiterState",cond=whenDispatch("setWaiterState"))
+					transition(edgeName="t0102",targetState="barmanState",cond=whenDispatch("setBarmanState"))
+					transition(edgeName="t0103",targetState="tableState",cond=whenDispatch("setTableState"))
+					transition(edgeName="t0104",targetState="occupyTableState",cond=whenDispatch("occupyTable"))
+					transition(edgeName="t0105",targetState="orderReady",cond=whenDispatch("addOrderReady"))
+					transition(edgeName="t0106",targetState="orderTaken",cond=whenDispatch("removeOrderReady"))
+					transition(edgeName="t0107",targetState="endWork",cond=whenDispatch("end"))
+					transition(edgeName="t0108",targetState="returnFreeCleanTable",cond=whenRequest("getTableFreeCleanRequest"))
+					transition(edgeName="t0109",targetState="returnTableToClean",cond=whenRequest("getTableToCleanRequest"))
+					transition(edgeName="t0110",targetState="returnTimerInform",cond=whenRequest("getTimerForInformRequest"))
+					transition(edgeName="t0111",targetState="returnTableFromId",cond=whenRequest("getTableFromIdRequest"))
 				}	 
 				state("waiterState") { //this:State
 					action { //it:State
@@ -278,7 +280,7 @@ class Tearoomstatemanager ( name: String, scope: CoroutineScope  ) : ActorBasicF
 						println("TEAROOMSTATEMANAGER | maxStayTimeLeftTable1")
 						request("maxStayTimerLeftRequest", "maxStayTimerLeftRequest(1)" ,"maxstaytime" )  
 					}
-					 transition(edgeName="t094",targetState="maxStayTimeLeftTable2",cond=whenReply("maxStayTimerLeftReply"))
+					 transition(edgeName="t0112",targetState="maxStayTimeLeftTable2",cond=whenReply("maxStayTimerLeftReply"))
 				}	 
 				state("maxStayTimeLeftTable2") { //this:State
 					action { //it:State
@@ -291,7 +293,7 @@ class Tearoomstatemanager ( name: String, scope: CoroutineScope  ) : ActorBasicF
 						}
 						request("maxStayTimerLeftRequest", "maxStayTimerLeftRequest(2)" ,"maxstaytime" )  
 					}
-					 transition(edgeName="t195",targetState="maxStayTimeLeftCompare",cond=whenReply("maxStayTimerLeftReply"))
+					 transition(edgeName="t1113",targetState="maxStayTimeLeftCompare",cond=whenReply("maxStayTimerLeftReply"))
 				}	 
 				state("maxStayTimeLeftCompare") { //this:State
 					action { //it:State

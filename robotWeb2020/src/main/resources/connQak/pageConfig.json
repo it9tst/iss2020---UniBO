@@ -1,0 +1,2 @@
+{"page":"login", "host":"localhost", "port":"50810", "qakdest":"waitermind", "ctxqadest":"ctxtearoom",
+	"hostAddrBasicRobot":"192.168.10.100", "portBasicRobot":"50800", "qakdestBasicRobot":"basicrobot", "ctxqadestBasicRobot":"ctxbasicrobot", "stepsize":"260"}
