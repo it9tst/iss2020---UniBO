@@ -68,9 +68,9 @@ public class RobotController {
     @GetMapping("/")
     public String entry(Model viewmodel) {
     	viewmodel.addAttribute("arg", "Entry page loaded. Please use the buttons");
-    	peparePageUpdating();
-    	peparePageUpdating2();
-    	peparePageUpdating3();
+    	peparePageUpdatingStatemanager();
+    	peparePageUpdatingSmartbell();
+    	peparePageUpdatingMaxstaytime();
     	return htmlPage;
     }
     
@@ -88,11 +88,11 @@ public class RobotController {
 		//binds the value of the query string parameter name into the moveName parameter of the  method
 		String moveName, Model viewmodel) {
 			System.out.println("------------------- RobotController doMove move=" + moveName);
-			doBusinessJob(moveName, viewmodel);
+			doBusinessJobMove(moveName, viewmodel);
 		return htmlPage;
 	}
 
-	private void peparePageUpdating() {
+	private void peparePageUpdatingStatemanager() {
 		CoapClient client = new CoapClient();
 		String url =  "coap://" + configurator.getHostAddr() + ":" + configurator.getPort() + "/" + configurator.getCtxqadest() + "/tearoomstatemanager";
 		System.out.println("CoapObserver | url=" + url.toString());
@@ -109,18 +109,18 @@ public class RobotController {
 		client.observe(new CoapHandler() {
 			@Override
 			public void onLoad(CoapResponse response) {
-				System.out.println("TearoomState changed!" + response.getResponseText());
-				simpMessagingTemplate.convertAndSend(WebSocketConfig.topicForTeaManager, new ResourceRep("" + HtmlUtils.htmlEscape(response.getResponseText())));
+				System.out.println("Tearoomstatemanager changed!" + response.getResponseText());
+				simpMessagingTemplate.convertAndSend(WebSocketConfig.topicForTearoomstatemanager, new ResourceRep("" + HtmlUtils.htmlEscape(response.getResponseText())));
 			}
 			
 			@Override
 			public void onError() {
-				System.out.println("TearoomState error!");
+				System.out.println("Tearoomstatemanager error!");
 			}
 		});
 	}
 	
-	private void peparePageUpdating2() {
+	private void peparePageUpdatingSmartbell() {
 		CoapClient client = new CoapClient();
 		String url =  "coap://" + configurator.getHostAddr() + ":" + configurator.getPort() + "/" + configurator.getCtxqadest() + "/smartbell";
 		System.out.println("CoapObserver | url=" + url.toString());
@@ -148,7 +148,7 @@ public class RobotController {
 		});
 	}
 	
-	private void peparePageUpdating3() {
+	private void peparePageUpdatingMaxstaytime() {
 		CoapClient client = new CoapClient();
 		String url =  "coap://" + configurator.getHostAddr() + ":" + configurator.getPort() + "/" + configurator.getCtxqadest() + "/maxstaytime";
 		System.out.println("CoapObserver | url=" + url.toString());
@@ -179,7 +179,7 @@ public class RobotController {
 	/*
 	 * INTERACTION WITH THE BUSINESS LOGIC			
 	 */
-	protected void doBusinessJob(String message, Model viewmodel) {
+	protected void doBusinessJobNewClient(String message, Model viewmodel) {
 		try {
 			
 			if (message.equals("enterRequestClient")) {
@@ -196,12 +196,12 @@ public class RobotController {
 				viewmodel.addAttribute("arg", "Current Robot State:  "+rep.getContent());
 			}
 		} catch (Exception e) {
-			System.out.println("------------------- RobotController doBusinessJob ERROR=" + e.getMessage());
+			System.out.println("------------------- RobotController doBusinessJobNewClient ERROR=" + e.getMessage());
 			//e.printStackTrace();
 		}		
 	}
 	
-	protected void doBusinessJob2(int id, String message, Model viewmodel) {
+	protected void doBusinessJobStepClient(int id, String message, Model viewmodel) {
 		try {
 			
 			if (message.equals("clientReadyToOrder")) {
@@ -224,7 +224,7 @@ public class RobotController {
 				viewmodel.addAttribute("arg", "Current Robot State:  "+rep.getContent());
 			}
 		} catch (Exception e) {
-			System.out.println("------------------- RobotController doBusinessJob2 ERROR=" + e.getMessage());
+			System.out.println("------------------- RobotController doBusinessJobStepClient ERROR=" + e.getMessage());
 			//e.printStackTrace();
 		}		
 	}
@@ -265,17 +265,17 @@ public class RobotController {
 	 * ----------------------------------------------------------
 	 */
 	
-	@MessageMapping("/new")
+	@MessageMapping("/newclient")
  	@SendTo("/topic/display")
  	public ResourceRep client1(RequestMessageOnSock message) throws Exception {
-		doBusinessJob(message.getName(), null);
+		doBusinessJobNewClient(message.getName(), null);
 		return getWebPageRep();
  	}
 	
-	@MessageMapping("/test")
+	@MessageMapping("/stepclient")
  	@SendTo("/topic/display")
  	public ResourceRep client2(RequestMessageOnSock message) throws Exception {
-		doBusinessJob2(message.getID(), message.getName(), null);
+		doBusinessJobStepClient(message.getID(), message.getName(), null);
 		return getWebPageRep();
  	}
 	

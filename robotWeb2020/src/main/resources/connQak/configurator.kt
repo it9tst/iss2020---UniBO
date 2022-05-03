@@ -61,7 +61,7 @@ object configurator {
 			qakdest         = "waitermind"
 			ctxqadest		= "ctxtearoom"
 			
-			hostAddrBasicRobot   	= "192.168.10.100"
+			hostAddrBasicRobot   	= "192.168.10.160"
 			portBasicRobot    		= "50800"
 			qakdestBasicRobot	    = "basicrobot"
 			ctxqadestBasicRobot 	= "ctxbasicrobot"

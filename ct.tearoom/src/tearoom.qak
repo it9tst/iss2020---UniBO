@@ -76,7 +76,7 @@ Dispatch end : end (PAYLOAD)
 
 
 Context ctxtearoom ip [host="localhost" port=50810]
-Context ctxbasicrobot ip [host="192.168.10.100" port=50800]
+Context ctxbasicrobot ip [host="192.168.10.160" port=50800]
 
 ExternalQActor basicrobot context ctxbasicrobot
 

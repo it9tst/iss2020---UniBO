@@ -44,8 +44,8 @@ function connect() {
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         setConnected(true);
-        stompClient.subscribe('/topic/display-manager', function (msg) {
-            showMsg(JSON.parse(msg.body).content);
+        stompClient.subscribe('/topic/display-tearoomstatemanager', function (msg) {
+            updateStatemanager(JSON.parse(msg.body).content);
         });
         stompClient.subscribe('/topic/display-smartbell', function (msg) {
             updateClient(JSON.parse(msg.body).content);
@@ -64,16 +64,16 @@ function disconnect() {
     console.log("Disconnected");
 }
 
-function sendUpdateRequest(){
-	console.log(" sendUpdateRequest "  );
-    stompClient.send("/app/update", {}, JSON.stringify({'name': 'update' }));
+function sendUpdateRequest() {
+	console.log("sendUpdateRequest");
+    stompClient.send("/app/update", {}, JSON.stringify({'name': 'update'}));
 }
 
-function replaceAll(str, cerca, sostituisci) {
-    return str.split(cerca).join(sostituisci);
+function replaceAll(str, f, s) {
+    return str.split(f).join(s);
 }
 
-function showMsg(message) {
+function updateStatemanager(message) {
 	console.log(message);
     
     var str = replaceAll(message, "&quot;", '"');
@@ -107,6 +107,48 @@ function showMsg(message) {
     } else {
         document.getElementById("divTable2").classList.remove("transition");
     }
+
+    switch(obj.TABLE1) {
+        case "tableDirty":
+            document.getElementById("iconTable1").style.background = "linear-gradient(0deg, #5ddab4 0%, #ff7976 0%)";
+            break;
+
+        case "tableCleared":
+            document.getElementById("iconTable1").style.background = "linear-gradient(0deg, #5ddab4 30%, #ff7976 30%)";
+            break;
+
+        case "tableCleaned":
+            document.getElementById("iconTable1").style.background = "linear-gradient(0deg, #5ddab4 60%, #ff7976 60%)";
+            break;
+
+        case "tableSanitized":
+            document.getElementById("iconTable1").style.background = "linear-gradient(0deg, #5ddab4 100%, #ff7976 100%)";
+            break;
+
+        default:
+            document.getElementById("iconTable1").style.background = "linear-gradient(0deg, #5ddab4 0%, #ff7976 0%)";
+    };
+
+    switch(obj.TABLE2) {
+        case "tableDirty":
+            document.getElementById("iconTable2").style.background = "linear-gradient(0deg, #5ddab4 0%, #ff7976 0%)";
+            break;
+
+        case "tableCleared":
+            document.getElementById("iconTable2").style.background = "linear-gradient(0deg, #5ddab4 30%, #ff7976 30%)";
+            break;
+
+        case "tableCleaned":
+            document.getElementById("iconTable2").style.background = "linear-gradient(0deg, #5ddab4 60%, #ff7976 60%)";
+            break;
+
+        case "tableSanitized":
+            document.getElementById("iconTable2").style.background = "linear-gradient(0deg, #5ddab4 100%, #ff7976 100%)";
+            break;
+
+        default:
+            document.getElementById("iconTable2").style.background = "linear-gradient(0deg, #5ddab4 0%, #ff7976 0%)";
+    };
 
     idTable1 = obj.TABLE1.match(/\d/g);
     idTable2 = obj.TABLE2.match(/\d/g);
@@ -144,7 +186,7 @@ function kickClient(message) {
     console.log("DOPO kickResponse: " + kickResponse);
 }
 
-function sendTheMove(move){
+function sendTheMove(move) {
     console.log("sendTheMove " + move);
     stompClient.send("/app/move", {}, JSON.stringify({'name': move }));
 }
@@ -159,9 +201,9 @@ $( "#x" ).click(function() { sendTheMove("x") });
 $( "#z" ).click(function() { sendTheMove("z") });
 
 
-function newClient(){
+function newClient() {
     console.log("new client");
-    stompClient.send("/app/new", {}, JSON.stringify({'name': 'enterRequestClient'}));
+    stompClient.send("/app/newclient", {}, JSON.stringify({'name': 'enterRequestClient'}));
 }
 
 function updateClient(message) {
@@ -198,9 +240,9 @@ function updateClient(message) {
     }
 }
 
-function client1(id){
+function client1(id) {
     console.log("client1");
-    stompClient.send("/app/test", {}, JSON.stringify({'id': id, 'name': 'clientReadyToOrder'}));
+    stompClient.send("/app/stepclient", {}, JSON.stringify({'id': id, 'name': 'clientReadyToOrder'}));
 
     var clientState = "Would like to order";
     var clientButtonText = "Order";
@@ -218,9 +260,9 @@ function client1(id){
     }
 }
 
-function client2(id){
+function client2(id) {
     console.log("client2");
-    stompClient.send("/app/test", {}, JSON.stringify({'id': id, 'name': 'clientOrder'}));
+    stompClient.send("/app/stepclient", {}, JSON.stringify({'id': id, 'name': 'clientOrder'}));
 
     var clientState = "Would like to pay";
     var clientButtonText = "Pay";
@@ -238,11 +280,11 @@ function client2(id){
     }
 }
 
-function client3(id, isKick){
+function client3(id, isKick) {
     console.log("client3");
 
     if (!isKick){
-        stompClient.send("/app/test", {}, JSON.stringify({'id': id, 'name': 'clientPayment'}));
+        stompClient.send("/app/stepclient", {}, JSON.stringify({'id': id, 'name': 'clientPayment'}));
     }
 
     var clientState = "Exit";
@@ -262,53 +304,6 @@ function client3(id, isKick){
     }
 }
 
-function removeClient(item){
+function removeClient(item) {
     item.innerHTML = "";
 }
-
-
-
-/*
-$(function () {
-     $("form").on('submit', function (e) {
-         e.preventDefault();
-    });
-    $( "#connect" ).click(function() { connect(); });
-    $( "#disconnect" ).click(function() { disconnect(); });
-    $( "#send" ).click(function() { sendName(); });
-
-//USED BY SOCKET.IO-BASED GUI  
-
-    $( "#h" ).click(function() {  sendTheMove("h") });
-    $( "#w" ).click(function() {  sendTheMove("w") });
-    $( "#s" ).click(function() {  sendTheMove("s") });
-    $( "#r" ).click(function() {  sendTheMove("r") });
-    $( "#l" ).click(function() {  sendTheMove("l") });
-    $( "#x" ).click(function() {  sendTheMove("x") });
-    $( "#z" ).click(function() {  sendTheMove("z") });
-    $( "#p" ).click(function() {  sendTheMove("p") });
-
-    //$( "#rr" ).click(function() { console.log("submit rr"); redirectPost("r") });
-    //$( "#rrjo" ).click(function() { console.log("submit rr"); jqueryPost("r") });
-
-//USED BY POST-BASED GUI   
-    
-    $( "#ww" ).click(function() { sendRequestData( "w") });
-    $( "#ss" ).click(function() { sendRequestData( "s") });
-    $( "#rr" ).click(function() { sendRequestData( "r") });
-    $( "#ll" ).click(function() { sendRequestData( "l") });
-    $( "#zz" ).click(function() { sendRequestData( "z") });
-    $( "#xx" ).click(function() { sendRequestData( "x") });
-    $( "#pp" ).click(function() { sendRequestData( "p") });
-    $( "#hh" ).click(function() { sendRequestData( "h") });
-
-//USED BY POST-BASED BOUNDARY  
-    $( "#start" ).click(function() { sendRequestData( "w") });
-    $( "#stop" ).click(function()  { sendRequestData( "h") });
-
-	$( "#update" ).click(function() { sendUpdateRequest(  ) });
-});
-
-//alert("app.js")
-
-*/

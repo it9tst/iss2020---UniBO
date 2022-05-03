@@ -10,12 +10,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-	public static final String topicForTeaManager      = "/topic/display-manager";
-	public static final String topicForSmartbell       = "/topic/display-smartbell";
-	public static final String topicForMaxstaytime       = "/topic/display-maxstaytime";
-	public static final String brokerDestinationPrefix = "/topic";
-	public static final String applDestinationPrefix   = "/app";
-	public static final String stompEndpointPath       = "/it-unibo-iss";
+	public static final String topicForTearoomstatemanager   = "/topic/display-tearoomstatemanager";
+	public static final String topicForSmartbell             = "/topic/display-smartbell";
+	public static final String topicForMaxstaytime           = "/topic/display-maxstaytime";
+	public static final String brokerDestinationPrefix       = "/topic";
+	public static final String applDestinationPrefix         = "/app";
+	public static final String stompEndpointPath             = "/it-unibo-iss";
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
