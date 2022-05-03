@@ -30,6 +30,7 @@ export default canvas => {
     const {sceneSubjects, controls} = createSceneSubjects(scene, sceneConstants, camera)
 
     const datGui = new dat.GUI()
+    datGui.close()
     /*
     	Open a console on the GUI (by AN)
     */
