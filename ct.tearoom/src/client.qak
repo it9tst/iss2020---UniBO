@@ -1,0 +1,126 @@
+System -msglog client
+
+// MESSAGES CLIENT
+// Message between client - smartbell
+Request enterRequestClient				: enterRequestClient (TEMP)
+Reply   enterReplyFromSmartbell			: enterReplyFromSmartbell (ID)
+Reply   enterReplyFromSmartbellNeg		: enterReplyFromSmartbellNeg (ID)
+Reply 	enterReplyFromSmartbellWithTime : enterReplyFromSmartbellWithTime (ID, MAXWAITINGTIME)
+
+// Message between client - waiter
+Dispatch clientReadyToOrder : clientReadyToOrder (ID)
+Dispatch clientOrder 		: clientOrder (ID, ORD)
+Dispatch clientPayment 		: clientPayment (ID)
+
+
+// CONTEXT
+Context ctxclient ip [host="127.0.0.1" port=50820] 
+Context ctxtearoom ip [host="localhost" port=50810]
+
+ExternalQActor waitermind context ctxtearoom
+ExternalQActor smartbell context ctxtearoom
+
+
+QActor client context ctxclient {
+	[#
+		var Client_ID = 0
+		var Client_Temp = 36.0
+		var Client_MaxWaitingTime = 8000L
+		var Client_Table = 1
+		var Client_Ord: String = ""
+		val Menu : Array<String> = arrayOf("the", "acqua", "brioches", "cioccolata")
+	#]
+
+	State s0 initial {
+		println("CLIENT | Start")
+	}
+	Goto ringBell
+	
+	State ringBell {
+		println("CLIENT | Rings the doorbell")
+		
+		[#
+			Client_Temp = Random.nextDouble(35.0, 39.0)
+		#]
+		request smartbell -m enterRequestClient : enterRequestClient ($Client_Temp)
+	}
+	Transition t0 	whenReply enterReplyFromSmartbell -> enter
+					whenReply enterReplyFromSmartbellNeg -> goAway
+					whenReply enterReplyFromSmartbellWithTime -> enterWithTime
+	
+	State enterWithTime {
+		// Client wait
+		onMsg(enterReplyFromSmartbellWithTime : enterReplyFromSmartbellWithTime (ID, MAXWAITINGTIME)){
+			if [# Client_MaxWaitingTime < payloadArg(1).toInt() #] {
+				println("CLIENT | ID: ${payloadArg(0)} | Wait with ${payloadArg(1)} milliseconds")
+			} else {
+				println("CLIENT | ID: ${payloadArg(0)} | Not Wait")
+			}
+		}
+	}
+	Goto endWork
+	
+	State goAway {
+		// Client go away because temp is KO
+		onMsg(enterReplyFromSmartbellNeg : enterReplyFromSmartbellNeg (ID)){
+			println("CLIENT | ID: ${payloadArg(0)} | Go away because temperature is KO: $Client_Temp")
+		}
+	}
+	Goto endWork
+	
+	State enter {
+		// Client enter
+		onMsg(enterReplyFromSmartbell : enterReplyFromSmartbell (ID)){
+			println("CLIENT | ID: ${payloadArg(0)} | Enter")
+			[# 
+				Client_ID = payloadArg(0).toInt()
+			#]
+		}
+		
+		println("CLIENT | Premi invio per chiedere di ordinare")
+		[# readLine() #]
+	}
+	Goto readyToOrder
+
+	State readyToOrder {
+		// Client would like to order
+		println("CLIENT | ID: $Client_ID | Would like to order")
+		forward waitermind -m clientReadyToOrder : clientReadyToOrder ($Client_ID)
+		
+		println("CLIENT | Premi invio per ordinare e mangiare")
+		[# readLine() #]
+	}
+	Goto order
+	
+	State order {
+		// Client order
+		[#
+			Client_Ord = Menu[Random.nextInt(0, 3)]
+		#]
+		println("CLIENT | ID: $Client_ID | Would like to order $Client_Ord")
+		forward waitermind -m clientOrder : clientOrder ($Client_ID, $Client_Ord)
+		
+		println("CLIENT | Premi invio per pagare")
+		[# readLine() #]
+	}
+	Goto pay
+	
+	State pay {
+		// Client would like to pay
+		println("CLIENT | ID: $Client_ID | Would like to pay")
+		forward waitermind -m clientPayment : clientPayment ($Client_ID)
+	}
+	Goto exit
+	
+	State exit {
+		// Client exit
+		println("CLIENT || ID: $Client_ID | Exit")
+	}
+	Goto endWork
+
+	State endWork {
+		// Client end work
+		println("CLIENT | ID: $Client_ID | End work")
+		terminate 0
+	}
+}

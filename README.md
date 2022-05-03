@@ -1,4 +1,4 @@
-# iss2020ProjectBO | SPRINT 2 - Analisi dei Problemi
+# iss2020ProjectBO | SPRINT 4 - Analisi dei Problemi
 
 ### Final Project for exam of Software Systems Engineering M - Ing. Informatica Magistrale - UniBO 2020
 
@@ -6,7 +6,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 ### Documentation
 
-[``Sprint 2 - Analisi dei Problemi``](https://htmlpreview.github.io/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_probl/doc/sprint2.html)
+[``Sprint 4 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_probl/doc/sprint4.html)
 
 ### Requirements
 
@@ -24,10 +24,6 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 4. In test folder, copy [``test_01.kt``](ct.tearoom/test/test_01.kt)
 5. Open terminal in workspace folder and run command ``gradle -b build_ctxtearoom.gradle eclipse``
 6. Select Configure Kotlin -> Add Kotlin nature
-7. In ``tearoom.qak``, based on the test to be performed, uncomment the corresponding ``[# readLine() #]``
-8. For ``it.unibo.qak20.basicrobot`` run ``MainCtxbasicrobot.kt``
-9. Run ``MainCtxtearoom.kt``
-10. Run ``test_01.kt``
 
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
