@@ -20,8 +20,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.HtmlUtils;
 
 import connQak.configurator;
@@ -67,30 +65,38 @@ public class RobotController {
 
     @GetMapping("/")
     public String entry(Model viewmodel) {
-    	viewmodel.addAttribute("arg", "Entry page loaded. Please use the buttons");
     	peparePageUpdatingStatemanager();
     	peparePageUpdatingSmartbell();
     	peparePageUpdatingMaxstaytime();
     	return htmlPage;
-    }
-    
-    @GetMapping("/applmodel")
-    @ResponseBody
-    public String getApplicationModel(Model viewmodel) {
-    	ResourceRep rep = getWebPageRep();
-    	viewmodel.addAttribute("state",rep.getContent());
-    	return rep.getContent();
-    }     
+    }  
 
-	@PostMapping(path = "/move") 
-	public String doMove (
-		@RequestParam(name = "move", required = false, defaultValue = "h")
-		//binds the value of the query string parameter name into the moveName parameter of the  method
+	@PostMapping(path = "/index") 
+	public String postIndex (
 		String moveName, Model viewmodel) {
-			System.out.println("------------------- RobotController doMove move=" + moveName);
-			doBusinessJobMove(moveName, viewmodel);
-		return htmlPage;
+			viewmodel.addAttribute("ip_virtual_robot", configurator.getHostAddrVirtualRobot());
+			viewmodel.addAttribute("ip_basic_robot", configurator.getHostAddrBasicRobot());
+		return "index";
 	}
+	
+	@GetMapping("/index")
+    public String getIndex(Model viewmodel) {
+		viewmodel.addAttribute("ip_virtual_robot", configurator.getHostAddrVirtualRobot());
+		viewmodel.addAttribute("ip_basic_robot", configurator.getHostAddrBasicRobot());
+    	return "index";
+    }
+	
+	@GetMapping("/virtual_robot")
+    public String getVirtual_robot(Model viewmodel) {
+		viewmodel.addAttribute("ip_virtual_robot", configurator.getHostAddrVirtualRobot());
+    	return "virtual_robot";
+    }
+	
+	@GetMapping("/physical_robot")
+    public String getPhysical_robot(Model viewmodel) {
+		viewmodel.addAttribute("ip_basic_robot", configurator.getHostAddrBasicRobot());
+    	return "physical_robot";
+    }
 
 	private void peparePageUpdatingStatemanager() {
 		CoapClient client = new CoapClient();

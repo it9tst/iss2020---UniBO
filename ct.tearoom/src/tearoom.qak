@@ -594,6 +594,15 @@ QActor waiterengine context ctxtearoom {
 		val TableSanitizedTime = 5000L
 
 		var CmdToMove = ""
+		
+		try {
+			val configfile = File("waiterConfig.json")
+			val config = configfile.readText()
+			val jsonObject = JSONObject(config)
+			StepTime = jsonObject.getLong("stepsize")
+		} catch(e:Exception) {
+			StepTime = 260L
+		}
 	#]
 		
 	State s0 initial {
