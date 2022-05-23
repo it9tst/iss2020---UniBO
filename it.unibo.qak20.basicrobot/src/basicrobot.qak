@@ -15,7 +15,7 @@ mqttBroker "localhost" : 1883 eventTopic "unibo/boundarywalker"
 
 Dispatch cmd       	: cmd(MOVE)    
 Dispatch end       	: end(ARG)  
- 
+
 Request step       : step( TIME )	
 Reply   stepdone   : stepdone(V)  
 Reply   stepfail   : stepfail(DURATION, CAUSE)
@@ -31,7 +31,7 @@ Context ctxbasicrobot ip [host="localhost" port=50800]
 
 CodedQActor datacleaner    context ctxbasicrobot className "rx.dataCleaner"
 CodedQActor distancefilter context ctxbasicrobot className "rx.distanceFilter"
- 
+
 QActor basicrobot context ctxbasicrobot{
 [#
   var StepTime      = 0L

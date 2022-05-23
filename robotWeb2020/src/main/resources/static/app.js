@@ -307,3 +307,57 @@ function client3(id, isKick) {
 function removeClient(item) {
     item.innerHTML = "";
 }
+
+/*
+function saveTable() {
+    var table = document.getElementById("clientStateTable");
+    var data = "";
+
+    for(var i = 1; i < table.rows.length; i++) {
+        for(var j = 0; j < table.rows[0].cells.length-1; j++) {
+            data += table.rows[i].cells[j].innerHTML + ",";
+        }
+    }
+
+    setCookie("data", data, 60);
+}
+
+function setCookie(cname, cvalue, exdays) {
+  var d = new Date();
+  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+  var expires = "expires=" + d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function LoadTable() {
+    var table = document.getElementById("clientStateTable");
+    var rowLength = table.rows.length;
+    var endOfCol = table.rows[0].cells.length;
+    var data = getCookie("data");
+    console.log("The table says:" + data);
+    var array = data.split(',');
+    var count = 0;
+    for(var i = 1; i < rowLength; i++) {
+        for(var j = 0; j < endOfCol-1; j++) {       
+            table.rows[i].cells[j].innerHTML = array[count];
+            count++;
+        }
+    }
+}
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+*/
