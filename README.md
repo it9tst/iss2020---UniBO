@@ -1,4 +1,4 @@
-# iss2020ProjectBO | SPRINT 4 - Analisi dei Problemi
+# iss2020ProjectBO | Final Project
 
 ### Final Project for exam of Software Systems Engineering M - Ing. Informatica Magistrale - UniBO 2020
 
@@ -6,6 +6,14 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 ### Documentation
 
+[``Sprint 0``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/doc/sprint0.html)
+[``Sprint 1 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html)
+[``Sprint 1 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html)
+[``Sprint 2 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_req/doc/sprint2.html)
+[``Sprint 2 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_probl/doc/sprint2.html)
+[``Sprint 3 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_req/doc/sprint3.html)
+[``Sprint 3 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_probl/doc/sprint3.html)
+[``Sprint 4 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_req/doc/sprint4.html)
 [``Sprint 4 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_probl/doc/sprint4.html)
 
 ### Requirements
@@ -16,17 +24,13 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 - Gradle 6.2.2
 - Java 1.8.0
 
-### Use
+### Use (Virtual Robot)
 
-1. In an empty workspace, create a new project of type Java Project (e.g. ct.tearoom)
-2. In workspace folder, copy [``unibolibs``](unibolibs) directory
-3. In src folder, copy [``client.qak``](ct.tearoom/src/client.qak) and [``tearoom.qak``](ct.tearoom/src/tearoom.qak)
-4. In test folder, copy [``test_01.kt``](ct.tearoom/test/test_01.kt)
-5. In ct.tearoom folder, copy [``storage.pl``](ct.tearoom/storage.pl), [``teaRoomExplored.bin``](ct.tearoom/teaRoomExplored.bin) and [``teaRoomExplored.txt``](ct.tearoom/teaRoomExplored.txt)
-6. Open terminal in workspace folder and run command ``gradle -b build_ctxtearoom.gradle eclipse``
-7. Select Configure Kotlin -> Add Kotlin nature
-8. For ``it.unibo.qak20.basicrobot`` run ``MainCtxbasicrobot.kt``
-9. Run ``test_01.kt``
+1. ...
+
+### Use (Physical Robot)
+
+1. ...
 
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
