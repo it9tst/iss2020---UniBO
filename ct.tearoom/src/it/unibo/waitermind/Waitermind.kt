@@ -244,6 +244,8 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						}
 						else
 						{}
+						updateResourceRep( "reachDoor"  
+						)
 					}
 					 transition(edgeName="t1234",targetState="convoyTable",cond=whenDispatch("done"))
 				}	 
@@ -262,6 +264,8 @@ class Waitermind ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name,
 						}
 						else
 						{}
+						updateResourceRep( "convoyTable"  
+						)
 					}
 					 transition(edgeName="t1335",targetState="checkQueue",cond=whenDispatch("done"))
 				}	 

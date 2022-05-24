@@ -126,11 +126,20 @@ class Test01 {
 			delay(3000)
 			// Il primo cliente chiede di entrare
 			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
-			delay(11600)
+			delay(9000)
+			
+			checkState("convoyTable", 1)
+			println("TEST | convoyTable checked")
+			
+			delay(2600)
 			// Il secondo cliente chiede di entrare
 			MsgUtil.sendMsg(MsgUtil.buildRequest("smartbell","enterRequestClient","enterRequestClient(36.5)","smartbell"),smartbell!!)
+			
+			delay(3000)
+			checkState("reachDoor", 1)
+			println("TEST | reachDoor checked")
 
-			delay(25000)
+			delay(20000)
 			MsgUtil.sendMsg("end","end","end",maxstaytime!!)
 			MsgUtil.sendMsg("end","end","end",maxstaytimetable1!!)
 			MsgUtil.sendMsg("end","end","end",maxstaytimetable2!!)

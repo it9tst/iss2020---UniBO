@@ -25,6 +25,8 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 5. In ct.tearoom folder, copy [``storage.pl``](ct.tearoom/storage.pl), [``teaRoomExplored.bin``](ct.tearoom/teaRoomExplored.bin) and [``teaRoomExplored.txt``](ct.tearoom/teaRoomExplored.txt)
 6. Open terminal in workspace folder and run command ``gradle -b build_ctxtearoom.gradle eclipse``
 7. Select Configure Kotlin -> Add Kotlin nature
+8. For ``it.unibo.qak20.basicrobot`` run ``MainCtxbasicrobot.kt``
+9. Run ``test_01.kt``
 
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
