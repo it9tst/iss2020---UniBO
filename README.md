@@ -94,8 +94,6 @@ Linux, Windows and MacOS environments should both work.
 
 ![Robot](/demo/robot.jpg)
 
-![Logical Architecture](/doc/assets/logico.png)
-
 ### Authors
 [Vittorio Corsale](https://github.com/VittorioCorsale-1)
 [Gabriele Tornatore](https://github.com/it9tst)
