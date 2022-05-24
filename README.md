@@ -92,8 +92,8 @@ Linux, Windows and MacOS environments should both work.
 
 [``Video Demo``](/demo/Demo.mp4)
 
-<img src="demo/robot1.jpg" alt="robot1" style="zoom:50%;" />
-<img src="demo/robot2.jpg" alt="robot2" style="zoom:50%;" />
+<img src="demo/robot1.jpg" alt="robot1" style="zoom:20%;" />
+<img src="demo/robot2.jpg" alt="robot2" style="zoom:20%;" />
 
 ![Logical Architecture](/doc/assets/logico.png)
 
