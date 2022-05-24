@@ -76,7 +76,7 @@ Dispatch end : end (PAYLOAD)
 
 
 Context ctxtearoom ip [host="localhost" port=50810]
-Context ctxbasicrobot ip [host="192.168.10.160" port=50800]
+Context ctxbasicrobot ip [host="192.168.10.100" port=50800]
 
 ExternalQActor basicrobot context ctxbasicrobot
 
@@ -312,7 +312,10 @@ QActor waitermind context ctxtearoom {
             	MoveY = getCurSol("Y").toString().toInt()
             #]
          	forward waiterengine -m moveTo : moveTo ($MoveX, $MoveY)	
-         }
+        }
+        // TEST01
+		updateResource [# "reachDoor" #]
+		// TEST01
 	}
 	Transition t12	whenMsg done -> convoyTable
 	
@@ -334,6 +337,9 @@ QActor waitermind context ctxtearoom {
          	forward waiterengine -m moveTo : moveTo ($MoveX, $MoveY)
          	forward maxstaytime -m startTimer : startTimer ($TableSelectedToConvoy)	
         }
+        // TEST01
+		updateResource [# "convoyTable" #]
+		// TEST01
 	}
 	Transition t13	whenMsg done -> checkQueue
 
