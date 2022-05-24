@@ -72,6 +72,7 @@ dependencies {
     implementation name: '2p301'
     implementation name: 'unibonoawtsupports'
     implementation name: 'it.unibo.qakactor-2.4'
+    implementation name: 'it.unibo.planner20-1.0'
     //compile name: 'it.unibo.robotPojo-1.0'
 	//compile name: 'springfox-swagger2-3.0.0-20190803.175454-30.jar'	
 	

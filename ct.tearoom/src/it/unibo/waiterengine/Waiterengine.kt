@@ -7,6 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.io.File
+import org.json.JSONObject
 	
 class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( name, scope ){
 
@@ -32,6 +34,15 @@ class Waiterengine ( name: String, scope: CoroutineScope  ) : ActorBasicFsm( nam
 				val TableSanitizedTime = 5000L
 		
 				var CmdToMove = ""
+				
+				try {
+					val configfile = File("waiterConfig.json")
+					val config = configfile.readText()
+					val jsonObject = JSONObject(config)
+					StepTime = jsonObject.getLong("stepsize")
+				} catch(e:Exception) {
+					StepTime = 260L
+				}
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State

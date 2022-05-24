@@ -29,6 +29,9 @@ object configurator {
 	@JvmStatic var ctxqadestBasicRobot	= ""
 	@JvmStatic var stepsize				= ""
 	
+	// Virtualrobot application
+	@JvmStatic var hostAddrVirtualRobot	= ""
+	
 	@JvmStatic	//to be used by Java
 	fun configure(){
 		try {
@@ -36,21 +39,23 @@ object configurator {
 			val config     =   configfile.readText()	//charset: Charset = Charsets.UTF_8
 			//println( "		--- configurator | config=$config" )
 			val jsonObject	=  JSONObject(config)			
-			pageTemplate 		=  jsonObject.getString("page")
+			pageTemplate 		 =  jsonObject.getString("page")
 			
-			hostAddr    		=  jsonObject.getString("host")
-			port    			=  jsonObject.getString("port")
-			qakdest         	=  jsonObject.getString("qakdest")
-			ctxqadest			=  jsonObject.getString("ctxqadest")
+			hostAddr    		 =  jsonObject.getString("host")
+			port    			 =  jsonObject.getString("port")
+			qakdest         	 =  jsonObject.getString("qakdest")
+			ctxqadest			 =  jsonObject.getString("ctxqadest")
 			
-			hostAddrBasicRobot	=  jsonObject.getString("hostAddrBasicRobot")
-			portBasicRobot		=  jsonObject.getString("portBasicRobot")
-			qakdestBasicRobot	=  jsonObject.getString("qakdestBasicRobot")
-			ctxqadestBasicRobot	=  jsonObject.getString("ctxqadestBasicRobot")
-			stepsize			=  jsonObject.getString("stepsize")
+			hostAddrBasicRobot	 =  jsonObject.getString("hostAddrBasicRobot")
+			portBasicRobot		 =  jsonObject.getString("portBasicRobot")
+			qakdestBasicRobot	 =  jsonObject.getString("qakdestBasicRobot")
+			ctxqadestBasicRobot	 =  jsonObject.getString("ctxqadestBasicRobot")
+			stepsize			 =  jsonObject.getString("stepsize")
+			
+			hostAddrVirtualRobot =  jsonObject.getString("hostAddrVirtualRobot")
 			
 			System.out.println("System IP Address : " + (InetAddress.getLocalHost().getHostAddress()).trim());
-			System.out.println("--- configurator | configfile path=${configfile.getPath()} pageTemplate=$pageTemplate hostAddr=$hostAddr port=$port qakdest=$qakdest ctxqadest=$ctxqadest hostAddrBasicRobot=$hostAddrBasicRobot portBasicRobot=$portBasicRobot qakdestBasicRobot=$qakdestBasicRobot ctxqadestBasicRobot=$ctxqadestBasicRobot stepsize=$stepsize")
+			System.out.println("--- configurator | configfile path=${configfile.getPath()} pageTemplate=$pageTemplate hostAddr=$hostAddr port=$port qakdest=$qakdest ctxqadest=$ctxqadest hostAddrBasicRobot=$hostAddrBasicRobot portBasicRobot=$portBasicRobot qakdestBasicRobot=$qakdestBasicRobot ctxqadestBasicRobot=$ctxqadestBasicRobot stepsize=$stepsize hostAddrVirtualRobot=$hostAddrVirtualRobot")
 		
 		} catch(e:Exception) {
 			System.out.println("&&& SORRY pageConfig.json NOT FOUND")
@@ -67,7 +72,9 @@ object configurator {
 			ctxqadestBasicRobot 	= "ctxbasicrobot"
 			stepsize				= "260"
 			
-			System.out.println("--- configurator | pageTemplate=$pageTemplate hostAddr=$hostAddr port=$port qakdest=$qakdest ctxqadest=$ctxqadest hostAddrBasicRobot=$hostAddrBasicRobot portBasicRobot=$portBasicRobot qakdestBasicRobot=$qakdestBasicRobot ctxqadestBasicRobot=$ctxqadestBasicRobot stepsize=$stepsize")
+			hostAddrVirtualRobot   	= "localhost"
+			
+			System.out.println("--- configurator | pageTemplate=$pageTemplate hostAddr=$hostAddr port=$port qakdest=$qakdest ctxqadest=$ctxqadest hostAddrBasicRobot=$hostAddrBasicRobot portBasicRobot=$portBasicRobot qakdestBasicRobot=$qakdestBasicRobot ctxqadestBasicRobot=$ctxqadestBasicRobot stepsize=$stepsize hostAddrVirtualRobot=$hostAddrVirtualRobot")
 		}
 	}//configure
 }
