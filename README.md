@@ -23,6 +23,7 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 - Dropins files that constitute the support to the qak meta-model: [``it.unibo.Qactork.ide_1.2.4.jar``](dropins/it.unibo.Qactork.ide_1.2.4.jar), [``it.unibo.Qactork.ui_1.2.4.jar``](dropins/it.unibo.Qactork.ui_1.2.4.jar), [``it.unibo.Qactork_1.2.4.jar``](dropins/it.unibo.Qactork_1.2.4.jar)
 - Gradle 6.2.2
 - Java 1.8.0
+
 Linux, Windows and MacOS environments should both work.
 
 ### Use (Virtual Robot)
