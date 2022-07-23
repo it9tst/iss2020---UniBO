@@ -6,15 +6,15 @@ Software Lab for Course 72939 - Antonio Natali - DISI - University of Bologna: h
 
 ### Documentation
 
-[``Sprint 0``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/doc/sprint0.html)<br />
-[``Sprint 1 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html)<br />
-[``Sprint 1 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html)<br />
-[``Sprint 2 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_req/doc/sprint2.html)<br />
-[``Sprint 2 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_probl/doc/sprint2.html)<br />
-[``Sprint 3 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_req/doc/sprint3.html)<br />
-[``Sprint 3 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_probl/doc/sprint3.html)<br />
-[``Sprint 4 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_req/doc/sprint4.html)<br />
-[``Sprint 4 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_probl/doc/sprint4.html)
+- [``Sprint 0``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint0/doc/sprint0.html)<br />
+- [``Sprint 1 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_req/doc/sprint1.html)
+- [``Sprint 1 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint1_an_probl/doc/sprint1.html)
+- [``Sprint 2 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_req/doc/sprint2.html)
+- [``Sprint 2 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint2_an_probl/doc/sprint2.html)
+- [``Sprint 3 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_req/doc/sprint3.html)
+- [``Sprint 3 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint3_an_probl/doc/sprint3.html)
+- [``Sprint 4 - Analisi dei Requisiti``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_req/doc/sprint4.html)
+- [``Sprint 4 - Analisi dei Problemi``](https://htmlview.glitch.me/?https://github.com/it9tst/iss2020ProjectBO/blob/feature/sprint4_an_probl/doc/sprint4.html)
 
 ### Requirements
 
